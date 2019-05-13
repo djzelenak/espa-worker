@@ -1,5 +1,5 @@
 FROM centos:centos7.6.1810
-MAINTAINER USGS LCMAP http://eros.usgs.gov
+MAINTAINER USGS LSRD http://eros.usgs.gov
 
 ENV GDAL_VERSION 2.4.1
 
