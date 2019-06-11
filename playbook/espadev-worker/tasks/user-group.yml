@@ -1,0 +1,14 @@
+# File: user-group.yml
+# Description: Set up espa user
+# Last Updated: See 'git log -p <filename>'
+# Recent Changes: See 'git log -p <filename>'
+
+- name: user-group|Add espa group
+  group:
+    name: "{{ app_group }}"
+    state: present
+
+- name: user-group|Add espa user
+  user:
+    name: "{{ app_user }}"
+    groups: "{{ app_group }}"

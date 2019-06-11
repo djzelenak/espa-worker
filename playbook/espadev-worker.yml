@@ -1,0 +1,21 @@
+# File: espadev-worker.yml
+# Description: ESPA Mesos Worker/Processing node setup
+# Last Updated: See 'git log -p <filename>'
+# Recent Changes: See 'git log -p <filename>'
+
+# hosts: group_name or 'all'
+- hosts:
+    - localhost
+
+  # roles: located in ../roles/
+  roles:
+    # role: role to assign to hosts, tags: tag(s) to give entire role
+    - { role: espadev-worker, tags: espadev-worker }
+
+  # Gather host facts for this playbook
+  gather_facts: yes
+  # Gather only minimal and ansible_distribution info (OS attributes)
+  gather_subset:
+    - '!all'
+    - 'min'
+    - 'distribution'
