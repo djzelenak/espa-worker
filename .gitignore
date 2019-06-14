@@ -106,5 +106,6 @@ venv.bak/
 # PyCharm
 .idea/
 
-# local setup
+# local setup and scratch
 env.sh
+test_docker_run.sh
