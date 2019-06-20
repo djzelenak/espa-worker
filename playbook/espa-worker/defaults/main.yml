@@ -1,0 +1,5 @@
+# File: main.yml
+# Description: Default values for espa-worker role
+
+app_user: espa
+app_group: espa

@@ -1,5 +1,5 @@
 FROM centos:centos6.10
-LABEL USGS LSRD http://eros.usgs.gov
+LABEL maintainer="USGS LSRD http://eros.usgs.gov"
 
 RUN yum -y update && yum clean all
 
@@ -18,23 +18,21 @@ RUN yum -y install epel-release \
     && rm -rf Python-2.7.8*
 
 # Install ESPA dependencies
-RUN yum -y install gcc \
-                   gcc-c++ \
-                   wgrib \
-                   hdf5 \
-                   hdf5-devel \
-                   libxml2 \
-                   libxml2-devel \
-                   libxslt \
-                   libxslt-devel \
-                   pigz \
-                   java-1.7.0-openjdk \
-                   java-1.7.0-openjdk-devel \
-                   git ansible yum-utils \
-    && yum clean all \
-    && pip install lxml==3.6.0 netcdf4==1.4.2 \
+RUN yum -y install wgrib \
+    hdf5 \
+    hdf5-devel \
+    libxml2-devel \
+    libxslt \
+    libxslt-devel \
+    pigz \
+    java-1.7.0-openjdk \
+    java-1.7.0-openjdk-devel \
+    ansible \
+    yum-utils \
+    && pip install lxml==3.6.0 netcdf4==1.4.2 docker \
     && yum -y update && yum clean all
 
-# Ansible playbook installs ESPA science libraries and sets up working dirs
-COPY playbook/ /tmp/ansible/
-RUN ansible-playbook /tmp/ansible/espadev-worker.yml
+# Ansible: the 'espa-worker.yml' playbook installs our ESPA science applications
+COPY playbook /tmp/ansible/
+RUN ansible-playbook /tmp/ansible/espa-worker.yml \
+    && rm -rf /tmp/ansible

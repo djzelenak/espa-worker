@@ -1,5 +1,0 @@
-# File: main.yml
-# Description: Default values for espadev-worker role
-
-app_user: espadev
-app_group: espadev

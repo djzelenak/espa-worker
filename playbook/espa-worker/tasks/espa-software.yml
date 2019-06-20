@@ -1,0 +1,65 @@
+# File: espa-software.yml
+# Description: Install ESPA software and system package dependencies
+# Last Updated: See 'git log -p <filename>'
+# Recent Changes: See 'git log -p <filename>'
+
+# Install LSRD Repo
+- name: espa-software|Add LSRD Custom Repo
+  yum_repository:
+    name: lsrd
+    description: LSRD - System Package Repository
+    file: lsrd
+    baseurl: http://lsrdrepo.cr.usgs.gov/repo/lsrd/el6/
+    gpgcheck: no
+    enabled: yes
+    metadata_expire: 300
+
+# Install ESPA Repo
+- name: espa-software|Add ESPA Custom Repo
+  yum_repository:
+    name: espa
+    description: ESPA - Package Repository
+    file: lsrd
+    baseurl: http://lsrdrepo.cr.usgs.gov/repo/espa/el6/
+    gpgcheck: no
+    enabled: yes
+    metadata_expire: 300
+
+# Install espa-release group
+- name: espa-software|Install espa-release group
+  yum:
+    name: "@espa-release"
+    state: installed
+
+## Check to see if pip exists, store answer in "pip_path"
+#- name: espa-software|Check for pip
+#  stat:
+#    path: "/usr/local/bin/pip"
+#  register: pip_path
+#
+## Copy pip script to system if pip did not exist
+#- name: espa-software|No Pip - Copy get-pip.py for pip install
+#  copy:
+#    src: "espa_software/python_get-pip.py"
+#    dest: "/root/get-pip.py"
+#  when: pip_path.stat.exists == False
+#
+## Install pip into LSRD Python site packages if pip did not exist
+#- name: espa-software|No Pip - Install pip using LSRD Python (/usr/local/bin/python)
+#  command: "/usr/local/bin/python /root/get-pip.py"
+#  when: pip_path.stat.exists == False
+#
+## Remove get-pip.py if pip did not exist
+#- name: espa-software|No Pip - Remove get-pip.py
+#  file:
+#    path: "/root/get-pip.py"
+#    state: absent
+#  when: pip_path.stat.exists == False
+
+# Install espa-python library
+- name: espa-software|Install espa-python-library
+  pip:
+    executable: "/usr/local/bin/pip"
+    editable: false
+    version: 1.1.0
+    name: "git+https://github.com/USGS-EROS/espa-python-library.git@v1.1.0#egg=espa"

@@ -109,3 +109,4 @@ venv.bak/
 # local setup and scratch
 env.sh
 test_docker_run.sh
+processing.conf

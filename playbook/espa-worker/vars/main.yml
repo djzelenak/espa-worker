@@ -1,5 +1,5 @@
 # File: main.yml
-# Description: Variables for espadev-worker role
+# Description: Variables for espa-worker role
 
 # Required system packages for ESPA
 espa_dependencies:

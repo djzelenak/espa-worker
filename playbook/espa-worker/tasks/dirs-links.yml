@@ -19,13 +19,6 @@
     group: "{{ app_group }}"
     mode: 0755
 
-- name: dirs-links|Symlink - App User's Home to Hadoop HDFS
-  file:
-    src: "/data/espa-hdfs-2.8.0"
-    dest: "/home/{{ app_user }}/espa-hdfs"
-    state: link
-    owner: root
-
 - name: dirs-links|Directory - App User's ssh
   file:
     path: "/home/{{ app_user }}/.ssh"
@@ -49,14 +42,6 @@
     owner: "{{ app_user }}"
     group: "{{ app_group }}"
     mode: 0755
-
-- name: dirs-links|Symlink - Output Product Cache
-  file:
-    src: "/espa-storage/orders"
-    dest: "/output_product_cache"
-    state: link
-    owner: root
-    force: yes
 
 - name: dirs-links|Directory - Ledaps
   file:

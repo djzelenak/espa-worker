@@ -1,20 +1,20 @@
 # File: main.yml
-# Description: Main task file for role 'espadev-worker'
+# Description: Main task file for role 'espa-worker'
 # Last Updated: See 'git log -p <filename>'
 # Recent Changes: See 'git log -p <filename>'
-
-# Setup mounts
-- import_tasks: mounts.yml
-  tags: mounts
 
 # Add user and group
 - import_tasks: user-group.yml
   tags: user-group
+
+# Setup mounts
+- import_tasks: mounts.yml
+  tags: mounts
 
 # Install ESPA Software
 - import_tasks: espa-software.yml
   tags: espa-software
 
 # Directories and Symlinks
-#- import_tasks: dirs-links.yml
-#  tags: dirs-links
+- import_tasks: dirs-links.yml
+  tags: dirs-links

@@ -1,4 +1,4 @@
-# File: espadev-worker.yml
+# File: espa-worker.yml
 # Description: ESPA Mesos Worker/Processing node setup
 # Last Updated: See 'git log -p <filename>'
 # Recent Changes: See 'git log -p <filename>'
@@ -10,7 +10,7 @@
   # roles: located in ../roles/
   roles:
     # role: role to assign to hosts, tags: tag(s) to give entire role
-    - { role: espadev-worker, tags: espadev-worker }
+    - { role: espa-worker, tags: espa-worker }
 
   # Gather host facts for this playbook
   gather_facts: yes
