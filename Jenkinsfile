@@ -46,7 +46,7 @@ pipeline {
             }
         }
 
-
+}
 
     //-- Run After Job Stages Are Complete --\\
     post {
@@ -61,7 +61,7 @@ pipeline {
             echo 'Failure'
         }
     }
-}
 
+}
 
 
