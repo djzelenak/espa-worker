@@ -2,4 +2,5 @@
 # Description: Default values for espa-worker role
 
 app_user: espa
-app_group: espa
+app_group: worker
+user_group: users

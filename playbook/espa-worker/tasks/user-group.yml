@@ -11,4 +11,4 @@
 - name: user-group|Add espa user
   user:
     name: "{{ app_user }}"
-    groups: "{{ app_group }}"
+    groups: "{{ app_group }}, {{ user_group }}"
