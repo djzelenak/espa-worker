@@ -1,4 +1,4 @@
-TAG=0.0.1
+TAG=0.0.2
 IMAGE=usgseros/espa-worker:${TAG}
 
 docker-build:

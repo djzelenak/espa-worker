@@ -49,3 +49,10 @@
     state: directory
     owner: root
     mode: 0755
+
+- name: mounts|Create Deployments directory
+  file:
+    path: "/home/{{ app_user }}/deployments"
+    state: directory
+    owner: "{{ app_user }}"
+    mode: 0755

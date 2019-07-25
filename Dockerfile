@@ -29,10 +29,12 @@ RUN yum -y install wgrib \
     java-1.7.0-openjdk-devel \
     ansible \
     yum-utils \
-    && pip install lxml==3.6.0 netcdf4==1.4.2 docker \
+    && pip install lxml==3.6.0 netcdf4==1.4.2 docker schedule\
     && yum -y update && yum clean all
 
 # Ansible: the 'espa-worker.yml' playbook installs our ESPA science applications
 COPY playbook /tmp/ansible/
 RUN ansible-playbook /tmp/ansible/espa-worker.yml \
     && rm -rf /tmp/ansible
+
+CMD ['/usr/bin/python', '${HOME}/scheduler.py']
