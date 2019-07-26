@@ -3,8 +3,8 @@ import requests
 import schedule
 from functools import partial
 
-​def request(method, url, status=None):
-    """
+def request(method, url, status=None):
+   """
     Make an http request
     Args:
         method: HTTP method to use
@@ -12,22 +12,23 @@ from functools import partial
 
     Returns: response and status code
     """
-    valid_methods = ('get', 'put', 'delete', 'head', 'options', 'post')
+   valid_methods = ('get', 'put', 'delete', 'head', 'options', 'post')
 
-    if method not in valid_methods:
-        raise Exception('Invalid request method {}'.format(method))
+   if method not in valid_methods:
+       raise Exception('Invalid request method {}'.format(method))
 
-    try:
-        resp = requests.request(method, url)
-    except requests.RequestException as e:
-        raise Exception(e)
+   try:
+       resp = requests.request(method, url)
+   except requests.RequestException as e:
+       raise Exception(e)
 
-    if status and resp.status_code != status:
-        raise Exception("unexpected status: {} for {}".format(resp.status_code, url))
+   if status and resp.status_code != status:
+       raise Exception("unexpected status: {} for {}".format(resp.status_code, url))
 
-    return resp.json(), resp.status_code
+   return resp.json(), resp.status_code
 
 def update_status(api, products, status):
+    return True
 
 def get_products_to_process(resource, limit, user, priority, product_type):
     """
@@ -48,7 +49,7 @@ def get_products_to_process(resource, limit, user, priority, product_type):
     url = '{}/products?{}'.format(resource, query)
     resp, status = request('get', url, status=200)
     return resp
-​
+
 def remove_single_quotes(instring):
     return instring.replace("'", '')
 
@@ -91,10 +92,10 @@ def work(parms):
             pp = processor.get_instance(proc_cfg, parms)
             (destination_product_file, destination_cksum_file) = pp.process()
 
-            finally:
-                # Free disk space to be nice to the whole system.
-                if pp is not None:
-                    pp.remove_product_directory()
+        finally:
+             # Free disk space to be nice to the whole system.
+             if pp is not None:
+                 pp.remove_product_directory()
 
 def config():
     priority = None
@@ -110,19 +111,16 @@ def config():
                 api=os.environ.get('ESPA_API'),
                 priority=priority,
                 user=user)
-​
+
 def main():
-​    # i think we'll control which product type a worker is operating on via env var
-    # this will allow us to scale work on products on the fly
     cfg = config()
     schedule.every(1).minutes.do(work, cfg)
 
     # this should be scheduled in the api using either Schedule, or cron
     # schedule.every(7).minutes.do(order_disposition_job)
-​
     while True:
         schedule.run_pending()
-​
+
 if __name__ == '__main__':
     main()
 
