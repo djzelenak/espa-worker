@@ -1,7 +1,7 @@
 import os
 import requests
 import schedule
-from processing import processor
+from processing import processor, config
 from functools import partial
 
 def request(method, url, status=None):
@@ -98,23 +98,24 @@ def work(parms):
              if pp is not None:
                  pp.remove_product_directory()
 
-def config():
-    priority = None
-    if os.environ.get('ESPA_PRIORITY'):
-        priority = os.environ.get('ESPA_PRIORITY')
+# These values still need to be included in the config module
+# def config():
+#     priority = None
+#     if os.environ.get('ESPA_PRIORITY'):
+#         priority = os.environ.get('ESPA_PRIORITY')
 
-    user = None
-    if os.environ.get('ESPA_USER'):
-        user = os.environ.get('ESPA_USER')
+#     user = None
+#     if os.environ.get('ESPA_USER'):
+#         user = os.environ.get('ESPA_USER')
 
-    return dict(datatype=os.environ.get('ESPA_DATATYPE'),
-                scale=int(os.environ.get('ESPA_JOBSCALE')),
-                api=os.environ.get('ESPA_API'),
-                priority=priority,
-                user=user)
+#     return dict(datatype=os.environ.get('ESPA_DATATYPE'),
+#                 scale=int(os.environ.get('ESPA_JOBSCALE')),
+#                 api=os.environ.get('ESPA_API'),
+#                 priority=priority,
+#                 user=user)
 
 def main():
-    cfg = config()
+    cfg = config.config()
     schedule.every(1).minutes.do(work, cfg)
 
     # this should be scheduled in the api using either Schedule, or cron
