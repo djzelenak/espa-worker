@@ -74,7 +74,7 @@ def work(indata):
     for product in products:
         # todo: use some a spec validation to ensure data characteristics
         # todo: add logging
-        params = deepcopy product
+        params = deepcopy(product)
 
         params['orderid'] = remove_single_quotes(product['orderid']) 
         params['product_id'] = product['scene'] 
