@@ -21,6 +21,10 @@ def config():
 
     de = default_env
     return dict([
+        de('espa_user', None),
+        de('espa_priority', None),
+        de('espa_jobscale', 1, int),
+        de('espa_datatype', 'landsat'),
         de('espa_min_request_duration_in_seconds', 0, int),
         de('espa_work_dir', '/'),
         de('espa_distribution_method', 'local'),

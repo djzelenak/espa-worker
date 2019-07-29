@@ -68,8 +68,7 @@ class ProductProcessor(object):
 
         # Log the distribution method that will be used
         self._logger.info('Using distribution method [{}]'.
-                          format(self._cfg.get('processing',
-                                               'espa_distribution_method')))
+                          format(self._cfg.get('espa_distribution_method')))
 
         # Validate the parameters
         self.validate_parameters()
@@ -82,7 +81,7 @@ class ProductProcessor(object):
         self._output_dir = None
 
         # Ship resource report
-        self._include_resource_report = self._cfg.get('processing', 'include_resource_report')
+        self._include_resource_report = self._cfg.get('include_resource_report')
 
     def validate_parameters(self):
         """Validates the parameters required for the processor
@@ -174,7 +173,7 @@ class ProductProcessor(object):
         product_id = self._parms['product_id']
         order_id = self._parms['orderid']
 
-        base_work_dir = self._cfg.get('processing', 'espa_work_dir')
+        base_work_dir = self._cfg.get('espa_work_dir')
 
         # Get the absolute path to the directory, and default to the current
         # one
@@ -241,8 +240,7 @@ class ProductProcessor(object):
         product_file = 'ERROR'
         cksum_file = 'ERROR'
         try:
-            immutability = self._cfg.getboolean('processing',
-                                                'immutable_distribution')
+            immutability = self._cfg.getboolean('immutable_distribution')
 
             (product_file, cksum_file) = \
                 distribution.distribute_product(immutability,
@@ -522,8 +520,7 @@ class CDRProcessor(CustomizationProcessor):
 
         if options['include_statistics']:
             try:
-                immutability = self._cfg.getboolean('processing',
-                                                    'immutable_distribution')
+                immutability = self._cfg.getboolean('immutable_distribution')
 
                 distribution.distribute_statistics(immutability,
                                                    self._work_dir,
