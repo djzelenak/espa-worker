@@ -81,14 +81,6 @@
     owner: root
     force: yes
 
-- name: dirs-links|Symlink - espa-site
-  file:
-    src: "/home/{{ app_user }}/deployments/espa-processing-{{ processing_tagname }}"
-    dest: "/home/{{ app_user }}/espa-site"
-    state: link
-    owner: "{{ app_user }}"
-    force: yes
-
 - name: dirs-links|Symlink - output_product_cache
   file:
     src: "/espa-storage/orders"
@@ -96,19 +88,3 @@
     state: link
     owner: root
     mode: 0777
-
-- name: dirs-links|Copy - processing.conf
-  copy:
-    src: "processing.conf"
-    dest: "/home/{{ app_user }}/.usgs/espa/processing.conf"
-    owner: "{{ app_user }}"
-    group: "{{ app_group }}"
-    mode: 0755
-
-- name: dirs-links|Copy - scheduler.py
-  copy:
-    src: "scheduler.py"
-    dest: "/home/{{ app_user }}/scheduler.py"
-    owner: "{{ app_user }}"
-    group: "{{ app_group }}"
-    mode: 0755

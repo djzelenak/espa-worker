@@ -17,6 +17,9 @@ RUN yum -y install epel-release \
     && cd / \
     && rm -rf Python-2.7.8*
 
+COPY requirements.txt /requirements.txt
+RUN pip install -r requirements.txt
+
 # Install ESPA dependencies
 RUN yum -y install wgrib \
     hdf5 \
@@ -29,7 +32,6 @@ RUN yum -y install wgrib \
     java-1.7.0-openjdk-devel \
     ansible \
     yum-utils \
-    && pip install lxml==3.6.0 netcdf4==1.4.2 docker schedule\
     && yum -y update && yum clean all
 
 # Ansible: the 'espa-worker.yml' playbook installs our ESPA science applications
@@ -39,8 +41,4 @@ RUN ansible-playbook /tmp/ansible/espa-worker.yml \
 
 COPY main.py /main.py
 COPY processing /processing
-COPY requirements.txt /requirements.txt
-
-RUN pip install git+https://github.com/USGS-EROS/espa-python-library.git@v1.1.0#espa
-RUN pip install -r requirements.txt
 

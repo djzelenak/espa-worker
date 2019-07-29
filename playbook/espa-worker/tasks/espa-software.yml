@@ -38,10 +38,3 @@
     editable: false
     version: 1.1.0
     name: "git+https://github.com/USGS-EROS/espa-python-library.git@v1.1.0#egg=espa"
-
-# Install espa-processing
-- name: espa-processing|Install espa-processing
-  git:
-    repo: "https://github.com/USGS-EROS/espa-processing.git"
-    dest: "/home/{{ app_user }}/deployments/espa-processing-{{ processing_tagname }}"
-    version: "{{ processing_tagname }}"

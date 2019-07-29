@@ -19,40 +19,9 @@
     group: "{{ app_group }}"
     mode: 0775
 
-- name: mounts|Create Data Staging Area
-  file:
-    path: "/data/staging"
-    state: directory
-    owner: root
-    group: "{{ app_group }}"
-    mode: 0775
-
-- name: mounts|Create Data Working Area
-  file:
-      path: "/data/working"
-      state: directory
-      owner: root
-      group: "{{ app_group }}"
-      mode: 0775
-
-- name: mounts|Create Output Data Mount Point
-  file:
-    path: "/data/output"
-    state: directory
-    owner: root
-    group: "{{ app_group }}"
-    mode: 0775
-
 - name: mounts|Create Auxiliaries Mount Point
   file:
     path: "/usr/local/auxiliaries"
     state: directory
     owner: root
-    mode: 0755
-
-- name: mounts|Create Deployments directory
-  file:
-    path: "/home/{{ app_user }}/deployments"
-    state: directory
-    owner: "{{ app_user }}"
     mode: 0755

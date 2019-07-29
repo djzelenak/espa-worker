@@ -12,4 +12,4 @@ docker run --rm -it \
 --mount type=bind,source=${AUX_ROOT_STORAGE},destination=/usr/local/auxiliaries,readonly \
 --mount type=bind,source=${ESPA_STORAGE},destination=/espa-storage/orders \
 --user espa \
-usgseros/espa-worker:0.0.1
+usgseros/espa-worker:0.0.2
