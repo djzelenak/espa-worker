@@ -37,4 +37,10 @@ COPY playbook /tmp/ansible/
 RUN ansible-playbook /tmp/ansible/espa-worker.yml \
     && rm -rf /tmp/ansible
 
-CMD ['/usr/bin/python', '${HOME}/scheduler.py']
+COPY main.py /main.py
+COPY processing /processing
+COPY requirements.txt /requirements.txt
+
+RUN pip install git+https://github.com/USGS-EROS/espa-python-library.git@v1.1.0#espa
+RUN pip install -r requirements.txt
+
