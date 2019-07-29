@@ -1,6 +1,7 @@
 import os
 import requests
 import schedule
+from copy import deepcopy
 from processing import processor, config
 from functools import partial
 
@@ -54,12 +55,14 @@ def get_products_to_process(resource, limit, user, priority, product_type):
 def remove_single_quotes(instring):
     return instring.replace("'", '')
 
-def work(parms):
-    datatype = parms['datatype']
-    priority = parms['priority']
-    scale    = parms['scale']
-    user     = parms['user']
-    api      = parms['api']
+def work(indata):
+    datatype = indata['espa_datatype']
+    priority = indata['espa_priority']
+    scale    = indata['espa_jobscale']
+    user     = indata['espa_user']
+    api      = indata['espa_api']
+
+    cfg = config.config()
 
     # make request to api for work
     products = get_products_to_process(api, scale, user, priority, datatype)
@@ -71,13 +74,17 @@ def work(parms):
     for product in products:
         # todo: use some a spec validation to ensure data characteristics
         # todo: add logging
-        order_id     = remove_single_quotes(product['orderid'])
-        product_id   = product['scene']
+        params = deepcopy product
+
+        params['orderid'] = remove_single_quotes(product['orderid']) 
+        params['product_id'] = product['scene'] 
         product_type = product['product_type']
         options      = product['options']
 
         if 'output_format' not in options.keys():
             options['output_format'] = 'envi'
+
+        params['options'] = options
 
         # pass the dicts to processor.py
         # ----------------------------------------------------------------
@@ -90,29 +97,13 @@ def work(parms):
         pp = None
         try:
             # All processors are implemented in the processor module
-            pp = processor.get_instance(proc_cfg, parms)
+            pp = processor.get_instance(cfg, params)
             (destination_product_file, destination_cksum_file) = pp.process()
 
         finally:
              # Free disk space to be nice to the whole system.
              if pp is not None:
                  pp.remove_product_directory()
-
-# These values still need to be included in the config module
-# def config():
-#     priority = None
-#     if os.environ.get('ESPA_PRIORITY'):
-#         priority = os.environ.get('ESPA_PRIORITY')
-
-#     user = None
-#     if os.environ.get('ESPA_USER'):
-#         user = os.environ.get('ESPA_USER')
-
-#     return dict(datatype=os.environ.get('ESPA_DATATYPE'),
-#                 scale=int(os.environ.get('ESPA_JOBSCALE')),
-#                 api=os.environ.get('ESPA_API'),
-#                 priority=priority,
-#                 user=user)
 
 def main():
     cfg = config.config()
