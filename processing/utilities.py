@@ -15,7 +15,6 @@ from collections import defaultdict
 from subprocess import check_output, CalledProcessError, check_call
 from config_utils import retrieve_pigz_cfg
 
-PROC_CFG_FILENAME = 'processing.conf'
 PIGZ_WRAPPER_FILENAME = 'pigz_wrapper.sh'
 
 
@@ -215,6 +214,7 @@ def tar_files(tarred_full_path, file_list, gzip=False):
     """Create a tar ball (*.tar or *.tar.gz) of the specified file(s)
 
     Args:
+        cfg (dict): Config settings
         tarred_full_path (str): The full path to the tarred filename.
         file_list (list): The files to tar as a list.
         gzip (bool): Whether or not to gzip the tar on the fly.
@@ -232,7 +232,7 @@ def tar_files(tarred_full_path, file_list, gzip=False):
     # If zipping was chosen, change the flags and the target name
     if gzip:
         # Look up the configured level of multithreading
-        num_threads = retrieve_pigz_cfg(PROC_CFG_FILENAME)
+        num_threads = retrieve_pigz_cfg()
 
         # Create and use a pigz wrapper script.  tar --use-compress-program
         # doesn't allow parameters
@@ -271,13 +271,14 @@ def gzip_files(file_list):
     """Create a gzip for each of the specified file(s).
 
     Args:
+        cfg (dict): Config settings
         file_list (list): The files to tar as a list.
 
     Raises:
         Exception(message)
     """
     # Look up the configured level of multithreading
-    num_threads = retrieve_pigz_cfg(PROC_CFG_FILENAME)
+    num_threads = retrieve_pigz_cfg()
 
     # Force the gzip file to overwrite any previously existing attempt
     cmd = ['pigz', '-p ' + num_threads, '--force']
@@ -295,3 +296,16 @@ def gzip_files(file_list):
             msg = ' '.join([msg, 'NO STDOUT/STDERR'])
         # Raise and retain the callstack
         raise Exception(msg)
+
+
+def str2bool(val):
+    """Convert string to boolean value
+    """
+    try:
+        if val.lower() in ['false', 'off', '0']:
+            return False
+        else:
+            return True
+
+    except AttributeError:
+        raise TypeError('value {0} was not a string'.format(type(val)))

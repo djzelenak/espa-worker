@@ -240,7 +240,7 @@ class ProductProcessor(object):
         product_file = 'ERROR'
         cksum_file = 'ERROR'
         try:
-            immutability = self._cfg.getboolean('immutable_distribution')
+            immutability = utilities.str2bool(self._cfg.get('immutable_distribution'))
 
             (product_file, cksum_file) = \
                 distribution.distribute_product(immutability,
@@ -520,7 +520,7 @@ class CDRProcessor(CustomizationProcessor):
 
         if options['include_statistics']:
             try:
-                immutability = self._cfg.getboolean('immutable_distribution')
+                immutability = utilities.str2bool(self._cfg.get('immutable_distribution'))
 
                 distribution.distribute_statistics(immutability,
                                                    self._work_dir,

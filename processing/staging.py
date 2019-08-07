@@ -17,8 +17,6 @@ from environment import Environment, DISTRIBUTION_METHOD_LOCAL
 import transfer
 from config_utils import retrieve_pigz_cfg
 
-PROC_CFG_FILENAME = 'processing.conf'
-
 
 def untar_data(source_file, destination_directory):
     '''
@@ -32,7 +30,7 @@ def untar_data(source_file, destination_directory):
     logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
     # Look up the configured level of multithreading
-    num_threads_str = retrieve_pigz_cfg(PROC_CFG_FILENAME)
+    num_threads_str = retrieve_pigz_cfg()
 
     # If both source and destination are localhost we can just copy the data
     cmd = ' '.join(['unpigz -p ', num_threads_str, ' < ', source_file,

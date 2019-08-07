@@ -82,6 +82,15 @@ BAND_TYPE_STAT_RANGES = {
         'UPPER_BOUND': 10000,
         'LOWER_BOUND': -1000
     },
+    # Over-water reflectance from LaORCA
+    'RRS': {
+        'UPPER_BOUND': 20000,
+        'LOWER_BOUND': 0
+    },
+    'CHLOR_A': {
+        'UPPER_BOUND': 10000,
+        'LOWER_BOUND': 0
+    },
     # This is for MODIS LST.  The data range is 7500 to 65535, but with scaling
     # factor 0.02 that translates to 150K to 1310.7K.  Most of that temperature
     # range will not be used much.  For comparison to the Landsat LST, and to

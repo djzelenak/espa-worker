@@ -1,0 +1,61 @@
+"""Mock data to use for testing"""
+import json
+
+mock_api_response = [{'download_url': u'http://www.a-download-link.gov',
+                      'options': {'central_meridian': None,
+                                  'datum': 'wgs84',
+                                  'false_easting': None,
+                                  'false_northing': None,
+                                  'image_extents': False,
+                                  'image_extents_units': None,
+                                  'include_customized_source_data': False,
+                                  'include_dswe': False,
+                                  'include_solr_index': False,
+                                  'include_source_data': False,
+                                  'include_source_metadata': False,
+                                  'include_sr': True,
+                                  'include_sr_browse': False,
+                                  'include_sr_evi': False,
+                                  'include_sr_msavi': False,
+                                  'include_sr_nbr': False,
+                                  'include_sr_nbr2': False,
+                                  'include_sr_ndmi': False,
+                                  'include_sr_ndvi': True,
+                                  'include_sr_savi': False,
+                                  'include_sr_thermal': False,
+                                  'include_sr_toa': True,
+                                  'include_st': False,
+                                  'include_statistics': False,
+                                  'latitude_true_scale': None,
+                                  'longitude_pole': None,
+                                  'maxx': None,
+                                  'maxy': None,
+                                  'minx': None,
+                                  'miny': None,
+                                  'origin_lat': None,
+                                  'output_format': u'envi',
+                                  'pixel_size': None,
+                                  'pixel_size_units': None,
+                                  'reproject': False,
+                                  'resample_method': 'near',
+                                  'resize': False,
+                                  'std_parallel_1': None,
+                                  'std_parallel_2': None,
+                                  'target_projection': None,
+                                  'utm_north_south': None,
+                                  'utm_zone': None},
+                      'orderid': 'espa-bilbobaggins@usgs.gov-07012019-011111-111',
+                      'priority': 'normal',
+                      'product_type': 'landsat',
+                      'scene': 'LC08_L1TP_128058_20160608_20170324_01_T1'}]
+
+mock_api_response = json.dumps(mock_api_response)
+
+# options is missing
+mock_invalid_response = [{'download_url': u'http://www.a-download-link.gov',
+                      'orderid': 'espa-bilbobaggins@usgs.gov-07012019-011111-111',
+                      'priority': 'normal',
+                      'product_type': 'landsat',
+                      'scene': 'LC08_L1TP_128058_20160608_20170324_01_T1'}]
+
+mock_invalid_response = json.dumps(mock_invalid_response)

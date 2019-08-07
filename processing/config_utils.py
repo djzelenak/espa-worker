@@ -2,8 +2,11 @@
 
 import os
 from ConfigParser import ConfigParser
+import config
 import settings
 
+
+cfg = config.config()
 
 def get_cfg_file_path(filename):
     """Build the full path to the config file
@@ -49,7 +52,7 @@ def retrieve_cfg(cfg_filename, default=None):
 
     return cfg
 
-def retrieve_pigz_cfg(cfg_filename):
+def retrieve_pigz_cfg(key='pigz_num_threads'):
     """Retrieve and verify the pigz configuration
 
     Returns:
@@ -57,8 +60,9 @@ def retrieve_pigz_cfg(cfg_filename):
     """
 
     default = {'pigz_num_threads' : str(settings.PIGZ_MULTITHREADING)}
-    proc_cfg = retrieve_cfg(cfg_filename, default)
-    num_threads_str = proc_cfg.get('processing', 'pigz_num_threads')
+
+    num_threads_str = cfg.get(key)
+
     try:
         num_threads = int(num_threads_str)
         if num_threads <= 0:
