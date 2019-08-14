@@ -6,4 +6,7 @@ requests==2.22.0
 schedule==0.6.0
 urllib3==1.25.3
 netcdf4==1.4.2
+mock==2.0.0
+nose2
+nose2-cov
 docker

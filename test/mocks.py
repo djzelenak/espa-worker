@@ -13,7 +13,7 @@ mock_api_response = [{'download_url': u'http://www.a-download-link.gov',
                                   'include_solr_index': False,
                                   'include_source_data': False,
                                   'include_source_metadata': False,
-                                  'include_sr': True,
+                                  'include_sr': False,
                                   'include_sr_browse': False,
                                   'include_sr_evi': False,
                                   'include_sr_msavi': False,
@@ -25,6 +25,8 @@ mock_api_response = [{'download_url': u'http://www.a-download-link.gov',
                                   'include_sr_thermal': False,
                                   'include_sr_toa': True,
                                   'include_st': False,
+                                  'include_viirs_ndvi': False,
+                                  'include_modis_ndvi': False,
                                   'include_statistics': False,
                                   'latitude_true_scale': None,
                                   'longitude_pole': None,
@@ -49,7 +51,7 @@ mock_api_response = [{'download_url': u'http://www.a-download-link.gov',
                       'product_type': 'landsat',
                       'scene': 'LC08_L1TP_128058_20160608_20170324_01_T1'}]
 
-mock_api_response = json.dumps(mock_api_response)
+# mock_api_response = json.dumps(mock_api_response)
 
 # options is missing
 mock_invalid_response = [{'download_url': u'http://www.a-download-link.gov',
@@ -58,4 +60,4 @@ mock_invalid_response = [{'download_url': u'http://www.a-download-link.gov',
                       'product_type': 'landsat',
                       'scene': 'LC08_L1TP_128058_20160608_20170324_01_T1'}]
 
-mock_invalid_response = json.dumps(mock_invalid_response)
+# mock_invalid_response = json.dumps(mock_invalid_response)
