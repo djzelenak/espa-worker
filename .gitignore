@@ -107,6 +107,5 @@ venv.bak/
 .idea/
 
 # local setup and scratch
-env.sh
-test_docker_run.sh
-processing.conf
+run/
+playbook/espa-worker/files/*.conf

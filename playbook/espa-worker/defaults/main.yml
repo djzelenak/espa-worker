@@ -4,3 +4,4 @@
 app_user: espa
 app_group: worker
 user_group: users
+processing_tagname: topic/espa-worker

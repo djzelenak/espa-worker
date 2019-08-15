@@ -1,5 +1,4 @@
-TAG=0.0.1
-IMAGE=usgseros/espa-worker:${TAG}
+TAG=devtest
 
 docker-build:
-	docker build -t ${IMAGE} .
+	docker build -t usgseros/espa-worker:${TAG} .

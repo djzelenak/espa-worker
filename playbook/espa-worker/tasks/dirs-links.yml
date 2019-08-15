@@ -81,3 +81,10 @@
     owner: root
     force: yes
 
+- name: dirs-links|Symlink - output_product_cache
+  file:
+    src: "/espa-storage/orders"
+    dest: "/output_product_cache"
+    state: link
+    owner: root
+    mode: 0777
