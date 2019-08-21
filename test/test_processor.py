@@ -2,14 +2,13 @@
 import os
 import copy
 import unittest
-import mock
 from mock import patch
 from mocks import mock_api_response, mock_invalid_response
 import processing
 from processing.main import convert_json
-from processing import parameters, config, utilities, config_utils, settings, processor, distribution
+from processing import parameters, config, config_utils, processor, distribution
 
-class TestProcessing(unittest.TestCase):
+class TestProcessor(unittest.TestCase):
     def setUp(self):
         self.cfg = config.config()
         self.params = mock_api_response[0]
@@ -100,31 +99,3 @@ class TestProcessing(unittest.TestCase):
                     self.assertTrue(type(pp) == processing.processor.ModisTERRAProcessor)
                 if code == 'MYD':
                     self.assertTrue(type(pp) == processing.processor.ModisAQUAProcessor)
-
-    @patch('processing.distribution.EspaLogging.get_logger')
-    @patch('processing.distribution.distribute_product_local')
-    @patch('processing.distribution.Environment')
-    @patch('processing.distribution.utilities.get_cache_hostname')
-    @patch('processing.distribution.utilities.execute_cmd')
-    def test_distribute_product(self, mock_execute_cmd, mock_get_cache_hostname, MockEnvironment,
-                                mock_distribute_product_local, mock_logger):
-        """
-        Make sure the product distribution is working
-        """
-        env = MockEnvironment()
-        env.get_distribution_method.return_value = 'local'
-
-        mock_get_cache_hostname.return_value = 'hostname'
-
-        mock_execute_cmd.return_value = True
-
-        mock_distribute_product_local.return_value = ('product_file', 'cksum_file')
-
-        params = copy.deepcopy(self.params)
-        params['bridge_mode'] = True
-
-        (product_file, cksum_file) = distribution.distribute_product(True, 'product_name', 'source_path', 'packaging_path', params)
-        print(product_file)
-        print(cksum_file)
-
-        mock_distribute_product_local.assert_called_with(True, 'product_name', 'source_path', 'packaging_path')

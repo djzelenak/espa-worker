@@ -24,22 +24,53 @@ def convert_json(in_data):
     return None
 
 
-def build_cmd(data, image='usgseros/espa-worker', tag='latest'):
-    print(type(data))
-    print(data)
-    new_data = convert_json(data)
-    print(type(new_data))
-    print(new_data)
+def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactive=False):
+    """
+    Build the command line argument that calls docker run with the requested parameters
 
-    cmd = [
-        'docker run',
-        '-it',
-        '--rm',
+    Args:
+        data (str):
+        image (str):
+        tag (str):
+        interactive (bool):
+
+    Returns:
+        str
+
+    """
+    mounts = [
         '--mount type=bind,source=${AUX_DIR},destination=/usr/local/auxiliaries,readonly',
         '--mount type=bind,source=${ESPA_STORAGE},destination=/espa-storage/orders',
-        '{0}:{1}'.format(image, tag),
-        new_data # This converts the json back into a string
     ]
+
+    envs = [
+        '--env ESPA_API=${ESPA_API}',
+        '--env ASTER_GED_SERVER_NAME=${ASTER_GED_SERVER_NAME}'
+    ]
+
+    image_tag = [
+        '{0}:{1}'.format(image, tag),
+    ]
+
+    if interactive:
+        cmd = ['docker run',
+               '-it',
+               '--rm',
+               '--entrypoint /bin/bash']
+    else:
+        data = [
+            "'{0}'".format(convert_json(data))  # This converts the json back into a string
+        ]
+
+        cmd = ['docker run',
+               '--rm']
+
+    cmd.extend(mounts)
+    cmd.extend(envs)
+    cmd.extend(image_tag)
+
+    if not interactive and data is not None:
+        cmd.extend(data)
 
     return ' '.join(cmd)
 
@@ -56,7 +87,6 @@ def execute_cmd(cmd):
     Raises:
         Exception(message)
     """
-
     output = ''
     (status, output) = commands.getstatusoutput(cmd)
 
@@ -86,11 +116,14 @@ def cli():
     parser.add_argument('--image', dest='image', type=str, metavar='STR', default='usgseros/espa-worker',
                          help='Specify the name of the docker image')
 
-    parser.add_argument('--tag', dest='tag', type=str, metavar='STR', default='latest',
+    parser.add_argument('--tag', dest='tag', type=str, metavar='STR', default='devtest',
                         help='Specify the docker image tagname to use')
 
-    parser.add_argument('--data', dest='data', type=convert_json, metavar='JSON',
+    parser.add_argument('--data', dest='data', type=convert_json, metavar='JSON', default=None,
                         help='The API JSON response')
+
+    parser.add_argument('--interactive', action='store_true',
+                        help='Enter container interactively')
 
     args = parser.parse_args()
 
