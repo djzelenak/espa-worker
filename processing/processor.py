@@ -6,26 +6,20 @@ Description: Implements the processors which generate the products the system
 License: NASA Open Source Agreement 1.3
 '''
 
-
 import os
-import sys
 import shutil
 import glob
 import json
 import datetime
 import copy
 import subprocess
-from cStringIO import StringIO
-from collections import defaultdict, namedtuple
-
+from collections import namedtuple
 
 from espa import Metadata
-
 
 import settings
 import utilities
 from logging_tools import EspaLogging
-import espa_exception as ee
 import sensor
 import initialization
 import parameters
@@ -68,7 +62,8 @@ class ProductProcessor(object):
 
         # Log the distribution method that will be used
         self._logger.info('Using distribution method [{}]'.
-                          format(self._cfg.get('espa_distribution_method')))
+                          format(self._cfg.get('processing',
+                                               'espa_distribution_method')))
 
         # Validate the parameters
         self.validate_parameters()
@@ -81,7 +76,7 @@ class ProductProcessor(object):
         self._output_dir = None
 
         # Ship resource report
-        self._include_resource_report = self._cfg.get('include_resource_report')
+        self._include_resource_report = self._cfg.get('processing', 'include_resource_report')
 
     def validate_parameters(self):
         """Validates the parameters required for the processor
@@ -173,7 +168,7 @@ class ProductProcessor(object):
         product_id = self._parms['product_id']
         order_id = self._parms['orderid']
 
-        base_work_dir = self._cfg.get('espa_work_dir')
+        base_work_dir = self._cfg.get('processing', 'espa_work_dir')
 
         # Get the absolute path to the directory, and default to the current
         # one
@@ -240,7 +235,8 @@ class ProductProcessor(object):
         product_file = 'ERROR'
         cksum_file = 'ERROR'
         try:
-            immutability = utilities.str2bool(self._cfg.get('immutable_distribution'))
+            immutability = self._cfg.getboolean('processing',
+                                                'immutable_distribution')
 
             (product_file, cksum_file) = \
                 distribution.distribute_product(immutability,
@@ -520,7 +516,8 @@ class CDRProcessor(CustomizationProcessor):
 
         if options['include_statistics']:
             try:
-                immutability = utilities.str2bool(self._cfg.get('immutable_distribution'))
+                immutability = self._cfg.getboolean('processing',
+                                                    'immutable_distribution')
 
                 distribution.distribute_statistics(immutability,
                                                    self._work_dir,
@@ -617,6 +614,7 @@ class LandsatProcessor(CDRProcessor):
                              'include_customized_source_data',
                              'include_dswe',
                              'include_st',
+                             'include_orca',
                              'include_source_data',
                              'include_sr',
                              'include_sr_evi',
@@ -650,7 +648,8 @@ class LandsatProcessor(CDRProcessor):
                 not options['include_sr_msavi'] and
                 not options['include_sr_evi'] and
                 not options['include_dswe'] and
-                not options['include_st']):
+                not options['include_st'] and
+                not options['include_orca']):
 
             self._logger.info('***NO SCIENCE PRODUCTS CHOSEN***')
             self._build_products = False
@@ -880,6 +879,28 @@ class LandsatProcessor(CDRProcessor):
                 if len(output) > 0:
                     self._logger.info(output)
 
+    def orca_command_line(self):
+        """Returns command line required to generate over-water reflectance"""
+        cmd = ['water_leaving_reflectance.py',
+               '--xml',
+               self._xml_filename]
+
+        return ' '.join(cmd)
+
+    def generate_over_water_reflectance(self):
+        """Generates over-water reflectance products"""
+        options = self._parms['options']
+        if options['include_orca']:
+            cmd = self.orca_command_line()
+
+            self._logger.info(' '.join(['WATER LEAVING REFLECTANCE COMMAND:', cmd]))
+            output = ''
+            try:
+                output = utilities.execute_cmd(cmd)
+            finally:
+                if len(output) > 0:
+                    self._logger.info(output)
+
     def generate_spectral_indices(self):
         """Generates the requested spectral indices
         """
@@ -1020,6 +1041,8 @@ class LandsatProcessor(CDRProcessor):
             self.generate_surface_water_extent()
 
             self.generate_surface_temperature()
+
+            self.generate_over_water_reflectance()
 
         finally:
             # Change back to the previous directory
@@ -1190,6 +1213,8 @@ class LandsatProcessor(CDRProcessor):
                                         '*_evi.img', '*_savi.img',
                                         '*_msavi.img']
         files_to_search_for['LANDSAT_ST'] = ['*_st.img']
+        files_to_search_for['RRS'] = ['*_rrs_band[0-7].img']
+        files_to_search_for['CHLOR_A'] = ['*_chlor_a.img']
 
         # Build a command line arguments list
         cmd = ['espa_statistics.py',
@@ -1913,6 +1938,16 @@ class PlotProcessor(ProductProcessor):
 
                           SearchInfo(VIIRS_NAME, ['VNP*SurfReflect_I3*.stats'])]
 
+        # LaORCA bands (Landsat 8)
+        _rrs_coastal_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band1.stats'])]
+        _rrs_blue_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band2.stats'])]
+        _rrs_green_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band3.stats'])]
+        _rrs_red_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band4.stats'])]
+        _rrs_nir_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band5.stats'])]
+        _rrs_swir1_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band6.stats'])]
+        _rrs_swir2_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band7.stats'])]
+        _chlor_a_info = [SearchInfo(L8_NAME, ['L[C,O]08*_chlor_a.stats'])]
+
         # SR (L4-L8 B7) (MODIS B7)
         _sr_swir2_info = [SearchInfo(L4_NAME, ['LT4*_sr_band7.stats',
                                                'LT04*_sr_band7.stats']),
@@ -2220,6 +2255,14 @@ class PlotProcessor(ProductProcessor):
                           (_emis_29_info, 'Emis Band 29'),
                           (_emis_31_info, 'Emis Band 31'),
                           (_emis_32_info, 'Emis Band 32'),
+                          (_rrs_coastal_info, 'RRS Coastal'),
+                          (_rrs_blue_info, 'RRS Blue'),
+                          (_rrs_green_info, 'RRS Green'),
+                          (_rrs_red_info, 'RRS Red'),
+                          (_rrs_nir_info, 'RRS NIR'),
+                          (_rrs_swir1_info, 'RRS SWIR1'),
+                          (_rrs_swir2_info, 'RRS SWIR2'),
+                          (_chlor_a_info, 'CHLOR_A'),
                           (_lst_day_info, 'LST Day'),
                           (_lst_night_info, 'LST Night'),
                           (_ndvi_info, 'NDVI'),
