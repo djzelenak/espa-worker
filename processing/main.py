@@ -1,10 +1,12 @@
 
 import os
+import sys
 import datetime
 import argparse
 import json
 import socket
 import shutil
+import logging
 from functools import partial
 from time import sleep
 
@@ -24,6 +26,22 @@ from environment import Environment
 WORKER_LOG_PREFIX = 'espa-worker'
 WORKER_LOG_FILENAME = '.'.join([WORKER_LOG_PREFIX, 'log'])
 
+EspaLogging.configure_base_logger(filename=WORKER_LOG_FILENAME)
+# Initially set to the base logger
+base_logger = EspaLogging.get_logger('base')
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# Add logging to stdout and stderr
+stdout_handler = logging.StreamHandler(sys.stdout)
+stdout_handler.setLevel(logging.DEBUG)
+stdout_handler.setFormatter(formatter)
+base_logger.addHandler(stdout_handler)
+
+stderr_handler = logging.StreamHandler(sys.stderr)
+stderr_handler.setLevel(logging.DEBUG)
+stderr_handler.setFormatter(formatter)
+base_logger.addHandler(stderr_handler)
 
 def remove_single_quotes(instring):
     return instring.replace("'", '')
@@ -161,17 +179,17 @@ def work(cfg, params, developer_sleep_mode=False):
 
     """
     # Initially set to the base logger
-    logger = EspaLogging.get_logger('base')
+    # logger = EspaLogging.get_logger('base')
 
     processing_location = socket.gethostname()
 
-    logger.debug('processing location given as: {0}'.format(processing_location))
+    base_logger.debug('processing location given as: {0}'.format(processing_location))
 
     if not parameters.test_for_parameter(params, 'options'):
         raise ValueError('Error missing JSON [options] record')
 
-    logger.info('PARAMETERS: {0}'.format(params))
-    logger.info('CONFIG: {0}'.format(cfg))
+    base_logger.info('PARAMETERS: {0}'.format(params))
+    base_logger.info('CONFIG: {0}'.format(cfg))
 
     # Reset these for each line
     # TODO: this might be unnecessary - carryover from espa-processing
@@ -219,8 +237,8 @@ def work(cfg, params, developer_sleep_mode=False):
             if cfg['espa_api'] != 'skip_api':
                 server = api_interface.api_connect(cfg['espa_api'])
 
-                logger.info('Attemped connection to {0}'.format(cfg['espa_api']))
-                logger.info('API connect response: {0}'.format(server))
+                base_logger.info('Attemped connection to {0}'.format(cfg['espa_api']))
+                base_logger.info('API connect response: {0}'.format(server))
 
                 if server is not None:
                     status = server.update_status(product_id, order_id,
@@ -232,12 +250,12 @@ def work(cfg, params, developer_sleep_mode=False):
 
                 else:
                     msg = ('Failed connecting to API {0}'.format(cfg['espa_api']))
-                    logger.critical(msg)
+                    base_logger.critical(msg)
                     raise api_interface.APIException(msg)
 
         else:
             msg = ('ESPA_API is not defined!')
-            logger.critical(msg)
+            base_logger.critical(msg)
             raise api_interface.APIException(msg)
 
         if product_id != 'plot':
@@ -294,11 +312,11 @@ def work(cfg, params, developer_sleep_mode=False):
 
     except api_interface.APIException as excep:
         # This is expected when scenes have been cancelled after queueing
-        logger.warning('Halt. API raised error: {}'.format(excep.message))
+        base_logger.warning('Halt. API raised error: {}'.format(excep.message))
 
     except Exception as excep:
         # First log the exception
-        logger.exception('Exception encountered stacktrace follows')
+        base_logger.exception('Exception encountered stacktrace follows')
 
         # Sleep the number of seconds for minimum request duration
         sleep(get_sleep_duration(cfg, start_time, dont_sleep))
@@ -312,11 +330,12 @@ def work(cfg, params, developer_sleep_mode=False):
                                            product_id,
                                            processing_location)
             except Exception:
-                logger.exception('Exception encountered stacktrace follows')
+                base_logger.exception('Exception encountered stacktrace follows')
 
     finally:
         # Reset back to the base logger
-        logger = EspaLogging.get_logger('base')
+        # logger = EspaLogging.get_logger('base')
+        pass
 
 
 def cli():
@@ -331,9 +350,7 @@ def cli():
 
 
 def main(data):
-    EspaLogging.configure_base_logger(filename=WORKER_LOG_FILENAME)
-    # Initially set to the base logger
-    logger = EspaLogging.get_logger('base')
+
 
     # retrieve a dict containing processing environment configuration values
     cfg = config.config()
@@ -341,7 +358,7 @@ def main(data):
     # export values for the container environment
     config.export_environment_variables(cfg)
 
-    logger.debug('OS ENV: {0}'.format(['{0}: {1}'.format(var, val) for var, val in os.environ.items()]))
+    base_logger.debug('OS ENV: {0}'.format(['{0}: {1}'.format(var, val) for var, val in os.environ.items()]))
 
     try:
 
@@ -349,7 +366,7 @@ def main(data):
         map(order_processor, data)
 
     except Exception:
-        logger.exception('Processing failed stacktrace follows')
+        base_logger.exception('Processing failed stacktrace follows')
 
 if __name__ == '__main__':
     cli()
