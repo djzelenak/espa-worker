@@ -24,7 +24,7 @@ def convert_json(in_data):
     return None
 
 
-def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactive=False):
+def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactive=False, user='espa'):
     """
     Build the command line argument that calls docker run with the requested parameters
 
@@ -64,6 +64,12 @@ def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactiv
 
         cmd = ['docker run',
                '--rm']
+
+    if user:
+        user = ['--user',
+                user]
+
+        cmd.extend(user)
 
     cmd.extend(mounts)
     cmd.extend(envs)
@@ -124,6 +130,9 @@ def cli():
 
     parser.add_argument('--interactive', action='store_true',
                         help='Enter container interactively')
+
+    parser.add_argument('--user', default='espa', metavar='USER',
+                        help='Enter a username for the container environment')
 
     args = parser.parse_args()
 
