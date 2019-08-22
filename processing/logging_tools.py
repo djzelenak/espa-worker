@@ -252,3 +252,15 @@ class EspaLogging(object):
             cls.check_logger_configured(logger_name)
 
         return logging.getLogger(logger_name)
+
+
+class LevelFilter(logging.Filter):
+    def __init__(self, low, high):
+        self._low = low
+        self._high = high
+        logging.Filter.__init__(self)
+
+    def filter(self, record):
+        if self._low <= record.levelno <= self._high:
+            return True
+        return False

@@ -18,7 +18,7 @@ import settings
 import sensor
 import utilities
 import api_interface
-from logging_tools import EspaLogging
+from logging_tools import EspaLogging, LevelFilter
 
 # local objects and methods
 from environment import Environment
@@ -36,11 +36,13 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 stdout_handler = logging.StreamHandler(sys.stdout)
 stdout_handler.setLevel(logging.DEBUG)
 stdout_handler.setFormatter(formatter)
+stdout_handler.addFilter(LevelFilter(10, 20))
 base_logger.addHandler(stdout_handler)
 
 stderr_handler = logging.StreamHandler(sys.stderr)
-stderr_handler.setLevel(logging.DEBUG)
+stderr_handler.setLevel(logging.WARNING)
 stderr_handler.setFormatter(formatter)
+stderr_handler.addFilter(LevelFilter(30, 50))
 base_logger.addHandler(stderr_handler)
 
 def remove_single_quotes(instring):
@@ -49,8 +51,10 @@ def remove_single_quotes(instring):
 
 def convert_json(data):
     if type(data) is str:
+        # return a list or dict
         return json.loads(data)
     if type(data) in (list, dict):
+        # return a string
         return json.dumps(data)
 
 
@@ -178,18 +182,13 @@ def work(cfg, params, developer_sleep_mode=False):
         None, Products are generated, packaged, and distributed if processing was successful
 
     """
-    # Initially set to the base logger
-    # logger = EspaLogging.get_logger('base')
-
+    # This will be the docker container ID
     processing_location = socket.gethostname()
 
-    base_logger.debug('processing location given as: {0}'.format(processing_location))
+    base_logger.debug('processing container ID: {0}'.format(processing_location))
 
     if not parameters.test_for_parameter(params, 'options'):
         raise ValueError('Error missing JSON [options] record')
-
-    base_logger.info('PARAMETERS: {0}'.format(params))
-    base_logger.info('CONFIG: {0}'.format(cfg))
 
     # Reset these for each line
     # TODO: this might be unnecessary - carryover from espa-processing
@@ -333,10 +332,7 @@ def work(cfg, params, developer_sleep_mode=False):
                 base_logger.exception('Exception encountered stacktrace follows')
 
     finally:
-        # Reset back to the base logger
-        # logger = EspaLogging.get_logger('base')
         pass
-
 
 def cli():
     parser = argparse.ArgumentParser()
@@ -358,7 +354,9 @@ def main(data):
     # export values for the container environment
     config.export_environment_variables(cfg)
 
-    base_logger.debug('OS ENV: {0}'.format(['{0}: {1}'.format(var, val) for var, val in os.environ.items()]))
+    base_logger.debug('OS ENV - {0}'.format(['{0}: {1}'.format(var, val) for var, val in os.environ.items()]))
+    base_logger.info('configured parameters - {0}'.format(['{0}: {1}'.format(var, val) for var, val in cfg.items()]))
+    base_logger.info('order data - {0}'.format(data))
 
     try:
 
