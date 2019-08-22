@@ -149,15 +149,23 @@ def get_sleep_duration(proc_cfg, start_time, dont_sleep, key='espa_min_request_d
 
 def work(cfg, params, developer_sleep_mode=False):
     """
+    Take the environment configuration, order parameters and initiate order processing.
+    Note: Much of this code was taken from the ondemand_mapper.py script in espa-processing.
 
-    :param cfg: Configuration params
-    :param params: JSON response from API - a single unit order
-    :return:
+    Args:
+        cfg (dict): Configuration params given by config.config() and by the worker environment
+        params (dict): JSON response from the API for a single granule or scene
+
+    Returns:
+        None, Products are generated, packaged, and distributed if processing was successful
+
     """
     # Initially set to the base logger
     logger = EspaLogging.get_logger('base')
 
     processing_location = socket.gethostname()
+
+    logger.debug('processing location given as: {0}'.format(processing_location))
 
     if not parameters.test_for_parameter(params, 'options'):
         raise ValueError('Error missing JSON [options] record')
@@ -166,6 +174,7 @@ def work(cfg, params, developer_sleep_mode=False):
     logger.info('CONFIG: {0}'.format(cfg))
 
     # Reset these for each line
+    # TODO: this might be unnecessary - carryover from espa-processing
     (server, order_id, product_id) = (None, None, None)
 
     start_time = datetime.datetime.now()
@@ -173,6 +182,7 @@ def work(cfg, params, developer_sleep_mode=False):
     # Initialize so that we don't sleep
     dont_sleep = True
 
+    # Note that the API response "scene" value is what we use for product_id
     try:
         (order_id, product_id, product_type, options) = \
             (params['orderid'], params['scene'], params['product_type'],
@@ -180,7 +190,7 @@ def work(cfg, params, developer_sleep_mode=False):
 
         if product_id != 'plot':
             # Developer mode is always false unless you are a developer
-            # so sleeping will always occur for none plotting requests
+            # so sleeping will always occur for non-plotting requests
             # Override with the developer mode
             dont_sleep = developer_sleep_mode
 
@@ -189,7 +199,7 @@ def work(cfg, params, developer_sleep_mode=False):
         # portion due to usage in command lines.
         params['orderid'] = order_id.replace("'", '')
 
-        # If it is missing due to above TODO, then add it
+        # product_id is not part of the API response - we add it here
         if not parameters.test_for_parameter(params, 'product_id'):
             params['product_id'] = product_id
 
@@ -220,6 +230,9 @@ def work(cfg, params, developer_sleep_mode=False):
                         msg = ('Failed processing API call to update_status to processing')
 
                         raise api_interface.APIException(msg)
+
+        else:
+            logger.warn('No connection to the API can be established!')
 
         if product_id != 'plot':
             # Make sure we can process the sensor
@@ -322,7 +335,7 @@ def main(data):
     # export values for the container environment
     config.export_environment_variables(cfg)
 
-    logger.info('OS ENV: {0}'.format(['{0}: {1}'.format(var, val) for var, val in os.environ.items()]))
+    logger.debug('OS ENV: {0}'.format(['{0}: {1}'.format(var, val) for var, val in os.environ.items()]))
 
     try:
 
