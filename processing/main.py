@@ -228,11 +228,17 @@ def work(cfg, params, developer_sleep_mode=False):
                                                   'processing')
                     if not status:
                         msg = ('Failed processing API call to update_status to processing')
-
                         raise api_interface.APIException(msg)
 
+                else:
+                    msg = ('Failed connecting to API {0}'.format(cfg['espa_api']))
+                    logger.critical(msg)
+                    raise api_interface.APIException(msg)
+
         else:
-            logger.warn('No connection to the API can be established!')
+            msg = ('ESPA_API is not defined!')
+            logger.critical(msg)
+            raise api_interface.APIException(msg)
 
         if product_id != 'plot':
             # Make sure we can process the sensor
