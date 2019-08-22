@@ -52,10 +52,22 @@ def remove_single_quotes(instring):
 def convert_json(data):
     if type(data) is str:
         # return a list or dict
-        return json.loads(data)
-    if type(data) in (list, dict):
+        temp = json.loads(data)
+        if type(temp) is dict:
+            base_logger.warning('The input order data was a single dict, but the processing container'
+                                ' requires a list - placing the dict in a list object')
+            return [temp]
+        else:
+            return temp
+    elif type(data) in (list, dict):
         # return a string
+        base_logger.warning('The input order data was a list or dict object - returning a string')
         return json.dumps(data)
+    else:
+        msg = 'Non-compatible data type for input data of type {0}'.format(type(data))
+        base_logger.critical(msg)
+        raise Exception(msg)
+
 
 
 def set_product_error(server, order_id, product_id, processing_location):
@@ -111,8 +123,11 @@ def set_product_error(server, order_id, product_id, processing_location):
 def archive_log_files(order_id, product_id):
     """Archive the log files for the current job
     """
+    try:
+        logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
-    logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
+    except Exception:
+        logger = base_logger
 
     try:
         # Determine the destination path for the logs
@@ -148,7 +163,11 @@ def archive_log_files(order_id, product_id):
 def get_sleep_duration(proc_cfg, start_time, dont_sleep, key='espa_min_request_duration_in_seconds'):
     """Logs details and returns number of seconds to sleep
     """
-    logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
+    try:
+        logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
+
+    except Exception:
+        logger = base_logger
 
     # Determine if we need to sleep
     end_time = datetime.datetime.now()
