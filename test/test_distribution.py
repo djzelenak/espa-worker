@@ -1,11 +1,32 @@
 
+import sys
 import copy
 import unittest
+import logging
 from mock import patch, mock_open
 from mocks import mock_api_response
 
 from processing import config, distribution
+from processing.logging_tools import EspaLogging, LevelFilter
 
+EspaLogging.configure_base_logger()
+# Initially set to the base logger
+base_logger = EspaLogging.get_logger('base')
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# Add logging to stdout and stderr
+stdout_handler = logging.StreamHandler(sys.stdout)
+stdout_handler.setLevel(logging.DEBUG)
+stdout_handler.setFormatter(formatter)
+stdout_handler.addFilter(LevelFilter(10, 20))
+base_logger.addHandler(stdout_handler)
+
+stderr_handler = logging.StreamHandler(sys.stderr)
+stderr_handler.setLevel(logging.WARNING)
+stderr_handler.setFormatter(formatter)
+stderr_handler.addFilter(LevelFilter(30, 50))
+base_logger.addHandler(stderr_handler)
 
 class TestDistribution(unittest.TestCase):
     def setUp(self):
@@ -76,10 +97,14 @@ class TestDistribution(unittest.TestCase):
     @patch('processing.distribution.package_product')
     @patch('processing.distribution.transfer_product')
     def test_distribute_product_remote(self, mock_transfer_product, mock_package_product,
-                                       mock_get_cache_hostname, MockEnvironment, mock_logger):
+                                       mock_get_cache_hostname, MockEnvironment,
+                                       mock_logger):
         """
-        Make sure the product distribution is working
+        Make sure the remote product distribution is functioning as expected given certain inputs
         """
+        params = copy.deepcopy(self.params)
+        params['options']['destination_pw'] = 'destination_pw'
+        params['options']['destination_username'] = 'destination_username'
         env = MockEnvironment()
         env.get_cache_host_list.return_value = ['host_1', 'host_2']
         mock_get_cache_hostname.return_value = 'hostname'
@@ -90,27 +115,12 @@ class TestDistribution(unittest.TestCase):
                                               self.test_product_full_path_tar,
                                               self.test_cksum_full_path)
 
-        # (product_file, cksum_file) = distribution.distribute_product(True,
-        #                                                              'product_name',
-        #                                                              'source_path',
-        #                                                              'packaging_path',
-        #                                                              self.params)
-
         (product_file, cksum_file) = distribution.distribute_product_remote(True,
                                                                             'product_name',
                                                                             '/source_path',
                                                                             '/packaging_path',
                                                                             '/cache_path',
-                                                                            self.params)
+                                                                            params)
 
         self.assertTrue(product_file == self.test_product_full_path_tar and
                         cksum_file == self.test_cksum_full_path)
-
-        # mock_distribute_product_remote.assert_called_with(True,
-        #                                                   'product_name',
-        #                                                   'source_path',
-        #                                                   'packaging_path',
-        #                                                   # from settings.ESPA_REMOTE_CACHE_DIRECTORY
-        #                                                   '/data2/science_lsrd/LSRD/orders/'
-        #                                                   'espa-bilbobaggins@usgs.gov-07012019-011111-111',
-        #                                                   self.params)
