@@ -51,7 +51,7 @@ class TestDistribution(unittest.TestCase):
     @patch('processing.distribution.utilities.tar_files')
     @patch('processing.distribution.os.chdir')
     @patch('processing.distribution.os.chmod')
-    @patch("__builtin__.open", new=mock_open(read_data='data'), create=True)
+    @patch("__builtin__.open", new=mock_open(read_data='data'), create=False)
     def test_package_product(self, mock_os_chmod, mock_os_chdir,
                              mock_tar_files, mock_execute_cmd,
                              mock_create_directory, mock_logger):
@@ -70,6 +70,30 @@ class TestDistribution(unittest.TestCase):
         self.assertTrue(product_full_path == self.test_product_full_path_tar and
                         cksum_full_path == self.test_cksum_full_path and
                         cksum_value == self.test_cksum_value)
+
+    @patch('processing.distribution.EspaLogging.get_logger')
+    @patch('processing.distribution.utilities.execute_cmd')
+    @patch('processing.distribution.transfer.transfer_file')
+    def test_transfer_product(self, mock_transfer_file, mock_execute_cmd, mock_logger):
+        """
+        Test that the transfer_product function is called and behaves as expected
+        TODO: assert_called_with for mock_transfer_file and mock_execute_cmd ?
+        """
+        mock_execute_cmd.return_value = 'cmd output'
+        mock_transfer_file.return_value = None
+
+        (cksum_value, destination_product_file, destination_cksum_file) = \
+            distribution.transfer_product(immutability=True,
+                                          destination_host='http://1.2.3.4',
+                                          destination_directory='/destination_directory',
+                                          destination_username='bilbo',
+                                          destination_pw='frodo',
+                                          product_filename='product_name.tar.gz',
+                                          cksum_filename='product_name.md5')
+
+        self.assertTrue(cksum_value == 'cmd output' and
+                        destination_product_file == self.test_product_full_path_tar and
+                        destination_cksum_file == self.test_cksum_full_path)
 
     @patch('processing.distribution.EspaLogging.get_logger')
     @patch('processing.distribution.package_product')
