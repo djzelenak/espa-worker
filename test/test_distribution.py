@@ -3,7 +3,7 @@ import sys
 import copy
 import unittest
 import logging
-from mock import patch, mock_open
+from mock import patch, mock_open, call
 from mocks import mock_api_response
 
 from processing import config, distribution
@@ -51,7 +51,7 @@ class TestDistribution(unittest.TestCase):
     @patch('processing.distribution.utilities.tar_files')
     @patch('processing.distribution.os.chdir')
     @patch('processing.distribution.os.chmod')
-    @patch("__builtin__.open", new=mock_open(read_data='data'), create=False)
+    @patch('__builtin__.open', new=mock_open(read_data='data'), create=False)
     def test_package_product(self, mock_os_chmod, mock_os_chdir,
                              mock_tar_files, mock_execute_cmd,
                              mock_create_directory, mock_logger):
@@ -148,3 +148,55 @@ class TestDistribution(unittest.TestCase):
 
         self.assertTrue(product_file == self.test_product_full_path_tar and
                         cksum_file == self.test_cksum_full_path)
+
+    @patch('processing.distribution.EspaLogging.get_logger')
+    @patch('processing.distribution.os.chdir')
+    @patch('processing.distribution.utilities.execute_cmd')
+    @patch('processing.distribution.transfer.transfer_file')
+    def test_distribute_statistics_remote(self, mock_transfer_file, mock_execute_cmd, mock_chdir, mock_logger):
+        """
+        Make sure that distribute_statistics_remote runs as expected
+        """
+        mock_chdir.return_value = None
+        mock_execute_cmd.return_value = 'cmd output'
+        mock_transfer_file.return_value = None
+
+        distribution.distribute_statistics_remote(immutability=True,
+                                                  product_id='product_id',
+                                                  source_path='/source',
+                                                  destination_host='hostname',
+                                                  destination_path='/destination',
+                                                  destination_username='bilbo',
+                                                  destination_pw='password')
+
+        mock_transfer_file.assert_called_once_with('localhost', 'stats/product_id*', 'hostname',
+                                                   '/destination/stats',
+                                                   destination_pw='password',
+                                                   destination_username='bilbo')
+
+    @patch('processing.distribution.EspaLogging.get_logger')
+    @patch('processing.distribution.os.chdir')
+    @patch('processing.distribution.utilities.create_directory')
+    @patch('processing.distribution.utilities.execute_cmd')
+    @patch('processing.distribution.glob.glob')
+    @patch('processing.distribution.shutil.copyfile')
+    def test_distribute_statistics_local(self, mock_copyfile, mock_glob, mock_execute_cmd,
+                                         mock_create_directory, mock_chdir, mock_logger):
+        """
+        Make sure that distribute_statistics_local runs as expected
+        """
+        mock_chdir.return_value = None
+        mock_create_directory.return_value = None
+        mock_execute_cmd.return_value = 'cmd output'
+        mock_copyfile.return_value = None
+        mock_glob.return_value = ['stats/band_1.csv', 'stats/band_2.csv', 'stats/band_3.csv']
+
+        distribution.distribute_statistics_local(immutability=True,
+                                                 product_id='product_id',
+                                                 source_path='/source',
+                                                 destination_path='/destination')
+        calls = [call('stats/band_1.csv', '/destination/stats/band_1.csv'),
+                 call('stats/band_2.csv', '/destination/stats/band_2.csv'),
+                 call('stats/band_3.csv', '/destination/stats/band_3.csv')]
+
+        mock_copyfile.assert_has_calls(calls, any_order=True)
