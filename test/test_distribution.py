@@ -200,3 +200,90 @@ class TestDistribution(unittest.TestCase):
                  call('stats/band_3.csv', '/destination/stats/band_3.csv')]
 
         mock_copyfile.assert_has_calls(calls, any_order=True)
+
+    @patch('processing.distribution.Environment')
+    @patch('processing.distribution.distribute_statistics_local')
+    @patch('processing.distribution.distribute_statistics_remote')
+    @patch('processing.distribution.utilities.get_cache_hostname')
+    def test_distribute_statistics(self, mock_get_cache_hostname, mock_distribute_remote,
+                                   mock_distribute_local, mock_environment):
+        params = copy.deepcopy(self.params)
+        params['options']['destination_pw'] = 'password'
+        params['options']['destination_username'] = 'bilbo'
+
+        # First test local
+        env = mock_environment()
+        env.get_distribution_method.return_value = 'local'
+        distribution.distribute_statistics(immutability=True,
+                                           source_path='/source',
+                                           packaging_path='/destination',
+                                           parms=params)
+        mock_distribute_local.assert_called_once_with(True,
+                                                      'LC08_L1TP_128058_20160608_20170324_01_T1',
+                                                      '/source',
+                                                      '/destination/espa-bilbobaggins@usgs.gov-07012019-011111-111')
+
+        # Second test remote
+        mock_get_cache_hostname.return_value = 'hostname'
+        env = mock_environment()
+        env.get_cache_host_list.return_value = ['host_1', 'host_2']
+        env.get_distribution_method.return_value = 'remote'
+        distribution.distribute_statistics(immutability=True,
+                                           source_path='/source',
+                                           packaging_path='/destination',
+                                           parms=params)
+
+        mock_distribute_remote.assert_called_once_with(True,
+                                                       'LC08_L1TP_128058_20160608_20170324_01_T1',
+                                                       '/source',
+                                                       'hostname',
+                                                       '/data2/science_lsrd/LSRD'
+                                                           '/orders/espa-bilbobaggins@usgs.gov-07012019-011111-111',
+                                                       'bilbo',
+                                                       'password')
+
+    @patch('processing.distribution.Environment')
+    @patch('processing.distribution.distribute_product_local')
+    @patch('processing.distribution.distribute_product_remote')
+    def test_distribute_product(self, mock_distribute_remote, mock_distribute_local, mock_environment):
+
+        params = copy.deepcopy(self.params)
+        params['bridge_mode'] = True
+        params['options']['destination_pw'] = 'password'
+        params['options']['destination_username'] = 'bilbo'
+
+        # First test local
+        env = mock_environment()
+        env.get_distribution_method.return_value = 'local'
+
+        mock_distribute_local.return_value = 'product_file', 'cksum_file'
+
+        product_file, cksum_file = distribution.distribute_product(immutability=True,
+                                        product_name='product_name',
+                                        source_path='/source',
+                                        packaging_path='/packaging_path',
+                                        parms=params)
+
+        mock_distribute_local.assert_called_once_with(True,
+                                                      'product_name',
+                                                      '/source',
+                                                      '/packaging_path/2016/128/58')
+
+        # Second test remote
+        env = mock_environment()
+        env.get_distribution_method.return_value = 'remote'
+        mock_distribute_remote.return_value = 'product_file', 'cksum_file'
+
+        product_file, cksum_file = distribution.distribute_product(immutability=True,
+                                        product_name='product_name',
+                                        source_path='/source',
+                                        packaging_path='/packaging_path',
+                                        parms=params)
+
+        mock_distribute_remote.assert_called_once_with(True,
+                                                       'product_name',
+                                                       '/source',
+                                                       '/packaging_path',
+                                                       '/data2/science_lsrd/LSRD/orders/'
+                                                           'espa-bilbobaggins@usgs.gov-07012019-011111-111',
+                                                       params)
