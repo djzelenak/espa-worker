@@ -6,7 +6,7 @@ from mock import patch
 from mocks import mock_api_response, mock_invalid_response
 import processing
 from processing.main import convert_json
-from processing import parameters, config, config_utils, processor, distribution
+from processing import parameters, config, config_utils, processor, product_formatting
 
 class TestProcessor(unittest.TestCase):
     def setUp(self):
@@ -99,3 +99,4 @@ class TestProcessor(unittest.TestCase):
                     self.assertTrue(type(pp) == processing.processor.ModisTERRAProcessor)
                 if code == 'MYD':
                     self.assertTrue(type(pp) == processing.processor.ModisAQUAProcessor)
+
