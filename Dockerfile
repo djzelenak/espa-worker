@@ -40,8 +40,9 @@ RUN ansible-playbook /tmp/ansible/espa-worker.yml \
     && rm -rf /tmp/ansible
 
 # Copy over the espa-worker processing scripts
-COPY processing /processing
+RUN mkdir /src
+COPY processing /src/processing
+COPY test /src/test
+RUN chown -R espa:espa /src
 
-WORKDIR /processing
-
-ENTRYPOINT ["python", "main.py"]
+WORKDIR /src
