@@ -24,7 +24,7 @@ def convert_json(in_data):
     return None
 
 
-def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactive=False, user='espa'):
+def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactive=False, user=None):
     """
     Build the command line argument that calls docker run with the requested parameters
 
