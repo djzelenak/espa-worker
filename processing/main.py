@@ -248,6 +248,11 @@ def work(cfg, params, developer_sleep_mode=False):
         EspaLogging.configure(settings.PROCESSING_LOGGER, order=order_id,
                               product=product_id, debug=debug)
         logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
+
+        # add our stdout/stderr log streams
+        logger.addHandler(stdout_handler)
+        logger.addHandler(stderr_handler)
+
         logger.info('Processing {}:{}'.format(order_id, product_id))
 
         # Update the status in the database
@@ -330,11 +335,11 @@ def work(cfg, params, developer_sleep_mode=False):
 
     except api_interface.APIException as excep:
         # This is expected when scenes have been cancelled after queueing
-        base_logger.warning('Halt. API raised error: {}'.format(excep.message))
+        logger.warning('Halt. API raised error: {}'.format(excep.message))
 
     except Exception as excep:
         # First log the exception
-        base_logger.exception('Exception encountered stacktrace follows')
+        logger.exception('Exception encountered stacktrace follows')
 
         # Sleep the number of seconds for minimum request duration
         sleep(get_sleep_duration(cfg, start_time, dont_sleep))
@@ -348,7 +353,7 @@ def work(cfg, params, developer_sleep_mode=False):
                                            product_id,
                                            processing_location)
             except Exception:
-                base_logger.exception('Exception encountered stacktrace follows')
+                logger.exception('Exception encountered stacktrace follows')
 
     finally:
         pass
