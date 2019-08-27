@@ -4,7 +4,7 @@ pipeline {
 
     //-- Job Build Parameters --\\
     parameters {
-        string(name: 'DOCKERTAG', defaultValue: '0.0.1', description: 'Docker image tagname')
+        string(name: 'DOCKERTAG', defaultValue: 'latest', description: 'Docker image tagname')
     }
 
 
@@ -38,9 +38,8 @@ pipeline {
                 script {
                     // Test commands inside of the built image
                     CUSTOM_IMAGE.inside {
-                        // Show python version inside of container
-                        sh 'export OCDATAROOT=/usr/local/auxiliary/ocdata'
-                        sh 'landsat_l2gen'
+                        // Run Unit Tests
+                        nose2
                     }
                 }
             }
