@@ -8,6 +8,8 @@ License: NASA Open Source Agreement 1.3
 
 import os
 import sys
+import pwd
+import grp
 import shutil
 import glob
 from time import sleep
@@ -94,6 +96,14 @@ def package_product(immutability, source_directory, destination_directory,
         logger.info("Changing file permissions on %s to 0644"
                     % product_full_path)
         os.chmod(product_full_path, 0644)
+
+        uid = pwd.getpwnam("espa").pw_uid
+        gid = grp.getgrnam("ie").gr_gid
+
+        logger.info("Changing file ownership on {0} to user 'espa' UID {1} and "
+                    "group 'ie' GID {2}".format(product_full_path, uid, gid))
+
+        os.chown(product_full_path, uid, gid)
 
         # Verify that the archive is good
         output = ''
