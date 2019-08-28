@@ -38,10 +38,15 @@ pipeline {
                 script {
                     // Test commands inside of the built image
                     CUSTOM_IMAGE.inside {
-                        // Run Unit Tests
-                        nose2
                     }
                 }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploy steps here.'
+
             }
         }
 
