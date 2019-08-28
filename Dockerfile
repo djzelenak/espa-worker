@@ -1,7 +1,18 @@
 FROM centos:centos6.10
 LABEL maintainer="USGS LSRD http://eros.usgs.gov"
 
+#ENV GDAL_VERSION 1.11.1
+
 RUN yum -y update && yum clean all
+
+
+# Install GDAL and dependencies - leaving this here in case we ever want to build GDAL from scratch
+#ADD http://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar.gz /usr/local/src
+#RUN yum -y install cmake gcc gcc-c++ make
+#RUN cd /usr/local/src \
+#    && tar xf gdal-${GDAL_VERSION}.tar.gz \
+#    && cd gdal-${GDAL_VERSION} \
+#    && ./configure; make; make install
 
 # Install python2.7 requirements, python2.7, and pip
 RUN yum -y install epel-release \
@@ -32,6 +43,8 @@ RUN yum -y install wgrib \
     java-1.7.0-openjdk-devel \
     ansible \
     yum-utils \
+    gdal \
+    gdal-devel \
     && yum -y update && yum clean all
 
 # Ansible: the 'espa-worker.yml' playbook installs our ESPA science applications
