@@ -46,7 +46,7 @@ def config():
         de('espa_jobscale', 1, int),
         de('espa_datatype', 'landsat'),
         de('espa_min_request_duration_in_seconds', 0, int),
-        de('espa_work_dir', '/'),
+        de('espa_work_dir', '/home/espa'),
         de('espa_distribution_method', 'local'),
         de('espa_distribution_dir', '/output_product_cache'),
         de('espa_schema', '/usr/local/schema/espa_internal_metadata_v2_1.xsd'),
