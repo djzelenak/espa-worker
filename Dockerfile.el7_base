@@ -1,0 +1,129 @@
+FROM centos:centos7
+LABEL maintainer="USGS LSRD http://eros.usgs.gov"
+
+#ENV UNAME='espa'
+#ENV UGROUP='ie'
+
+ENV GDAL_VERSION 3.0.1
+
+RUN yum -y update && yum clean all && \
+	yum -y install epel-release && \
+	yum -y groupinstall 'development tools' && \
+	yum -y install \
+	zlib-devel \
+	openssl-devel \
+	sqlite-devel \
+	bzip2-devel \
+	xz-libs \
+	cmake \
+	gcc \
+	gcc-c++ \
+	make \
+	wget \
+	wgrib \
+	hdf5 \
+	hdf5-devel \
+	libxml2-devel \
+	libxslt \
+	libxslt-devel \
+	pigz \
+	java-1.7.0-openjdk \
+	java-1.7.0-openjdk-devel \
+	ansible \
+	yum-utils && \
+	yum -y update && \
+	yum clean all
+
+# Install PROJ 6 dependency for GDAL
+RUN wget https://download.osgeo.org/proj/proj-6.2.0.tar.gz && \
+	tar -xf proj-6.2.0.tar.gz && \
+	cd proj-6.2.0 && \
+	./configure && \
+	make && \
+	make install && \
+	cd / && \
+	rm -rf proj-6.2.0*
+
+# Install GDAL
+RUN wget http://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar.gz && \
+	tar xf gdal-${GDAL_VERSION}.tar.gz && \
+	cd gdal-${GDAL_VERSION} && \
+	./configure && \
+	make && \
+	make install && \
+	cd / && \
+	rm -rf gdal-${GDAL_VERSION}
+
+# Install pip and gdal python bindings for the system python 2.7 interpreter
+# RUN curl https://bootstrap.pypa.io/get-pip.py | python2.7
+RUN yum -y install python-pip gdal-python
+
+# Install python3 and requirements
+#RUN yum -y install epel-release \
+#    && yum groupinstall -y 'development tools' \
+#    && yum -y install zlib-devel openssl-devel sqlite-devel bzip2-devel wget libffi-devel \
+#    && wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz \
+#    && tar xvfJ Python-${PYTHON_VERSION}.tar.xz \
+#    && cd Python-${PYTHON_VERSION} \
+#    && ./configure --prefix=/usr/local \
+#    && make \
+#    && make install \
+#    && cd / \
+#    && rm -rf Python-${PYTHON_VERSION}* \
+#    && curl https://bootstrap.pypa.io/get-pip.py | python3
+
+# Install ESPA dependencies
+#RUN yum -y install wgrib \
+#    hdf5 \
+#    hdf5-devel \
+#    libxml2-devel \
+#    libxslt \
+#    libxslt-devel \
+#    pigz \
+#    java-1.7.0-openjdk \
+#    java-1.7.0-openjdk-devel \
+#    ansible \
+#    yum-utils \
+#    && yum -y update && yum clean all
+
+# Install Miniconda
+#RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+#    && chmod 777 Miniconda3-latest-Linux-x86_64.sh \
+#    && ./Miniconda3-latest-Linux-x86_64.sh -b -p /usr/local/miniconda
+
+# Install required packages
+COPY requirements.txt /requirements.txt
+RUN pip install -r requirements.txt && \
+	rm -f requirements.txt
+
+#RUN eval "$(/usr/local/miniconda/bin/conda shell.bash hook)" \
+#    && conda init bash\
+#    && conda config --set auto_activate_base false \
+#    && conda create -n py27 python=2.7 gdal matplotlib -y \
+#    && conda activate py27 \
+#    && pip install -r requirements.txt
+
+# Ansible: the 'espa-worker.yml' playbook installs our ESPA science applications
+# COPY playbook /tmp/ansible/
+#RUN ansible-playbook /tmp/ansible/espa-worker.yml \
+#    && rm -rf /tmp/ansible
+
+# Copy over the startup shell script
+#COPY run/startup.sh /usr/local/bin/startup.sh
+#RUN ln -s /usr/local/bin/startup.sh /
+# RUN chmod 777 startup.sh
+
+# SHELL '/bin/bash -c'
+
+# Copy over the espa-worker processing scripts
+#RUN mkdir /home/$UNAME/espa-processing
+#COPY processing /home/$UNAME/espa-processing/processing
+#COPY test /home/$UNAME/espa-processing/test
+#RUN chown -R $UNAME:$UGROUP /home/$UNAME/ \
+#    && ln -s /home/$UNAME/espa-procesing/ /src
+
+# Set the username and working directory
+#USER $UNAME
+#WORKDIR /home/$UNAME
+
+#ENTRYPOINT ['/startup.sh']
