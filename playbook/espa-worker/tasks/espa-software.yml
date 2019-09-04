@@ -28,7 +28,13 @@
 # Install espa-release group
 - name: espa-software|Install espa-release group
   yum:
-    name: "@espa-release"
+    name: "espa-release-info-{{ espa_release }}"
+    state: installed
+
+# Install espa-release-aux
+- name: espa-software|Install espa-release-aux-info
+  yum:
+    name: "espa-release-aux-info-{{ espa_aux }}"
     state: installed
 
 # Install espa-python library
