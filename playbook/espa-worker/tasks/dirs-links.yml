@@ -86,5 +86,6 @@
     src: "/espa-storage/orders"
     dest: "/output_product_cache"
     state: link
-    owner: root
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
     mode: 0777
