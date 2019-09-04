@@ -48,6 +48,32 @@ base_logger.addHandler(stderr_handler)
 def remove_single_quotes(instring):
     return instring.replace("'", '')
 
+def check_netrc():
+    """
+    make a .netrc in the home dir
+    Returns:
+
+    """
+    home = os.environ.get('HOME')
+    urs_machine = os.environ.get('URS_MACHINE')
+    urs_login = os.environ.get('URS_LOGIN')
+    urs_pw = os.environ.get('URS_PASSWORD')
+
+    if home is None:
+        base_logger.exception('No home directory found!')
+
+    if urs_machine is None or urs_login is None or urs_pw is None:
+        base_logger.exception('URS credentials not found!')
+        sys.exit(1)
+
+    netrc = os.path.join(home, '.netrc')
+
+    with open(netrc, 'w') as f:
+        f.write('machine {0}\n'.format(urs_machine))
+        f.write('login {0}\n'.format(urs_login))
+        f.write('password {0}'.format(urs_pw))
+
+    base_logger.info('Created .netrc file!')
 
 def convert_json(data):
     if type(data) is str:
@@ -377,6 +403,8 @@ def main(data):
 
     # export values for the container environment
     config.export_environment_variables(cfg)
+
+    check_netrc()
 
     base_logger.debug('OS ENV - {0}'.format(['{0}: {1}'.format(var, val) for var, val in os.environ.items()]))
     base_logger.info('configured parameters - {0}'.format(['{0}: {1}'.format(var, val) for var, val in cfg.items()]))
