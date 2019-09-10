@@ -27,6 +27,7 @@ RUN yum -y update && yum clean all && \
 	java-1.7.0-openjdk \
 	java-1.7.0-openjdk-devel \
 	ansible \
+	tkinter \
 	yum-utils && \
 	yum -y update && \
 	yum clean all
@@ -53,9 +54,3 @@ RUN wget http://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar
 
 # Install pip and gdal python bindings for the system python 2.7 interpreter
 RUN yum -y install python-pip gdal-python
-
-# Install required packages
-COPY requirements.txt /requirements.txt
-RUN pip install -r requirements.txt && \
-	rm -f requirements.txt
-
