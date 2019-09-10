@@ -11,3 +11,4 @@ mock==2.0.0
 nose2==0.9.1
 nose2-cov==1.0a4
 docker==4.0.2
+matplotlib==2.2.4
