@@ -166,11 +166,12 @@ def get_cache_hostname(host_names):
     return get_hostname()
 
 
-def create_directory(directory):
+def create_directory(directory, mode=0755):
     """Create the specified directory with some error checking
 
     Args:
         directory (str): The full path to create.
+        mode (int): Octal representation of mode
 
     Raises:
         Exception()
@@ -178,7 +179,8 @@ def create_directory(directory):
 
     # Create/Make sure the directory exists
     try:
-        os.makedirs(directory, mode=0755)
+        os.makedirs(directory)  # use the default mode 0777
+        os.chmod(directory, mode)  # use chmod to explicitly set the desired mode
     except OSError as ose:
         if ose.errno == errno.EEXIST and os.path.isdir(directory):
             # With how we operate, as long as it is a directory, we do not

@@ -362,8 +362,8 @@ def http_transfer_file(download_url, destination_file):
         # done = True
 
     except Exception:
-        msg = "Transfer Failed - HTTP - {0}".format(download_url)
-        # logger.exception(msg)
+        logger.exception("Transfer Issue - HTTP - {0}".format(download_url))
+        msg = "Connection timed out"
         # if retry_attempt > 2:
         raise Exception(msg)
         # retry_attempt += 1

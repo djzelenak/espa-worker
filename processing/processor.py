@@ -1906,8 +1906,11 @@ class PlotProcessor(ProductProcessor):
         L8_TIRS1_NAME = 'Landsat 8 TIRS1'
         L8_TIRS2_NAME = 'Landsat 8 TIRS2'
         TERRA_NAME = 'Terra'
+        TERRA_NAME_DAILY = 'Terra 09GA'
         AQUA_NAME = 'Aqua'
+        AQUA_NAME_DAILY = 'Aqua 09GA'
         VIIRS_NAME = 'Viirs'
+        VIIRS_NAME_DAILY = 'Viirs 09GA'
 
         SearchInfo = namedtuple('SearchInfo', ('key', 'filter_list'))
 
@@ -2140,7 +2143,7 @@ class PlotProcessor(ProductProcessor):
         _lst_night_info = [SearchInfo(TERRA_NAME, ['MOD*LST_Night_*.stats']),
                            SearchInfo(AQUA_NAME, ['MYD*LST_Night_*.stats'])]
 
-        # MODIS and Landsat NDVI files
+        # MODIS, VIIRS, and Landsat NDVI files
         _ndvi_info = [SearchInfo(L4_NAME, ['LT4*_sr_ndvi.stats',
                                            'LT04*_sr_ndvi.stats']),
                       SearchInfo(L5_NAME, ['LT5*_sr_ndvi.stats',
@@ -2150,7 +2153,10 @@ class PlotProcessor(ProductProcessor):
                       SearchInfo(L8_NAME, ['LC8*_sr_ndvi.stats',
                                            'LC08*_sr_ndvi.stats']),
                       SearchInfo(TERRA_NAME, ['MOD*_NDVI.stats']),
-                      SearchInfo(AQUA_NAME, ['MYD*_NDVI.stats'])]
+                      SearchInfo(AQUA_NAME, ['MYD*_NDVI.stats']),
+                      SearchInfo(TERRA_NAME_DAILY, ['MOD*_sr_ndvi.stats']),
+                      SearchInfo(AQUA_NAME_DAILY, ['MYD*_sr_ndvi.stats']),
+                      SearchInfo(VIIRS_NAME_DAILY, ['VNP*_sr_ndvi.stats'])]
 
         # MODIS and VIIRS daily NDVI
         _09ga_ndvi_info = [SearchInfo(L4_NAME, ['LT4*_sr_ndvi.stats',

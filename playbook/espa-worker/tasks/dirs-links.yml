@@ -11,38 +11,6 @@
     group: "{{ app_group }}"
     mode: 0700
 
-- name: dirs-links|Directory - App User's bin
-  file:
-    path: "/home/{{ app_user }}/bin"
-    state: directory
-    owner: "{{ app_user }}"
-    group: "{{ app_group }}"
-    mode: 0755
-
-- name: dirs-links|Directory - App User's ssh
-  file:
-    path: "/home/{{ app_user }}/.ssh"
-    state: directory
-    owner: "{{ app_user }}"
-    group: "{{ app_group }}"
-    mode: 0700
-
-- name: dirs-links|Directory - App User's usgs
-  file:
-    path: "/home/{{ app_user }}/.usgs"
-    state: directory
-    owner: "{{ app_user }}"
-    group: "{{ app_group }}"
-    mode: 0755
-
-- name: dirs-links|Directory - App User's usgs/espa
-  file:
-    path: "/home/{{ app_user }}/.usgs/espa"
-    state: directory
-    owner: "{{ app_user }}"
-    group: "{{ app_group }}"
-    mode: 0755
-
 - name: dirs-links|Directory - Ledaps
   file:
     path: "/usr/local/ledaps"
