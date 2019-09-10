@@ -115,18 +115,6 @@
     name: "espa-plotting-{{ espa_plotting }}"
     state: installed
 
-# Install gdal-espa
-- name: espa-software|Install gdal-espa
-  yum:
-    name: "gdal-espa-{{ gdal_espa }}"
-    state: installed
-
-# Install proj-espa
-- name: espa-software|Install proj-espa
-  yum:
-    name: "proj-espa-{{ proj_espa }}"
-    state: installed
-
 # Install espa-python library
 - name: espa-software|Install espa-python-library
   pip:

@@ -23,6 +23,6 @@ espa_surface_water_extent_cfbwd: 1.1.0
 espa_surface_water_extent_dswe: 2.3.0
 espa_elevation: 2.3.1
 espa_reprojection: 1.1.1
-espa_plotting: 0.4.0
+espa_plotting: 0.4.1
 gdal_espa: 1.11.1
 proj_espa: 4.8.0
