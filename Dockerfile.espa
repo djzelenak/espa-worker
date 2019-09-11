@@ -4,8 +4,7 @@ LABEL maintainer="USGS LSRD http://eros.usgs.gov"
 ENV UNAME='espa'
 ENV UGROUP='ie'
 
-# Python
-# Install required packages
+# Install required Python packages
 COPY requirements.txt /requirements.txt
 RUN pip install -r requirements.txt && \
 	rm -f requirements.txt
@@ -29,4 +28,3 @@ RUN chown -R $UNAME:$UGROUP /home/$UNAME/ \
 # Set the username and working directory
 USER $UNAME
 WORKDIR /home/$UNAME
-

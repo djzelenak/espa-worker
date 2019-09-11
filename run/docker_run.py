@@ -24,7 +24,7 @@ def convert_json(in_data):
     return None
 
 
-def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactive=False, user=None):
+def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactive=False, user='espa'):
     """
     Build the command line argument that calls docker run with the requested parameters
 
@@ -45,7 +45,10 @@ def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactiv
 
     envs = [
         '--env ESPA_API=${ESPA_API}',
-        '--env ASTER_GED_SERVER_NAME=${ASTER_GED_SERVER_NAME}'
+        '--env ASTER_GED_SERVER_NAME=${ASTER_GED_SERVER_NAME}',
+        '--env URS_MACHINE=${URS_MACHINE}',
+        '--env URS_LOGIN=${URS_LOGIN}',
+        '--env URS_PASSWORD=${URS_PASSWORD}'
     ]
 
     image_tag = [
@@ -55,27 +58,33 @@ def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactiv
     if interactive:
         cmd = ['docker run',
                '-it',
-               '--rm',
-               '--entrypoint /bin/bash']
+               '--rm']
+               
     else:
         data = [
             "'{0}'".format(convert_json(data))  # This converts the json back into a string
         ]
 
         cmd = ['docker run',
-               '--rm']
+               '--rm',
+               '--entrypoint',
+               'python']
 
-    if user:
-        user = ['--user',
-                user]
+        run = ['/src/processing/main.py']
 
-        cmd.extend(user)
+#    if user:
+#        user = ['--user',
+#                user]
+#
+#        cmd.extend(user)
 
     cmd.extend(mounts)
     cmd.extend(envs)
     cmd.extend(image_tag)
+#    cmd.extend(run)
 
     if not interactive and data is not None:
+        cmd.extend(run)
         cmd.extend(data)
 
     return ' '.join(cmd)

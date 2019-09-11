@@ -2,6 +2,7 @@ FROM centos:centos7
 LABEL maintainer="USGS LSRD http://eros.usgs.gov"
 
 ENV GDAL_VERSION 3.0.1
+ENV PROJ_VERSION 6.2.0
 
 RUN yum -y update && yum clean all && \
 	yum -y install epel-release && \
@@ -32,15 +33,15 @@ RUN yum -y update && yum clean all && \
 	yum -y update && \
 	yum clean all
 
-# Install PROJ 6 dependency for GDAL
-RUN wget https://download.osgeo.org/proj/proj-6.2.0.tar.gz && \
-	tar -xf proj-6.2.0.tar.gz && \
-	cd proj-6.2.0 && \
+# Install PROJ dependency for GDAL
+RUN wget https://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz && \
+	tar -xf proj-${PROJ_VERSION}.tar.gz && \
+	cd proj-${PROJ_VERSION} && \
 	./configure && \
 	make && \
 	make install && \
 	cd / && \
-	rm -rf proj-6.2.0*
+	rm -rf proj-${PROJ_VERSION}*
 
 # Install GDAL
 RUN wget http://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar.gz && \
