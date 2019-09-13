@@ -51,7 +51,7 @@ RUN wget http://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar
 	make && \
 	make install && \
 	cd / && \
-	rm -rf gdal-${GDAL_VERSION}
+	rm -rf gdal-${GDAL_VERSION}*
 
 # Install pip and gdal python bindings for the system python 2.7 interpreter
 RUN yum -y install python-pip gdal-python
