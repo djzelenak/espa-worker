@@ -1,4 +1,4 @@
-FROM usgseros/espa-worker:el7_base-alpha.2
+FROM usgseros/espa-worker:el7_base-alpha.3
 LABEL maintainer="USGS LSRD http://eros.usgs.gov"
 
 ENV UNAME='espa'
@@ -17,6 +17,12 @@ RUN ln -s /usr/bin/python /usr/local/bin/python && \
 COPY playbook /tmp/ansible/
 RUN ansible-playbook /tmp/ansible/espa-worker.yml && \
 	rm -rf /tmp/ansible
+
+# Install some remaining dependencies
+RUN yum -y install netcdf4-python && \
+    yum -y install python2-numpy && \
+    yum -y install scipy && \
+    pip install scipy
 
 # Copy over the espa-worker processing scripts
 RUN mkdir /home/$UNAME/espa-processing

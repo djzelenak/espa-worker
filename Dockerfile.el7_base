@@ -58,9 +58,3 @@ RUN yum -y install python-pip gdal-python
 
 # Install matplotlib
 RUN yum -y install python-matplotlib && yum -y update && yum clean all
-
-# Install scipy numpy and netcdf4 headers
-RUN yum -y install python2-numpy netcdf4-python scipy && yum -y update && yum clean all
-
-# TODO is this necessary
-RUN pip install scipy
