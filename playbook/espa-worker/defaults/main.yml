@@ -26,3 +26,4 @@ espa_reprojection: 1.1.1
 espa_plotting: 0.4.1
 gdal_espa: 1.11.1
 proj_espa: 4.8.0
+modtran_espa: 5.3.2
