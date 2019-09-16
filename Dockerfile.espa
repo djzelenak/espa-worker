@@ -25,6 +25,9 @@ COPY test /home/$UNAME/espa-processing/test
 RUN chown -R $UNAME:$UGROUP /home/$UNAME/ \
     && ln -s /home/$UNAME/espa-processing/ /src
 
+# Update PYTHONPATH to find espa-product-formatter modules
+ENV PYTHONPATH=/usr/local/espa-product-formatter/python
+
 # Set the username and working directory
 USER $UNAME
 WORKDIR /home/$UNAME
