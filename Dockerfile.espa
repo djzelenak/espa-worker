@@ -1,4 +1,4 @@
-FROM usgseros/espa-worker:el7_base-alpha.1
+FROM usgseros/espa-worker:el7_base-alpha.2
 LABEL maintainer="USGS LSRD http://eros.usgs.gov"
 
 ENV UNAME='espa'
