@@ -115,6 +115,12 @@
     name: "espa-plotting-{{ espa_plotting }}"
     state: installed
 
+# Install modtran
+- name: espa-software|Install modtran-espa
+  yum:
+    name: "modtran-espa-{{ modtran_espa }}"
+    state: installed
+
 # Install espa-python library
 - name: espa-software|Install espa-python-library
   pip:
