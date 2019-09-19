@@ -45,8 +45,38 @@ stderr_handler.setFormatter(formatter)
 stderr_handler.addFilter(LevelFilter(30, 50))
 base_logger.addHandler(stderr_handler)
 
+
 def remove_single_quotes(instring):
     return instring.replace("'", '')
+
+
+def check_netrc():
+    """
+    make a .netrc in the home dir
+    Returns:
+
+    """
+    home = os.environ.get('HOME')
+    urs_machine = os.environ.get('URS_MACHINE')
+    urs_login = os.environ.get('URS_LOGIN')
+    urs_pw = os.environ.get('URS_PASSWORD')
+
+    if home is None:
+        base_logger.exception('No home directory found!')
+
+    if urs_machine is None or urs_login is None or urs_pw is None:
+        msg = 'URS credentials not found!'
+        base_logger.exception(msg)
+        raise Exception(msg)
+
+    netrc = os.path.join(home, '.netrc')
+
+    with open(netrc, 'w') as f:
+        f.write('machine {0}\n'.format(urs_machine))
+        f.write('login {0}\n'.format(urs_login))
+        f.write('password {0}'.format(urs_pw))
+
+    return None
 
 
 def convert_json(data):
@@ -204,13 +234,14 @@ def work(cfg, params, developer_sleep_mode=False):
     # This will be the docker container ID
     processing_location = socket.gethostname()
 
-    base_logger.debug('processing container ID: {0}'.format(processing_location))
+    # Use the base_logger initially, if an exception occurs before the processing logger is configured
+    # the base_logger will handle log it
+    logger = base_logger
 
     if not parameters.test_for_parameter(params, 'options'):
         raise ValueError('Error missing JSON [options] record')
 
-    # Reset these for each line
-    # TODO: this might be unnecessary - carryover from espa-processing
+    # Create these objects so they exist if an exception occurs
     (server, order_id, product_id) = (None, None, None)
 
     start_time = datetime.datetime.now()
@@ -247,6 +278,8 @@ def work(cfg, params, developer_sleep_mode=False):
         # Configure and get the logger for this order request
         EspaLogging.configure(settings.PROCESSING_LOGGER, order=order_id,
                               product=product_id, debug=debug)
+
+        # Replace the base_logger with the processing_logger
         logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
         # add our stdout/stderr log streams
@@ -255,15 +288,18 @@ def work(cfg, params, developer_sleep_mode=False):
 
         logger.info('Processing {}:{}'.format(order_id, product_id))
 
-        # Update the status in the database
         if parameters.test_for_parameter(cfg, 'espa_api'):
             if cfg['espa_api'] != 'skip_api':
+                logger.info('Attempting connection to {0}'.format(cfg['espa_api']))
                 server = api_interface.api_connect(cfg['espa_api'])
 
-                base_logger.info('Attemped connection to {0}'.format(cfg['espa_api']))
-                base_logger.info('API connect response: {0}'.format(server))
+                getresp, getstatus = server.request('get')
+
+                logger.debug('API "get" response: {0}'.format(getresp))
+                logger.info('API response status: {0}'.format(getstatus))
 
                 if server is not None:
+                    # Update the unit status in the database
                     status = server.update_status(product_id, order_id,
                                                   processing_location,
                                                   'processing')
@@ -273,12 +309,12 @@ def work(cfg, params, developer_sleep_mode=False):
 
                 else:
                     msg = ('Failed connecting to API {0}'.format(cfg['espa_api']))
-                    base_logger.critical(msg)
+                    logger.critical(msg)
                     raise api_interface.APIException(msg)
 
         else:
             msg = ('ESPA_API is not defined!')
-            base_logger.critical(msg)
+            logger.critical(msg)
             raise api_interface.APIException(msg)
 
         if product_id != 'plot':
@@ -300,44 +336,44 @@ def work(cfg, params, developer_sleep_mode=False):
                 #       initialization is validate the input parameters.
                 # ----------------------------------------------------------------
 
-            destination_product_file = 'ERROR'
-            destination_cksum_file = 'ERROR'
+        destination_product_file = 'ERROR'
+        destination_cksum_file = 'ERROR'
 
-            pp = None
+        pp = None
 
-            try:
-                # All processors are implemented in the processor module
-                pp = processor.get_instance(cfg, params)
+        try:
+            # All processors are implemented in the processor module
+            pp = processor.get_instance(cfg, params)
 
-                (destination_product_file, destination_cksum_file) = pp.process()
+            (destination_product_file, destination_cksum_file) = pp.process()
 
-            finally:
-                # Free disk space to be nice to the whole system.
-                if pp is not None:
-                    pp.remove_product_directory()
+        finally:
+            # Free disk space to be nice to the whole system.
+            if pp is not None:
+                pp.remove_product_directory()
 
-            # Sleep the number of seconds for minimum request duration
-            sleep(get_sleep_duration(cfg, start_time, dont_sleep))
+        # Sleep the number of seconds for minimum request duration
+        sleep(get_sleep_duration(cfg, start_time, dont_sleep))
 
-            archive_log_files(order_id, product_id)
+        archive_log_files(order_id, product_id)
 
-            # Everything was successful so mark the scene complete
-            if server is not None:
-                status = server.mark_scene_complete(product_id, order_id,
-                                                    processing_location,
-                                                    destination_product_file,
-                                                    destination_cksum_file,
-                                                    '') # sets log_file_contents to empty string ''
-                if not status:
-                    msg = ('Failed processing API call to mark_scene_complete')
+        # Everything was successful so mark the scene complete
+        if server is not None:
+            status = server.mark_scene_complete(product_id, order_id,
+                                                processing_location,
+                                                destination_product_file,
+                                                destination_cksum_file,
+                                                '') # sets log_file_contents to empty string ''
+            if not status:
+                msg = ('Failed processing API call to mark_scene_complete')
 
-                    raise api_interface.APIException(msg)
+                raise api_interface.APIException(msg)
 
     except api_interface.APIException as excep:
         # This is expected when scenes have been cancelled after queueing
         logger.warning('Halt. API raised error: {}'.format(excep.message))
 
-    except Exception as excep:
+    except Exception:
         # First log the exception
         logger.exception('Exception encountered stacktrace follows')
 
@@ -348,6 +384,7 @@ def work(cfg, params, developer_sleep_mode=False):
 
         if server is not None:
             try:
+                logging.debug('Setting product error')
                 status = set_product_error(server,
                                            order_id,
                                            product_id,
@@ -377,6 +414,8 @@ def main(data):
 
     # export values for the container environment
     config.export_environment_variables(cfg)
+
+    check_netrc()
 
     base_logger.debug('OS ENV - {0}'.format(['{0}: {1}'.format(var, val) for var, val in os.environ.items()]))
     base_logger.info('configured parameters - {0}'.format(['{0}: {1}'.format(var, val) for var, val in cfg.items()]))

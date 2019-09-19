@@ -1,0 +1,60 @@
+FROM centos:centos7
+LABEL maintainer="USGS LSRD http://eros.usgs.gov"
+
+ENV GDAL_VERSION 3.0.1
+ENV PROJ_VERSION 6.2.0
+
+RUN yum -y update && yum clean all && \
+	yum -y install epel-release && \
+	yum -y groupinstall 'development tools' && \
+	yum -y install \
+	zlib-devel \
+	openssl-devel \
+	sqlite-devel \
+	bzip2-devel \
+	xz-libs \
+	cmake \
+	gcc \
+	gcc-c++ \
+	make \
+	wget \
+	wgrib \
+	hdf5 \
+	hdf5-devel \
+	libxml2-devel \
+	libxslt \
+	libxslt-devel \
+	pigz \
+	java-1.7.0-openjdk \
+	java-1.7.0-openjdk-devel \
+	ansible \
+	tkinter \
+	yum-utils && \
+	yum -y update && \
+	yum clean all
+
+# Install PROJ dependency for GDAL
+RUN wget https://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz && \
+	tar -xf proj-${PROJ_VERSION}.tar.gz && \
+	cd proj-${PROJ_VERSION} && \
+	./configure && \
+	make && \
+	make install && \
+	cd / && \
+	rm -rf proj-${PROJ_VERSION}*
+
+# Install GDAL
+RUN wget http://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar.gz && \
+	tar xf gdal-${GDAL_VERSION}.tar.gz && \
+	cd gdal-${GDAL_VERSION} && \
+	./configure && \
+	make && \
+	make install && \
+	cd / && \
+	rm -rf gdal-${GDAL_VERSION}*
+
+# Install pip and gdal python bindings for the system python 2.7 interpreter
+RUN yum -y install python-pip gdal-python
+
+# Install matplotlib
+RUN yum -y install python-matplotlib && yum -y update && yum clean all

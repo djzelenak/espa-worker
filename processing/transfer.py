@@ -10,12 +10,14 @@ import shutil
 import ftplib
 import urllib2
 import requests
+from requests.adapters import HTTPAdapter
 import random
 from time import sleep
 
 import settings
 import utilities
 from logging_tools import EspaLogging
+from utilities import execute_cmd
 
 
 def copy_files_to_directory(source_files, destination_directory):
@@ -338,40 +340,40 @@ def http_transfer_file(download_url, destination_file):
 # Third way
     session = requests.Session()
 
-    session.mount('http://', requests.adapters.HTTPAdapter(max_retries=3))
-    session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
+    session.mount('http://', HTTPAdapter(max_retries=1))
+    session.mount('https://', HTTPAdapter(max_retries=1))
 
-    retry_attempt = 0
-    done = False
-    while not done:
-        req = None
-        try:
-            # Use .netrc credentials by default since no auth= specified
-            # we'll use this method for now to get through to the lp daac
-            req = session.get(url=download_url, timeout=300.0)
+    # retry_attempt = 0
+    # done = False
+    # while not done:
+    req = None
+    try:
+        # Use .netrc credentials by default since no auth= specified
+        # we'll use this method for now to get through to the lp daac
+        req = session.get(url=download_url, timeout=300.0)
 
-            if not req.ok:
-                logger.error("Transfer Failed - HTTP")
-                req.raise_for_status()
+        if not req.ok:
+            logger.error("Transfer Failed - HTTP")
+            req.raise_for_status()
 
-            with open(destination_file, 'wb') as local_fd:
-                local_fd.write(req.content)
+        with open(destination_file, 'wb') as local_fd:
+            local_fd.write(req.content)
 
-            done = True
+        # done = True
 
-        except Exception:
-            logger.exception("Transfer Issue - HTTP")
-            if retry_attempt > 3:
-                raise Exception("Transfer Failed - HTTP"
-                                " - exceeded retry limit")
-            retry_attempt += 1
-            # Sleep randomly from 1 to 10 minutes
-            sleep_seconds = int(random.random()*540)+60
-            sleep(sleep_seconds)
+    except Exception:
+        logger.exception("Transfer Issue - HTTP - {0}".format(download_url))
+        msg = "Connection timed out"
+        # if retry_attempt > 2:
+        raise Exception(msg)
+        # retry_attempt += 1
+        # Sleep randomly from 1 to 10 minutes
+        # sleep_seconds = int(random.random()*540)+60
+        # sleep(sleep_seconds)
 
-        finally:
-            if req is not None:
-                req.close()
+    finally:
+        if req is not None:
+            req.close()
 
     logger.info("Transfer Complete - HTTP")
 
