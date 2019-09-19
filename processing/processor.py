@@ -2158,19 +2158,6 @@ class PlotProcessor(ProductProcessor):
                       SearchInfo(AQUA_NAME_DAILY, ['MYD*_sr_ndvi.stats']),
                       SearchInfo(VIIRS_NAME_DAILY, ['VNP*_sr_ndvi.stats'])]
 
-        # MODIS and VIIRS daily NDVI
-        _09ga_ndvi_info = [SearchInfo(L4_NAME, ['LT4*_sr_ndvi.stats',
-                                           'LT04*_sr_ndvi.stats']),
-                           SearchInfo(L5_NAME, ['LT5*_sr_ndvi.stats',
-                                           'LT05*_sr_ndvi.stats']),
-                           SearchInfo(L7_NAME, ['LE7*_sr_ndvi.stats',
-                                           'LE07*_sr_ndvi.stats']),
-                           SearchInfo(L8_NAME, ['LC8*_sr_ndvi.stats',
-                                           'LC08*_sr_ndvi.stats']),
-                           SearchInfo(TERRA_NAME, ['MOD*_sr_ndvi.stats']),
-                           SearchInfo(AQUA_NAME, ['MYD*_sr_ndvi.stats']),
-                           SearchInfo(VIIRS_NAME, ['VNP*_sr_ndvi.stats'])]
-
         # MODIS and Landsat EVI files
         _evi_info = [SearchInfo(L4_NAME, ['LT4*_sr_evi.stats',
                                           'LT04*_sr_evi.stats']),
@@ -2269,7 +2256,6 @@ class PlotProcessor(ProductProcessor):
                           (_lst_day_info, 'LST Day'),
                           (_lst_night_info, 'LST Night'),
                           (_ndvi_info, 'NDVI'),
-                          (_09ga_ndvi_info, 'NDVI'),
                           (_evi_info, 'EVI'),
                           (_savi_info, 'SAVI'),
                           (_msavi_info, 'MSAVI'),
