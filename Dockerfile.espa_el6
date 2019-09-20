@@ -1,0 +1,58 @@
+#FROM usgseros/espa-worker:el7_base-alpha.3
+FROM worker:el6-base
+LABEL maintainer="USGS LSRD http://eros.usgs.gov"
+
+ENV UNAME='espa'
+ENV UGROUP='ie'
+
+# Install python 2.7
+# https://www.softwarecollections.org/en/scls/rhscl/python27/
+# 1. Install a package with repository for your system:
+# On CentOS, install package centos-release-scl available in CentOS repository:
+RUN yum install -y centos-release-scl
+
+# On RHEL, enable RHSCL repository for you system:
+RUN yum-config-manager --enable rhel-server-rhscl-7-rpms
+
+# 2. Install the collection:
+RUN yum install -y python27
+
+# 3. Start using software collections:
+RUN scl enable python27 bash
+
+# Install required Python packages
+ENV PKG_CONFIG_PATH /opt/rh/python27/root/usr/lib64/pkgconfig
+ENV LD_LIBRARY_PATH /opt/rh/python27/root/usr/lib64
+ENV PATH /opt/rh/python27/root/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+COPY requirements.txt /requirements.txt
+RUN export LD_LIBRARY_PATH=/opt/rh/python27/root/usr/lib64 && /opt/rh/python27/root/usr/bin/pip install -r requirements.txt && \
+	rm -f requirements.txt
+
+# Create symlinks so that ESPA can find the python interpreter
+RUN ln -s /opt/rh/python27/root/usr/bin/python /usr/local/bin/python && \
+	ln -s /opt/rh/python27/root/usr/bin/pip /usr/local/bin/pip
+
+# Ansible: the 'espa-worker.yml' playbook installs our ESPA science applications
+COPY playbook /tmp/ansible/
+RUN ansible-playbook /tmp/ansible/espa-worker.yml && \
+	rm -rf /tmp/ansible
+
+# Install some remaining dependencies
+RUN yum -y install netcdf4-python && \
+    yum -y install python2-numpy && \
+    yum -y install scipy && \
+    pip install scipy==0.16
+
+# Copy over the espa-worker processing scripts
+RUN mkdir /home/$UNAME/espa-processing
+COPY processing /home/$UNAME/espa-processing/processing
+COPY test /home/$UNAME/espa-processing/test
+RUN chown -R $UNAME:$UGROUP /home/$UNAME/ \
+    && ln -s /home/$UNAME/espa-processing/ /src
+
+# Update PYTHONPATH to find espa-product-formatter modules
+ENV PYTHONPATH=/usr/local/espa-product-formatter/python
+
+# Set the username and working directory
+USER $UNAME
+WORKDIR /home/$UNAME
