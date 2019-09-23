@@ -3,16 +3,22 @@
 # Last Updated: See 'git log -p <filename>'
 # Recent Changes: See 'git log -p <filename>'
 
+# Install required system packages (espa_dependencies defined in external vars file)
+- name: espa-software|Install ESPA required system packages
+  yum:
+    name: "{{ espa_dependencies }}"
+    state: installed
+
 # Install LSRD Repo
-#- name: espa-software|Add LSRD Custom Repo
-#  yum_repository:
-#    name: lsrd
-#    description: LSRD - System Package Repository
-#    file: lsrd
-#    baseurl: http://lsrdrepo.cr.usgs.gov/repo/lsrd/el6/
-#    gpgcheck: no
-#    enabled: yes
-#    metadata_expire: 300
+- name: espa-software|Add LSRD Custom Repo
+  yum_repository:
+    name: lsrd
+    description: LSRD - System Package Repository
+    file: lsrd
+    baseurl: http://lsrdrepo.cr.usgs.gov/repo/lsrd/el6/
+    gpgcheck: no
+    enabled: yes
+    metadata_expire: 300
 
 # Install ESPA Repo
 - name: espa-software|Add ESPA Custom Repo
@@ -24,6 +30,18 @@
     gpgcheck: no
     enabled: yes
     metadata_expire: 300
+
+# Install python from espa repo
+- name: espa-software|Install LSRD Python
+  yum:
+    name: "python-lsrd-{{ python_lsrd }}"
+    state: installed
+
+# Install dans-gdal-scripts-espa
+- name: espa-software|Install dans-gdal-scripts-espa
+  yum:
+    name: "dans-gdal-scripts-espa-{{ dans_gdal_scripts_espa }}"
+    state: installed
 
 # Install espa-product-formatter
 - name: espa-software|Install espa-product-formatter
@@ -115,11 +133,58 @@
     name: "espa-plotting-{{ espa_plotting }}"
     state: installed
 
-# Install modtran
-- name: espa-software|Install modtran-espa
+# Install openjdk packages required
+- name: espa-software|Install OpenJDK 7 and Devel Release
   yum:
-    name: "modtran-espa-{{ modtran_espa }}"
+    name: "{{ oracle_java_package }}"
     state: installed
+
+# Check to see if pip exists, store answer in "pip_path"
+- name: espa-software|Check for pip
+  stat:
+    path: "/usr/local/bin/pip"
+  register: pip_path
+
+# Copy pip script to system if pip did not exist
+- name: espa-software|No Pip - Copy get-pip.py for pip install
+  copy:
+    src: "espa_software/python_get-pip.py"
+    dest: "/root/get-pip.py"
+  when: pip_path.stat.exists == False
+
+# Install pip into LSRD Python site packages if pip did not exist
+- name: espa-software|No Pip - Install pip using LSRD Python (/usr/local/bin/python)
+  command: "/usr/local/bin/python /root/get-pip.py"
+  when: pip_path.stat.exists == False
+
+# Remove get-pip.py if pip did not exist
+- name: espa-software|No Pip - Remove get-pip.py
+  file:
+    path: "/root/get-pip.py"
+    state: absent
+  when: pip_path.stat.exists == False
+
+# Ensure pip and setuptools are the latest
+- name: espa-software|Ensure pip and setuptools are the latest
+  pip:
+    executable: "/usr/local/bin/pip"
+    name:
+      - pip
+      - setuptools
+    state: "latest"
+
+# Install lxml python library
+- name: espa-software|Install lxml python library via pip
+  pip:
+    executable: "/usr/local/bin/pip"
+    name: "lxml"
+    version: 3.6.0
+
+- name: espa-software|Install netcdf4 libraries via pip
+  pip:
+    executable: "/usr/local/bin/pip"
+    name: "netcdf4"
+    version: 1.4.2
 
 # Install espa-python library
 - name: espa-software|Install espa-python-library
