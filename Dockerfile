@@ -6,11 +6,6 @@ ENV UGROUP='ie'
 
 RUN yum -y update && yum clean all
 
-#RUN	yum -y install epel-release && \
-#	yum -y groupinstall 'development tools' && \
-#	yum -y install yum-utils && \
-#	yum -y update && \
-#	yum clean all
 RUN yum -y install epel-release
 
 RUN yum -y install ansible
@@ -19,6 +14,12 @@ RUN yum -y install ansible
 COPY playbook /tmp/ansible/
 RUN ansible-playbook /tmp/ansible/espa-worker.yml && \
 	rm -rf /tmp/ansible
+
+# We need to clear out this older version of numpy
+RUN rm -rf /usr/local/lib/python2.7/site-packages/numpy*
+RUN /usr/local/bin/pip install numpy==1.16.2 lxml==3.6.0 netcdf4==1.4.2
+
+RUN yum -y install modtran-espa --nogpgcheck
 
 # Copy over the espa-worker processing scripts
 RUN mkdir /home/$UNAME/espa-processing
