@@ -173,19 +173,6 @@
       - setuptools
     state: "latest"
 
-# Install lxml python library
-- name: espa-software|Install lxml python library via pip
-  pip:
-    executable: "/usr/local/bin/pip"
-    name: "lxml"
-    version: 3.6.0
-
-- name: espa-software|Install netcdf4 libraries via pip
-  pip:
-    executable: "/usr/local/bin/pip"
-    name: "netcdf4"
-    version: 1.4.2
-
 # Install espa-python library
 - name: espa-software|Install espa-python-library
   pip:
