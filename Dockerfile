@@ -19,8 +19,6 @@ RUN ansible-playbook /tmp/ansible/espa-worker.yml && \
 RUN rm -rf /usr/local/lib/python2.7/site-packages/numpy*
 RUN /usr/local/bin/pip install numpy==1.16.2 lxml==3.6.0 netcdf4==1.4.2
 
-RUN yum -y install modtran-espa --nogpgcheck
-
 # Copy over the espa-worker processing scripts
 RUN mkdir /home/$UNAME/espa-processing
 COPY processing /home/$UNAME/espa-processing/processing
