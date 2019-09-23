@@ -134,10 +134,10 @@
     state: installed
 
 # Install openjdk packages required
-- name: espa-software|Install OpenJDK 7 and Devel Release
-  yum:
-    name: "{{ oracle_java_package }}"
-    state: installed
+#- name: espa-software|Install OpenJDK 7 and Devel Release
+#  yum:
+#    name: "{{ oracle_java_package }}"
+#    state: installed
 
 # Check to see if pip exists, store answer in "pip_path"
 - name: espa-software|Check for pip
@@ -172,6 +172,12 @@
       - pip
       - setuptools
     state: "latest"
+
+# Install modtran-espa
+- name: espa-software|Install modtran-espa
+  yum:
+    name: "modtran-espa-{{ modtran_espa }}"
+    state: installed
 
 # Install espa-python library
 - name: espa-software|Install espa-python-library
