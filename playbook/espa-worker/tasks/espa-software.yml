@@ -3,11 +3,15 @@
 # Last Updated: See 'git log -p <filename>'
 # Recent Changes: See 'git log -p <filename>'
 
+# ---- ESPA SYSTEM REQUIREMENTS ---- #
+
 # Install required system packages (espa_dependencies defined in external vars file)
 - name: espa-software|Install ESPA required system packages
   yum:
     name: "{{ espa_dependencies }}"
     state: installed
+
+# ---- ESPA/LSRD CUSTOM REPOS ---- #
 
 # Install LSRD Repo
 - name: espa-software|Add LSRD Custom Repo
@@ -31,6 +35,8 @@
     enabled: yes
     metadata_expire: 300
 
+# ---- ESPA SOFTWARE RELEASE GROUP ---- #
+
 # Install python from espa repo
 - name: espa-software|Install LSRD Python
   yum:
@@ -41,6 +47,12 @@
 - name: espa-software|Install dans-gdal-scripts-espa
   yum:
     name: "dans-gdal-scripts-espa-{{ dans_gdal_scripts_espa }}"
+    state: installed
+
+# Install modtran-espa
+- name: espa-software|Install modtran-espa
+  yum:
+    name: "modtran-espa-{{ modtran_espa }}"
     state: installed
 
 # Install espa-product-formatter
@@ -133,11 +145,7 @@
     name: "espa-plotting-{{ espa_plotting }}"
     state: installed
 
-# Install openjdk packages required
-#- name: espa-software|Install OpenJDK 7 and Devel Release
-#  yum:
-#    name: "{{ oracle_java_package }}"
-#    state: installed
+# ---- PIP/SETUPTOOLS INSTALLATION and UPDATE ---- #
 
 # Check to see if pip exists, store answer in "pip_path"
 - name: espa-software|Check for pip
@@ -173,11 +181,7 @@
       - setuptools
     state: "latest"
 
-# Install modtran-espa
-- name: espa-software|Install modtran-espa
-  yum:
-    name: "modtran-espa-{{ modtran_espa }}"
-    state: installed
+# ---- ESPA PYTHON LIBRARY ---- #
 
 # Install espa-python library
 - name: espa-software|Install espa-python-library
