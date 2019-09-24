@@ -22,7 +22,7 @@ espa_dependencies:
 # Define ESPA Science Application Versions here:
 espa_release: 2.35.0
 dans_gdal_scripts_espa: 0.16
-espa_product_formatter: 1.18.0
+espa_product_formatter: 1.18.1
 espa_l2qa_tools: 1.7.2
 espa_laorca: 1.0.0
 espa_surface_reflectance: 1.0.13
