@@ -23,6 +23,7 @@ from logging_tools import EspaLogging, LevelFilter
 # local objects and methods
 from environment import Environment
 
+INIT_SLEEP_TIME = 5  # seconds
 WORKER_LOG_PREFIX = 'espa-worker'
 WORKER_LOG_FILENAME = '.'.join([WORKER_LOG_PREFIX, 'log'])
 
@@ -231,7 +232,7 @@ def work(cfg, params, developer_sleep_mode=False):
         None, Products are generated, packaged, and distributed if processing was successful
 
     """
-    # This will be the docker container ID
+    # This will be the Mesos node hostname
     processing_location = socket.gethostname()
 
     # Use the base_logger initially, if an exception occurs before the processing logger is configured
@@ -408,6 +409,8 @@ def cli():
 
 def main(data):
 
+    base_logger.info('Holding for {} seconds'.format(INIT_SLEEP_TIME))
+    sleep(INIT_SLEEP_TIME)
 
     # retrieve a dict containing processing environment configuration values
     cfg = config.config()
