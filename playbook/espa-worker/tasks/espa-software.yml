@@ -1,0 +1,192 @@
+# File: espa-software.yml
+# Description: Install ESPA software and system package dependencies
+# Last Updated: See 'git log -p <filename>'
+# Recent Changes: See 'git log -p <filename>'
+
+# ---- ESPA SYSTEM REQUIREMENTS ---- #
+
+# Install required system packages (espa_dependencies defined in external vars file)
+- name: espa-software|Install ESPA required system packages
+  yum:
+    name: "{{ espa_dependencies }}"
+    state: installed
+
+# ---- ESPA/LSRD CUSTOM REPOS ---- #
+
+# Install LSRD Repo
+- name: espa-software|Add LSRD Custom Repo
+  yum_repository:
+    name: lsrd
+    description: LSRD - System Package Repository
+    file: lsrd
+    baseurl: http://lsrdrepo.cr.usgs.gov/repo/lsrd/el6/
+    gpgcheck: no
+    enabled: yes
+    metadata_expire: 300
+
+# Install ESPA Repo
+- name: espa-software|Add ESPA Custom Repo
+  yum_repository:
+    name: espa
+    description: ESPA - Package Repository
+    file: lsrd
+    baseurl: http://lsrdrepo.cr.usgs.gov/repo/espa/el6/
+    gpgcheck: no
+    enabled: yes
+    metadata_expire: 300
+
+# ---- ESPA SOFTWARE RELEASE GROUP ---- #
+
+# Install python from espa repo
+- name: espa-software|Install LSRD Python
+  yum:
+    name: "python-lsrd-{{ python_lsrd }}"
+    state: installed
+
+# Install dans-gdal-scripts-espa
+- name: espa-software|Install dans-gdal-scripts-espa
+  yum:
+    name: "dans-gdal-scripts-espa-{{ dans_gdal_scripts_espa }}"
+    state: installed
+
+# Install modtran-espa
+- name: espa-software|Install modtran-espa
+  yum:
+    name: "modtran-espa-{{ modtran_espa }}"
+    state: installed
+
+# Install espa-product-formatter
+- name: espa-software|Install espa-product-formatter
+  yum:
+    name: "espa-product-formatter-{{ espa_product_formatter }}"
+    state: installed
+
+# Install espa-l2qa-tools
+- name: espa-software|Install espa-l2qa-tools
+  yum:
+    name: "espa-l2qa-tools-{{ espa_l2qa_tools }}"
+    state: installed
+
+# Install espa-laorca
+- name: espa-software|Install espa-laorca
+  yum:
+    name: "espa-laorca-{{ espa_laorca }}"
+    state: installed
+
+# Install espa-surface-reflectance
+- name: espa-software|Install espa-surface-reflectance
+  yum:
+    name: "espa-surface-reflectance-{{ espa_surface_reflectance }}"
+    state: installed
+
+# Install espa-surface-reflectance-ledaps
+- name: espa-software|Install espa-surface-reflectance-ledaps
+  yum:
+    name: "espa-surface-reflectance-ledaps-{{ espa_surface_reflectance_ledaps }}"
+    state: installed
+
+# Install espa-surface-reflectance-lasrc
+- name: espa-software|Install espa-surface-reflectance-lasrc
+  yum:
+    name: "espa-surface-reflectance-lasrc-{{ espa_surface_reflectance_lasrc }}"
+    state: installed
+
+# Install espa-surface-temperature
+- name: espa-software|Install espa-surface-temperature
+  yum:
+    name: "espa-surface-temperature-{{ espa_surface_temperature }}"
+    state: installed
+
+# Install espa-surface-temperature-rit
+- name: espa-software|Install espa-surface-temperature-rit
+  yum:
+    name: "espa-surface-temperature-rit-{{ espa_surface_temperature }}"
+    state: installed
+
+# Install espa-spectral-indices
+- name: espa-software|Install espa-spectral-indices
+  yum:
+    name: "espa-spectral-indices-{{ espa_spectral_indices }}"
+    state: installed
+
+# Install espa-surface-water-extent
+- name: espa-software|Install espa-surface-water-extent
+  yum:
+    name: "espa-surface-water-extent-{{ espa_surface_water_extent }}"
+    state: installed
+
+# Install espa-surface-water-extent-cfbwd
+- name: espa-software|Install espa-surface-water-extent-cfbwd
+  yum:
+    name: "espa-surface-water-extent-cfbwd-{{ espa_surface_water_extent_cfbwd }}"
+    state: installed
+
+# Install espa-surface-water-extent-dswe
+- name: espa-software|Install espa-surface-water-extent-dswe
+  yum:
+    name: "espa-surface-water-extent-dswe-{{ espa_surface_water_extent_dswe }}"
+    state: installed
+
+# Install espa-elevation
+- name: espa-software|Install espa-elevation
+  yum:
+    name: "espa-elevation-{{ espa_elevation }}"
+    state: installed
+
+# Install espa-reprojection
+- name: espa-software|Install espa-reprojection
+  yum:
+    name: "espa-reprojection-{{ espa_reprojection }}"
+    state: installed
+
+# Install espa-plotting
+- name: espa-software|Install espa-plotting
+  yum:
+    name: "espa-plotting-{{ espa_plotting }}"
+    state: installed
+
+# ---- PIP/SETUPTOOLS INSTALLATION and UPDATE ---- #
+
+# Check to see if pip exists, store answer in "pip_path"
+- name: espa-software|Check for pip
+  stat:
+    path: "/usr/local/bin/pip"
+  register: pip_path
+
+# Copy pip script to system if pip did not exist
+- name: espa-software|No Pip - Copy get-pip.py for pip install
+  copy:
+    src: "espa_software/python_get-pip.py"
+    dest: "/root/get-pip.py"
+  when: pip_path.stat.exists == False
+
+# Install pip into LSRD Python site packages if pip did not exist
+- name: espa-software|No Pip - Install pip using LSRD Python (/usr/local/bin/python)
+  command: "/usr/local/bin/python /root/get-pip.py"
+  when: pip_path.stat.exists == False
+
+# Remove get-pip.py if pip did not exist
+- name: espa-software|No Pip - Remove get-pip.py
+  file:
+    path: "/root/get-pip.py"
+    state: absent
+  when: pip_path.stat.exists == False
+
+# Ensure pip and setuptools are the latest
+- name: espa-software|Ensure pip and setuptools are the latest
+  pip:
+    executable: "/usr/local/bin/pip"
+    name:
+      - pip
+      - setuptools
+    state: "latest"
+
+# ---- ESPA PYTHON LIBRARY ---- #
+
+# Install espa-python library
+- name: espa-software|Install espa-python-library
+  pip:
+    executable: "/usr/local/bin/pip"
+    editable: false
+    version: 1.1.0
+    name: "git+https://github.com/USGS-EROS/espa-python-library.git@v1.1.0#egg=espa"

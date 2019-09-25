@@ -1,0 +1,19 @@
+# File: main.yml
+# Description: Variables for espa-worker role
+
+# Required system packages for ESPA
+espa_dependencies:
+  - gcc
+  - gcc-c++
+  - wgrib
+  - git
+  - libxml2
+  - libxml2-devel
+  - libxslt
+  - libxslt-devel
+  - pigz
+
+# Oracle Java Package Version
+oracle_java_package:
+  - java-1.7.0-openjdk
+  - java-1.7.0-openjdk-devel

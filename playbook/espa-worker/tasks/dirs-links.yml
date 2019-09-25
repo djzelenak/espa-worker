@@ -1,0 +1,59 @@
+# File: dirs-links.yml
+# Description: Setup required directories and symlinks
+# Last Updated: See 'git log -p <filename>'
+# Recent Changes: See 'git log -p <filename>'
+
+- name: dirs-links|Directory - App User's Home
+  file:
+    path: "/home/{{ app_user }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: 0700
+
+- name: dirs-links|Directory - Ledaps
+  file:
+    path: "/usr/local/ledaps"
+    state: directory
+    owner: root
+    mode: 0755
+
+- name: dirs-links|Symlink - ANC
+  file:
+    src: "/usr/local/auxiliaries/L17"
+    dest: "/usr/local/ledaps/ANC"
+    state: link
+    owner: root
+    force: yes
+
+- name: dirs-links|Symlink - L8ANC
+  file:
+    src: "/usr/local/auxiliaries/L8"
+    dest: "/usr/local/ledaps/L8ANC"
+    state: link
+    owner: root
+    force: yes
+
+- name: dirs-links|Directory - DSWE LST
+  file:
+    path: "/usr/local/gls"
+    state: directory
+    owner: root
+    mode: 0755
+
+- name: dirs-links|Symlink - DSWE LST
+  file:
+    src: "/usr/local/auxiliaries/gls-dem"
+    dest: "/usr/local/gls/DEM"
+    state: link
+    owner: root
+    force: yes
+
+- name: dirs-links|Symlink - output_product_cache
+  file:
+    src: "/espa-storage/orders"
+    dest: "/output_product_cache"
+    state: link
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: 0777
