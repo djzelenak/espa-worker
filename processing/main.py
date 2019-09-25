@@ -393,6 +393,11 @@ def work(cfg, params, developer_sleep_mode=False):
             except Exception:
                 logger.exception('Exception encountered stacktrace follows')
 
+        else:
+            msg = "Unable to reach the API"
+            logger.exception(msg)
+            raise
+
     finally:
         pass
 
