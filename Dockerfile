@@ -1,28 +1,23 @@
-FROM usgseros/espa-worker:el7_base-alpha.3
+FROM centos:centos6
 LABEL maintainer="USGS LSRD http://eros.usgs.gov"
 
 ENV UNAME='espa'
 ENV UGROUP='ie'
 
-# Install required Python packages
-COPY requirements.txt /requirements.txt
-RUN pip install -r requirements.txt && \
-	rm -f requirements.txt
+RUN yum -y update && yum clean all
 
-# Create symlinks so that ESPA can find the python interpreter
-RUN ln -s /usr/bin/python /usr/local/bin/python && \
-	ln -s /usr/bin/pip /usr/local/bin/pip
+RUN yum -y install epel-release
+
+RUN yum -y install ansible
 
 # Ansible: the 'espa-worker.yml' playbook installs our ESPA science applications
 COPY playbook /tmp/ansible/
 RUN ansible-playbook /tmp/ansible/espa-worker.yml && \
 	rm -rf /tmp/ansible
 
-# Install some remaining dependencies
-RUN yum -y install netcdf4-python && \
-    yum -y install python2-numpy && \
-    yum -y install scipy && \
-    pip install scipy
+# We need to clear out this older version of numpy
+RUN rm -rf /usr/local/lib/python2.7/site-packages/numpy*
+RUN /usr/local/bin/pip install numpy==1.16.2 lxml==3.6.0 netcdf4==1.4.2
 
 # Copy over the espa-worker processing scripts
 RUN mkdir /home/$UNAME/espa-processing
