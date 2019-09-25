@@ -1,8 +1,5 @@
-TAG_BASE=el7_base-alpha.3
-TAG_ESPA=2.35.0-el7-beta.5
+SYSTEM=el6
+VERSION=0.1.0
 
-docker-build-base:
-	docker build -t usgseros/espa-worker:${TAG_BASE} -f Dockerfile.el7_base .
-
-docker-build-espa:
-	docker build -t usgseros/espa-worker:${TAG_ESPA} -f Dockerfile.espa .
+docker-build:
+	docker build -t usgseros/espa-worker:${SYSTEM}_${VERSION} .
