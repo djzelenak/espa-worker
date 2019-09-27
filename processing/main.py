@@ -5,7 +5,6 @@ import argparse
 import json
 import socket
 import shutil
-import logging
 from functools import partial
 from time import sleep
 
@@ -17,67 +16,50 @@ import settings
 import sensor
 import utilities
 from api_interface import APIServer, APIException
-from logging_tools import EspaLogging, LevelFilter
+from logging_tools import EspaLogging, LevelFilter, WORKER_LOG_PREFIX, WORKER_LOG_FILENAME, get_base_logger, get_stdout_handler, get_stderr_handler
 
 # local objects and methods
 from environment import Environment
 
 INIT_SLEEP_TIME = 5  # seconds
-WORKER_LOG_PREFIX = 'espa-worker'
-WORKER_LOG_FILENAME = '.'.join([WORKER_LOG_PREFIX, 'log'])
 
-EspaLogging.configure_base_logger(filename=WORKER_LOG_FILENAME)
-# Initially set to the base logger
-base_logger = EspaLogging.get_logger('base')
+base_logger = get_base_logger()
 
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+class NETRCException(Exception):
+    pass
 
-# Add logging to stdout and stderr
-stdout_handler = logging.StreamHandler(sys.stdout)
-stdout_handler.setLevel(logging.DEBUG)
-stdout_handler.setFormatter(formatter)
-stdout_handler.addFilter(LevelFilter(10, 20))
-base_logger.addHandler(stdout_handler)
-
-stderr_handler = logging.StreamHandler(sys.stderr)
-stderr_handler.setLevel(logging.WARNING)
-stderr_handler.setFormatter(formatter)
-stderr_handler.addFilter(LevelFilter(30, 50))
-base_logger.addHandler(stderr_handler)
-
-
-def remove_single_quotes(instring):
-    return instring.replace("'", '')
-
-
-def check_netrc():
+def build_netrc():
     """
     make a .netrc in the home dir
     Returns:
 
     """
-    home = os.environ.get('HOME')
-    urs_machine = os.environ.get('URS_MACHINE')
-    urs_login = os.environ.get('URS_LOGIN')
-    urs_pw = os.environ.get('URS_PASSWORD')
+    try:
+        home = os.environ.get('HOME')
+        urs_machine = os.environ.get('URS_MACHINE')
+        urs_login = os.environ.get('URS_LOGIN')
+        urs_pw = os.environ.get('URS_PASSWORD')
 
-    if home is None:
-        base_logger.exception('No home directory found!')
+        if home is None:
+            base_logger.exception('No home directory found!')
 
-    if urs_machine is None or urs_login is None or urs_pw is None:
-        msg = 'URS credentials not found!'
+        if urs_machine is None or urs_login is None or urs_pw is None:
+            msg = 'URS credentials not found!'
+            base_logger.exception(msg)
+            raise NETRCException(msg)
+
+        netrc = os.path.join(home, '.netrc')
+
+        with open(netrc, 'w') as f:
+            f.write('machine {0}\n'.format(urs_machine))
+            f.write('login {0}\n'.format(urs_login))
+            f.write('password {0}'.format(urs_pw))
+  
+        return True
+    except Exception as e:
+        msg = "Exception encountered creating .netrc: {}".format(e)
         base_logger.exception(msg)
-        raise Exception(msg)
-
-    netrc = os.path.join(home, '.netrc')
-
-    with open(netrc, 'w') as f:
-        f.write('machine {0}\n'.format(urs_machine))
-        f.write('login {0}\n'.format(urs_login))
-        f.write('password {0}'.format(urs_pw))
-
-    return None
-
+        raise NETRCException(msg)
 
 def convert_json(data):
     if type(data) is str:
@@ -231,11 +213,10 @@ def work(cfg, params, developer_sleep_mode=False):
         logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
         # add our stdout/stderr log streams
-        logger.addHandler(stdout_handler)
-        logger.addHandler(stderr_handler)
+        logger.addHandler(get_stdout_handler())
+        logger.addHandler(get_stderr_handler())
 
         logger.info('Processing {}:{}'.format(order_id, product_id))
-
         logger.info('Attempting connection to {0}'.format(cfg['espa_api']))
 
         # will throw an exception on init if unable to get a 200 response
@@ -290,6 +271,8 @@ def work(cfg, params, developer_sleep_mode=False):
                                    destination_product_file,
                                    destination_cksum_file,
                                    '') # sets log_file_contents to empty string ''
+        return True
+
     except Exception as e:
         # First log the exception
         logger.exception('Exception encountered stacktrace follows')
@@ -313,40 +296,37 @@ def work(cfg, params, developer_sleep_mode=False):
         raise
 
 
-def cli():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(dest="data", action="store", metavar="JSON", type=convert_json,
-                        help="response from the API containing order information")
-
-    args = parser.parse_args()
-
-    main(**vars(args))
-
-
-def main(data):
-
-    base_logger.info('Holding for {} seconds'.format(INIT_SLEEP_TIME))
-    sleep(INIT_SLEEP_TIME)
-
-    # retrieve a dict containing processing environment configuration values
-    cfg = config.config()
-
-    # export values for the container environment
-    config.export_environment_variables(cfg)
-
-    check_netrc()
-
-    base_logger.debug('OS ENV - {0}'.format(['{0}: {1}'.format(var, val) for var, val in os.environ.items()]))
-    base_logger.info('configured parameters - {0}'.format(['{0}: {1}'.format(var, val) for var, val in cfg.items()]))
-    base_logger.info('order data - {0}'.format(data))
-
+def main(data=None):
     try:
+        base_logger.info('Holding for {} seconds'.format(INIT_SLEEP_TIME))
+        sleep(INIT_SLEEP_TIME)
+
+        # retrieve a dict containing processing environment configuration values
+        cfg = config.config()
+
+        # export values for the container environment
+        config.export_environment_variables(cfg)
+
+        build_netrc()
+
+        base_logger.debug('OS ENV - {0}'.format(['{0}: {1}'.format(var, val) for var, val in os.environ.items()]))
+        base_logger.info('configured parameters - {0}'.format(['{0}: {1}'.format(var, val) for var, val in cfg.items()]))
+
+        if not data:
+            parser = argparse.ArgumentParser()
+            parser.add_argument(dest="data", action="store", metavar="JSON", type=convert_json,
+                                help="response from the API containing order information")
+            args = parser.parse_args()
+            data = args.data
+
+        base_logger.info('order data - {0}'.format(data))
         order_processor = partial(work, cfg)
-        map(order_processor, data)
+        success = map(order_processor, data)
+        base_logger.info('processing.work executed across data successfully? {}'.format(success))
     except Exception as e:
-        base_logger.exception('Processing failed stacktrace follows')
-        raise Exception('ESPA Worker error, problem executing main.work\nError: {}'.format(e))
+        base_logger.exception('ESPA Worker error, problem executing main.main\nError: {}'.format(e))
+        # Exit with 1 so Container and Task know there was a problem and report to the framework appropriately
+        sys.exit(1)
 
 if __name__ == '__main__':
-    cli()
+    main()

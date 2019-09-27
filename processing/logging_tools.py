@@ -9,9 +9,12 @@ License: NASA Open Source Agreement 1.3
 import os
 import logging
 import logging.config
-
 import settings
+import sys
 
+WORKER_LOG_PREFIX = 'espa-worker'
+WORKER_LOG_FILENAME = '.'.join([WORKER_LOG_PREFIX, 'log'])
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 class EspaLoggerException(Exception):
     """An exception just for the EspaLogging class
@@ -264,3 +267,29 @@ class LevelFilter(logging.Filter):
         if self._low <= record.levelno <= self._high:
             return True
         return False
+
+def get_stdout_handler():
+    # Return StreamHandler that logs to sys.stdout
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    stdout_handler.setLevel(logging.DEBUG)
+    stdout_handler.setFormatter(formatter)
+    stdout_handler.addFilter(LevelFilter(10, 20))
+    return stdout_handler
+
+def get_stderr_handler():
+    # Return StreamHandler that logs to sys.stderr
+    stderr_handler = logging.StreamHandler(sys.stderr)
+    stderr_handler.setLevel(logging.WARNING)
+    stderr_handler.setFormatter(formatter)
+    stderr_handler.addFilter(LevelFilter(30, 50))
+    return stderr_handler
+
+def get_base_logger():
+    EspaLogging.configure_base_logger(filename=WORKER_LOG_FILENAME)
+    # Initially set to the base logger
+    base_logger = EspaLogging.get_logger('base')
+    base_logger.addHandler(get_stdout_handler())
+    base_logger.addHandler(get_stderr_handler())
+    return base_logger
+
+
