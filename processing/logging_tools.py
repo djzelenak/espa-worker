@@ -7,10 +7,14 @@ License: NASA Open Source Agreement 1.3
 
 
 import os
+import errno
 import logging
 import logging.config
 import settings
+import shutil
 import sys
+
+from environment import Environment
 
 WORKER_LOG_PREFIX = 'espa-worker'
 WORKER_LOG_FILENAME = '.'.join([WORKER_LOG_PREFIX, 'log'])
@@ -292,4 +296,54 @@ def get_base_logger():
     base_logger.addHandler(get_stderr_handler())
     return base_logger
 
+def archive_log_files(order_id, product_id):
+    """Archive the log files for the current job
+    """
+    try:
+        logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
+    except Exception:
+        logger = get_base_logger()
+
+    try:
+        # Determine the destination path for the logs
+        output_dir = Environment().get_distribution_directory()
+        destination_path = os.path.join(output_dir, 'logs', order_id)
+        # Create the path
+        create_directory(destination_path)
+        try:
+            os.makedirs(destination_path)  # use the default mode 0777
+            os.chmod(destination_path, 0755)  # use chmod to explicitly set the desired mode
+        except OSError as ose:
+            if ose.errno == errno.EEXIST and os.path.isdir(directory):
+                # With how we operate, as long as it is a directory, we do not
+                # care about the 'already exists' error.
+                pass
+            else:
+                raise
+
+
+
+
+        # Job log file
+        logfile_path = EspaLogging.get_filename(settings.PROCESSING_LOGGER)
+        full_logfile_path = os.path.abspath(logfile_path)
+        log_name = os.path.basename(full_logfile_path)
+        # Determine full destination
+        destination_file = os.path.join(destination_path, log_name)
+        # Copy it
+        shutil.copyfile(full_logfile_path, destination_file)
+
+        # Mapper log file
+        full_logfile_path = os.path.abspath(WORKER_LOG_FILENAME)
+        final_log_name = '-'.join([WORKER_LOG_PREFIX, order_id, product_id])
+        final_log_name = '.'.join([final_log_name, 'log'])
+        # Determine full destination
+        destination_file = os.path.join(destination_path, final_log_name)
+        # Copy it
+        shutil.copyfile(full_logfile_path, destination_file)
+
+    except Exception:
+        # We don't care because we are at the end of processing
+        # And if we are on the successful path, we don't care either
+        logger.exception('Exception encountered and follows')

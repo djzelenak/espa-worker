@@ -2,6 +2,10 @@ import requests
 import logging
 import config
 
+from logging_tools import get_base_logger
+
+logger = get_base_logger()
+
 logging.getLogger('requests').setLevel(logging.WARNING)
 cfg = config.config()
 
@@ -17,6 +21,7 @@ class APIServer(object):
     Provide a more straightforward way of handling API calls
     """
     def __init__(self, base_url):
+        logger.debug("initializing APIServer object with url: {}".format(base_url))
         self.base = base_url
         
         # raise exception if cannot reach api
@@ -54,23 +59,6 @@ class APIServer(object):
             self._unexpected_status(resp.status_code, url)
 
         return resp.json(), resp.status_code
-
-    def get_configuration(self, key):
-        """
-        Retrieve a configuration value
-
-        Args:
-            key: configuration key
-
-        Returns: value if it exists, otherwise None
-
-        """
-        config_url = '/configuration/{}'.format(key)
-
-        resp, status = self.request('get', config_url, status=200)
-
-        if key in resp.keys():
-            return resp[key]
 
     def update_status(self, prod_id, order_id, proc_loc, val):
         """
@@ -154,35 +142,21 @@ class APIServer(object):
             code: http status that was received
             url: URL that was used
         """
-        raise Exception('Received unexpected status code: {}\n'
-                        'for URL: {}'.format(code, url))
+        msg = 'Received unexpected status code: {}\n for URL: {}'.format(code, url)
+        logger.error(msg)
+        raise Exception(msg)
 
     def test_connection(self):
         """
         Tests the base URL for the class
         Returns: True if 200 status received, else False
         """
+        logger.debug("testing ESPA API connection...")
         resp, status = self.request('get')
-
         if status == 200:
+            logger.debug("Successfully reached ESPA API!")
             return True
         else:
-            raise APIException("Could not connect to ESPA API: {}".format(cfg['espa_api']))
-
-
-def api_connect(url):
-    """
-    Simple lead in method for using the API connection class
-
-    Args:
-        url: base URL to connect to
-
-    Returns: initialized APIServer object if successful connection
-             else None
-    """
-    api = APIServer(url)
-
-    if not api.test_connection():
-        return None
-
-    return api
+            msg = "Could not connect to ESPA API: {} \n status: {}\nresponse: {}".format(cfg['espa_api'], status, resp)
+            logger.error(msg)
+            raise APIException()

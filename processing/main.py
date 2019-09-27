@@ -1,152 +1,25 @@
-import os
-import sys
-import datetime
 import argparse
-import json
+import datetime
+import os
 import socket
-import shutil
+import sys
+
 from functools import partial
 from time import sleep
 
 ### espa-processing imports
-import processor
 import config
 import parameters
+import processor
 import settings
 import sensor
 import utilities
+
 from api_interface import APIServer, APIException
-from logging_tools import EspaLogging, LevelFilter, WORKER_LOG_PREFIX, WORKER_LOG_FILENAME, get_base_logger, get_stdout_handler, get_stderr_handler
-
-# local objects and methods
 from environment import Environment
-
-INIT_SLEEP_TIME = 5  # seconds
+from logging_tools import EspaLogging, get_base_logger, get_stdout_handler, get_stderr_handler
 
 base_logger = get_base_logger()
-
-class NETRCException(Exception):
-    pass
-
-def build_netrc():
-    """
-    make a .netrc in the home dir
-    Returns:
-
-    """
-    try:
-        home = os.environ.get('HOME')
-        urs_machine = os.environ.get('URS_MACHINE')
-        urs_login = os.environ.get('URS_LOGIN')
-        urs_pw = os.environ.get('URS_PASSWORD')
-
-        if home is None:
-            base_logger.exception('No home directory found!')
-
-        if urs_machine is None or urs_login is None or urs_pw is None:
-            msg = 'URS credentials not found!'
-            base_logger.exception(msg)
-            raise NETRCException(msg)
-
-        netrc = os.path.join(home, '.netrc')
-
-        with open(netrc, 'w') as f:
-            f.write('machine {0}\n'.format(urs_machine))
-            f.write('login {0}\n'.format(urs_login))
-            f.write('password {0}'.format(urs_pw))
-  
-        return True
-    except Exception as e:
-        msg = "Exception encountered creating .netrc: {}".format(e)
-        base_logger.exception(msg)
-        raise NETRCException(msg)
-
-def convert_json(data):
-    if type(data) is str:
-        # return a list or dict
-        temp = json.loads(data)
-        if type(temp) is dict:
-            base_logger.warning('The input order data was a single dict, but the processing container'
-                                ' requires a list - placing the dict in a list object')
-            return [temp]
-        else:
-            return temp
-    elif type(data) in (list, dict):
-        # return a string
-        base_logger.warning('The input order data was a list or dict object - returning a string')
-        return json.dumps(data)
-    else:
-        msg = 'Non-compatible data type for input data of type {0}'.format(type(data))
-        base_logger.critical(msg)
-        raise Exception(msg)
-
-def archive_log_files(order_id, product_id):
-    """Archive the log files for the current job
-    """
-    try:
-        logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
-
-    except Exception:
-        logger = base_logger
-
-    try:
-        # Determine the destination path for the logs
-        output_dir = Environment().get_distribution_directory()
-        destination_path = os.path.join(output_dir, 'logs', order_id)
-        # Create the path
-        utilities.create_directory(destination_path)
-
-        # Job log file
-        logfile_path = EspaLogging.get_filename(settings.PROCESSING_LOGGER)
-        full_logfile_path = os.path.abspath(logfile_path)
-        log_name = os.path.basename(full_logfile_path)
-        # Determine full destination
-        destination_file = os.path.join(destination_path, log_name)
-        # Copy it
-        shutil.copyfile(full_logfile_path, destination_file)
-
-        # Mapper log file
-        full_logfile_path = os.path.abspath(WORKER_LOG_FILENAME)
-        final_log_name = '-'.join([WORKER_LOG_PREFIX, order_id, product_id])
-        final_log_name = '.'.join([final_log_name, 'log'])
-        # Determine full destination
-        destination_file = os.path.join(destination_path, final_log_name)
-        # Copy it
-        shutil.copyfile(full_logfile_path, destination_file)
-
-    except Exception:
-        # We don't care because we are at the end of processing
-        # And if we are on the successful path, we don't care either
-        logger.exception('Exception encountered and follows')
-
-
-def get_sleep_duration(proc_cfg, start_time, dont_sleep, key='espa_min_request_duration_in_seconds'):
-    """Logs details and returns number of seconds to sleep
-    """
-    try:
-        logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
-
-    except Exception:
-        logger = base_logger
-
-    # Determine if we need to sleep
-    end_time = datetime.datetime.now()
-    seconds_elapsed = (end_time - start_time).seconds
-    logger.info('Processing Time Elapsed {0} Seconds'.format(seconds_elapsed))
-
-    min_seconds = int((proc_cfg.get(key)))
-
-    seconds_to_sleep = 1
-    if dont_sleep:
-        # We don't need to sleep
-        seconds_to_sleep = 1
-    elif seconds_elapsed < min_seconds:
-        seconds_to_sleep = (min_seconds - seconds_elapsed)
-
-    logger.info('Sleeping An Additional {0} Seconds'.format(seconds_to_sleep))
-
-    return seconds_to_sleep
-
 
 def work(cfg, params, developer_sleep_mode=False):
     """
@@ -261,7 +134,7 @@ def work(cfg, params, developer_sleep_mode=False):
                 pp.remove_product_directory()
 
         # Sleep the number of seconds for minimum request duration
-        sleep(get_sleep_duration(cfg, start_time, dont_sleep))
+        sleep(utilities.get_sleep_duration(cfg, start_time, dont_sleep))
 
         archive_log_files(order_id, product_id)
 
@@ -280,7 +153,7 @@ def work(cfg, params, developer_sleep_mode=False):
         try:
             # Sleep the number of seconds for minimum request duration
             logger.debug('Attempting to archive log files for order_id: {}\nproduct_id: {}'.format(order_id, product_id))
-            sleep(get_sleep_duration(cfg, start_time, dont_sleep))
+            sleep(utilities.get_sleep_duration(cfg, start_time, dont_sleep))
             archive_log_files(order_id, product_id)
         except Exception as e2:
             logger.exception('Problem archiving log files. error: {}'.format(e2))
@@ -298,23 +171,26 @@ def work(cfg, params, developer_sleep_mode=False):
 
 def main(data=None):
     try:
-        base_logger.info('Holding for {} seconds'.format(INIT_SLEEP_TIME))
-        sleep(INIT_SLEEP_TIME)
+        cfg = config.config()
+        sleep_for = cfg.get('init_sleep_seconds')
+        base_logger.info('Holding for {} seconds'.format(sleep_for))
+        sleep(sleep_for)
 
         # retrieve a dict containing processing environment configuration values
-        cfg = config.config()
+
 
         # export values for the container environment
         config.export_environment_variables(cfg)
 
-        build_netrc()
+        # create the .netrc file
+        utilities.build_netrc()
 
         base_logger.debug('OS ENV - {0}'.format(['{0}: {1}'.format(var, val) for var, val in os.environ.items()]))
         base_logger.info('configured parameters - {0}'.format(['{0}: {1}'.format(var, val) for var, val in cfg.items()]))
 
         if not data:
             parser = argparse.ArgumentParser()
-            parser.add_argument(dest="data", action="store", metavar="JSON", type=convert_json,
+            parser.add_argument(dest="data", action="store", metavar="JSON", type=utilities.convert_json,
                                 help="response from the API containing order information")
             args = parser.parse_args()
             data = args.data
