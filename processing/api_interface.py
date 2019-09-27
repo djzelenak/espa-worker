@@ -1,9 +1,9 @@
 import requests
 import logging
-
+import config
 
 logging.getLogger('requests').setLevel(logging.WARNING)
-
+cfg = config.config()
 
 class APIException(Exception):
     """
@@ -18,6 +18,9 @@ class APIServer(object):
     """
     def __init__(self, base_url):
         self.base = base_url
+        
+        # raise exception if cannot reach api
+        self.test_connection()
 
     def request(self, method, resource=None, status=None, **kwargs):
         """
@@ -68,33 +71,6 @@ class APIServer(object):
 
         if key in resp.keys():
             return resp[key]
-
-    def get_scenes_to_process(self, limit, user, priority, product_type):
-        """
-        Retrieve scenes/orders to begin processing in the system
-
-        Note: This method is not currently used by the espa-worker
-
-        Args:
-            limit: number of products to grab
-            user: specify a user
-            priority: depricated, legacy support
-            product_type: landsat and/or modis
-
-        Returns: list of dicts
-        """
-        params = ['record_limit={}'.format(limit) if limit else None,
-                  'for_user={}'.format(user) if user else None,
-                  'priority={}'.format(priority) if priority else None,
-                  'product_types={}'.format(product_type) if product_type else None]
-
-        query = '&'.join([q for q in params if q])
-
-        url = '/products?{}'.format(query)
-
-        resp, status = self.request('get', url, status=200)
-
-        return resp
 
     def update_status(self, prod_id, order_id, proc_loc, val):
         """
@@ -169,29 +145,6 @@ class APIServer(object):
 
         return resp
 
-    def queue_products(self, prod_list, status, job_name):
-        data_dict = {'order_name_tuple_list': prod_list,
-                     'processing_location': status,
-                     'job_name': job_name}
-
-        url = '/queue-products'
-
-        resp, status = self.request('post', url, json=data_dict, status=200)
-
-        return resp
-
-    def handle_orders(self):
-        """
-        Sends the handle_orders command to the API
-
-        Returns: True if successful
-        """
-        url = '/handle-orders'
-
-        resp, status = self.request('get', url, status=200)
-
-        return status == 200
-
     @staticmethod
     def _unexpected_status(code, url):
         """
@@ -213,8 +166,8 @@ class APIServer(object):
 
         if status == 200:
             return True
-
-        return False
+        else:
+            raise APIException("Could not connect to ESPA API: {}".format(cfg['espa_api']))
 
 
 def api_connect(url):

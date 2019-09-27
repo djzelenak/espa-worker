@@ -1,4 +1,3 @@
-
 import os
 import sys
 import datetime
@@ -17,7 +16,7 @@ import parameters
 import settings
 import sensor
 import utilities
-import api_interface
+from api_interface import APIServer, APIException
 from logging_tools import EspaLogging, LevelFilter
 
 # local objects and methods
@@ -98,58 +97,6 @@ def convert_json(data):
         msg = 'Non-compatible data type for input data of type {0}'.format(type(data))
         base_logger.critical(msg)
         raise Exception(msg)
-
-
-
-def set_product_error(server, order_id, product_id, processing_location):
-    """Call the API server routine to set a product request to error
-
-    Provides a sleep retry implementation to hopefully by-pass any errors
-    encountered, so that we do not get requests that have failed, but
-    show a status of processing.
-    """
-
-    if server is not None:
-        logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
-
-        attempt = 0
-        sleep_seconds = settings.DEFAULT_SLEEP_SECONDS
-        while True:
-            try:
-                logger.info('Product ID is [{}]'.format(product_id))
-                logger.info('Order ID is [{}]'.format(order_id))
-                logger.info('Processing Location is [{}]'
-                            .format(processing_location))
-
-                logged_contents = \
-                    EspaLogging.read_logger_file(settings.PROCESSING_LOGGER)
-
-                status = server.set_scene_error(product_id, order_id,
-                                                processing_location,
-                                                logged_contents)
-
-                if not status:
-                    logger.critical('Failed processing API call to'
-                                    ' set_scene_error')
-                    return False
-
-                break
-
-            except Exception:
-                logger.critical('Failed processing API call to'
-                                ' set_scene_error')
-                logger.exception('Exception encountered and follows')
-
-                if attempt < settings.MAX_SET_SCENE_ERROR_ATTEMPTS:
-                    sleep(sleep_seconds)  # sleep before trying again
-                    attempt += 1
-                    sleep_seconds = int(sleep_seconds * 1.5)
-                    continue
-                else:
-                    return False
-
-    return True
-
 
 def archive_log_files(order_id, product_id):
     """Archive the log files for the current job
@@ -289,34 +236,13 @@ def work(cfg, params, developer_sleep_mode=False):
 
         logger.info('Processing {}:{}'.format(order_id, product_id))
 
-        if parameters.test_for_parameter(cfg, 'espa_api'):
-            if cfg['espa_api'] != 'skip_api':
-                logger.info('Attempting connection to {0}'.format(cfg['espa_api']))
-                server = api_interface.api_connect(cfg['espa_api'])
+        logger.info('Attempting connection to {0}'.format(cfg['espa_api']))
 
-                getresp, getstatus = server.request('get')
+        # will throw an exception on init if unable to get a 200 response
+        server = APIServer(cfg['espa_api'])
 
-                logger.debug('API "get" response: {0}'.format(getresp))
-                logger.info('API response status: {0}'.format(getstatus))
-
-                if server is not None:
-                    # Update the unit status in the database
-                    status = server.update_status(product_id, order_id,
-                                                  processing_location,
-                                                  'processing')
-                    if not status:
-                        msg = ('Failed processing API call to update_status to processing')
-                        raise api_interface.APIException(msg)
-
-                else:
-                    msg = ('Failed connecting to API {0}'.format(cfg['espa_api']))
-                    logger.critical(msg)
-                    raise api_interface.APIException(msg)
-
-        else:
-            msg = ('ESPA_API is not defined!')
-            logger.critical(msg)
-            raise api_interface.APIException(msg)
+        # will throw an exception if does not receive a 200 response
+        status = server.update_status(product_id, order_id, processing_location, 'processing')
 
         if product_id != 'plot':
             # Make sure we can process the sensor
@@ -359,47 +285,33 @@ def work(cfg, params, developer_sleep_mode=False):
         archive_log_files(order_id, product_id)
 
         # Everything was successful so mark the scene complete
-        if server is not None:
-            status = server.mark_scene_complete(product_id, order_id,
-                                                processing_location,
-                                                destination_product_file,
-                                                destination_cksum_file,
-                                                '') # sets log_file_contents to empty string ''
-            if not status:
-                msg = ('Failed processing API call to mark_scene_complete')
-
-                raise api_interface.APIException(msg)
-
-    except api_interface.APIException as excep:
-        # This is expected when scenes have been cancelled after queueing
-        logger.warning('Halt. API raised error: {}'.format(excep.message))
-
-    except Exception:
+        server.mark_scene_complete(product_id, order_id,
+                                   processing_location,
+                                   destination_product_file,
+                                   destination_cksum_file,
+                                   '') # sets log_file_contents to empty string ''
+    except Exception as e:
         # First log the exception
         logger.exception('Exception encountered stacktrace follows')
 
-        # Sleep the number of seconds for minimum request duration
-        sleep(get_sleep_duration(cfg, start_time, dont_sleep))
+        try:
+            # Sleep the number of seconds for minimum request duration
+            logger.debug('Attempting to archive log files for order_id: {}\nproduct_id: {}'.format(order_id, product_id))
+            sleep(get_sleep_duration(cfg, start_time, dont_sleep))
+            archive_log_files(order_id, product_id)
+        except Exception as e2:
+            logger.exception('Problem archiving log files. error: {}'.format(e2))
 
-        archive_log_files(order_id, product_id)
+        try:
+            logger.debug('Attempting to set product error, order_id: {}\nproduct_id: {}'.format(order_id, product_id))
+            logged_contents = EspaLogging.read_logger_file(settings.PROCESSING_LOGGER)
+            error_log = "Processing Log: {}\n\nException: {}".format(logged_contents, e)
+            server.set_scene_error(product_id, order_id, processing_location, e)
+        except Exception as e3:
+            logger.exception('Unable to reach ESPA API and set product error for order_id: {}\nproduct_id: {}\nerror: {}'.format(order_id, product_id, e3))
 
-        if server is not None:
-            try:
-                logging.debug('Setting product error')
-                status = set_product_error(server,
-                                           order_id,
-                                           product_id,
-                                           processing_location)
-            except Exception:
-                logger.exception('Exception encountered stacktrace follows')
+        raise
 
-        else:
-            msg = "Unable to reach the API"
-            logger.exception(msg)
-            raise
-
-    finally:
-        pass
 
 def cli():
     parser = argparse.ArgumentParser()
@@ -430,12 +342,11 @@ def main(data):
     base_logger.info('order data - {0}'.format(data))
 
     try:
-
         order_processor = partial(work, cfg)
         map(order_processor, data)
-
-    except Exception:
+    except Exception as e:
         base_logger.exception('Processing failed stacktrace follows')
+        raise Exception('ESPA Worker error, problem executing main.work\nError: {}'.format(e))
 
 if __name__ == '__main__':
     cli()
