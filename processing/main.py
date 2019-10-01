@@ -44,9 +44,6 @@ def work(cfg, params, developer_sleep_mode=False):
     if not parameters.test_for_parameter(params, 'options'):
         raise ValueError('Error missing JSON [options] record')
 
-    # Create these objects so they exist if an exception occurs
-    (server, order_id, product_id) = (None, None, None)
-
     start_time = datetime.datetime.now()
 
     # Initialize so that we don't sleep
@@ -171,13 +168,11 @@ def work(cfg, params, developer_sleep_mode=False):
 
 def main(data=None):
     try:
+        # retrieve a dict containing processing environment configuration values
         cfg = config.config()
         sleep_for = cfg.get('init_sleep_seconds')
         base_logger.info('Holding for {} seconds'.format(sleep_for))
         sleep(sleep_for)
-
-        # retrieve a dict containing processing environment configuration values
-
 
         # export values for the container environment
         config.export_environment_variables(cfg)
@@ -196,9 +191,9 @@ def main(data=None):
             data = args.data
 
         base_logger.info('order data - {0}'.format(data))
-        order_processor = partial(work, cfg)
-        success = map(order_processor, data)
-        base_logger.info('processing.work executed across data successfully? {}'.format(success))
+        for d in data:
+            result = work(cfg, d)
+            base_logger.info('processing.work executed for data {} successfully? {}'.format(d, result))
     except Exception as e:
         base_logger.exception('ESPA Worker error, problem executing main.main\nError: {}'.format(e))
         # Exit with 1 so Container and Task know there was a problem and report to the framework appropriately
