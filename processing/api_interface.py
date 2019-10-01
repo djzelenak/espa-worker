@@ -2,6 +2,10 @@ import requests
 import logging
 import config
 
+from tenacity import retry
+from tenacity import stop_after_attempt
+from tenacity import wait_fixed
+
 from logging_tools import get_base_logger
 
 logger = get_base_logger()
@@ -27,6 +31,7 @@ class APIServer(object):
         # raise exception if cannot reach api
         self.test_connection()
 
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(10), reraise=True)
     def request(self, method, resource=None, status=None, **kwargs):
         """
         Make a call into the API
@@ -56,7 +61,9 @@ class APIServer(object):
             raise APIException(e)
 
         if status and resp.status_code != status:
-            self._unexpected_status(resp.status_code, url)
+            msg = 'Received unexpected status code: {}\n for URL: {}'.format(code, url)
+            logger.error(msg)
+            raise Exception(msg)
 
         return resp.json(), resp.status_code
 
@@ -133,30 +140,13 @@ class APIServer(object):
 
         return resp
 
-    @staticmethod
-    def _unexpected_status(code, url):
-        """
-        Throw exception for an unhandled http status
-
-        Args:
-            code: http status that was received
-            url: URL that was used
-        """
-        msg = 'Received unexpected status code: {}\n for URL: {}'.format(code, url)
-        logger.error(msg)
-        raise Exception(msg)
-
     def test_connection(self):
         """
         Tests the base URL for the class
         Returns: True if 200 status received, else False
         """
         logger.debug("testing ESPA API connection...")
-        resp, status = self.request('get')
-        if status == 200:
-            logger.debug("Successfully reached ESPA API!")
-            return True
-        else:
-            msg = "Could not connect to ESPA API: {} \n status: {}\nresponse: {}".format(cfg['espa_api'], status, resp)
-            logger.error(msg)
-            raise APIException()
+        # self.request will raise an exception on a non-200 status for the request
+        resp, status = self.request('get', status=200)
+        logger.debug("Successfully reached ESPA API!")
+        return True

@@ -4,4 +4,4 @@ netcdf4==1.4.2
 nose2==0.9.1
 nose2-cov==1.0a4
 coverage==4.5.4
-tenacity
+tenacity==5.1.1
