@@ -310,12 +310,11 @@ def archive_log_files(order_id, product_id):
         output_dir = Environment().get_distribution_directory()
         destination_path = os.path.join(output_dir, 'logs', order_id)
         # Create the path
-        create_directory(destination_path)
         try:
             os.makedirs(destination_path)  # use the default mode 0777
             os.chmod(destination_path, 0755)  # use chmod to explicitly set the desired mode
         except OSError as ose:
-            if ose.errno == errno.EEXIST and os.path.isdir(directory):
+            if ose.errno == errno.EEXIST and os.path.isdir(destination_path):
                 # With how we operate, as long as it is a directory, we do not
                 # care about the 'already exists' error.
                 pass

@@ -17,7 +17,7 @@ import utilities
 
 from api_interface import APIServer, APIException
 from environment import Environment
-from logging_tools import EspaLogging, get_base_logger, get_stdout_handler, get_stderr_handler
+from logging_tools import EspaLogging, get_base_logger, get_stdout_handler, get_stderr_handler, archive_log_files
 
 base_logger = get_base_logger()
 
@@ -145,7 +145,7 @@ def work(cfg, params, developer_sleep_mode=False):
 
     except Exception as e:
         # First log the exception
-        logger.exception('Exception encountered stacktrace follows')
+        logger.exception('Exception encountered in processing.main.work:\nexception: {}'.format(e))
 
         try:
             # Sleep the number of seconds for minimum request duration
@@ -159,11 +159,12 @@ def work(cfg, params, developer_sleep_mode=False):
             logger.debug('Attempting to set product error, order_id: {}\nproduct_id: {}'.format(order_id, product_id))
             logged_contents = EspaLogging.read_logger_file(settings.PROCESSING_LOGGER)
             error_log = "Processing Log: {}\n\nException: {}".format(logged_contents, e)
-            server.set_scene_error(product_id, order_id, processing_location, e)
+            server.set_scene_error(product_id, order_id, processing_location, str(e))
         except Exception as e3:
             logger.exception('Unable to reach ESPA API and set product error for order_id: {}\nproduct_id: {}\nerror: {}'.format(order_id, product_id, e3))
+            raise e3
 
-        raise
+        return False
 
 
 def main(data=None):
@@ -195,9 +196,10 @@ def main(data=None):
             result = work(cfg, d)
             base_logger.info('processing.work executed for data {} successfully? {}'.format(d, result))
     except Exception as e:
-        base_logger.exception('ESPA Worker error, problem executing main.main\nError: {}'.format(e))
+        msg = 'ESPA Worker error, problem executing main.main\nError: {}'.format(e)
+        base_logger.exception(msg)
         # Exit with 1 so Container and Task know there was a problem and report to the framework appropriately
-        sys.exit(1)
+        sys.exit(msg)
 
 if __name__ == '__main__':
     main()

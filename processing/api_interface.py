@@ -61,7 +61,7 @@ class APIServer(object):
             raise APIException(e)
 
         if status and resp.status_code != status:
-            msg = 'Received unexpected status code: {}\n for URL: {}'.format(code, url)
+            msg = 'Received unexpected status code: {}\n for URL: {}'.format(resp.status_code, url)
             logger.error(msg)
             raise Exception(msg)
 
