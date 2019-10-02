@@ -1,11 +1,23 @@
 # File: main.yml
 # Description: Default values for espa-worker role
 
-# User and group info
+# production info
 app_user: espa
 app_uid: 16802
 app_group: ie
 app_gid: 502
+
+# test info
+apt_user: espatst
+apt_uid: 16342
+apt_group: espatst
+apt_gid: 16342
+
+# dev info
+apd_user: espadev
+apd_uid: 16862
+apd_group: espadev
+apd_gid: 602
 
 # Required system packages for ESPA
 espa_dependencies:
