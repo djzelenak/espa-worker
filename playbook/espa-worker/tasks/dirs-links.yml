@@ -3,13 +3,13 @@
 # Last Updated: See 'git log -p <filename>'
 # Recent Changes: See 'git log -p <filename>'
 
-- name: dirs-links|Directory - App User's Home
-  file:
-    path: "/home/{{ app_user }}"
-    state: directory
-    owner: "{{ app_user }}"
-    group: "{{ app_group }}"
-    mode: 0700
+# - name: dirs-links|Directory - App User's Home
+#   file:
+#     path: "/home/{{ app_user }}"
+#     state: directory
+#     owner: "{{ app_user }}"
+#     group: "{{ app_group }}"
+#     mode: 0700
 
 - name: dirs-links|Directory - Ledaps
   file:
@@ -49,11 +49,12 @@
     owner: root
     force: yes
 
-- name: dirs-links|Symlink - output_product_cache
-  file:
-    src: "/espa-storage/orders"
-    dest: "/output_product_cache"
-    state: link
-    owner: "{{ app_user }}"
-    group: "{{ app_group }}"
-    mode: 0777
+#- name: dirs-links|Symlink - output_product_cache
+#  file:
+#    src: "/espa-storage/orders"
+#    dest: "/output_product_cache"
+#    state: link
+#    mode: 0777
+    #owner: "{{ app_user }}"
+    #group: "{{ app_group }}"
+

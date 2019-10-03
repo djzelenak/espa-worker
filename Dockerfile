@@ -1,8 +1,8 @@
 FROM centos:centos6
 LABEL maintainer="USGS LSRD http://eros.usgs.gov"
 
-ENV UNAME='espa'
-ENV UGROUP='ie'
+#ENV UNAME='espa'
+#ENV UGROUP='ie'
 
 RUN yum -y update && yum clean all
 
@@ -24,15 +24,16 @@ RUN /usr/local/bin/pip install -r requirements.txt && \
     rm -f requirements.txt
 
 # Copy over the espa-worker processing scripts
-RUN mkdir /home/$UNAME/espa-processing
-COPY processing /home/$UNAME/espa-processing/processing
-COPY test /home/$UNAME/espa-processing/test
-RUN chown -R $UNAME:$UGROUP /home/$UNAME/ \
-    && ln -s /home/$UNAME/espa-processing/ /src
+RUN mkdir /espa-processing
+COPY processing /espa-processing/processing
+COPY test /espa-processing/test
+#RUN chown -R $UNAME:$UGROUP /home/$UNAME/ \
+RUN ln -s /espa-processing/ /src
+RUN ln -s /espa-storage/orders /output_product_cache
 
 # Update PYTHONPATH to find espa-product-formatter modules
 ENV PYTHONPATH=/usr/local/espa-product-formatter/python
 
 # Set the username and working directory
-USER $UNAME
-WORKDIR /home/$UNAME
+#USER $UNAME
+WORKDIR /
