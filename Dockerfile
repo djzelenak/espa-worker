@@ -1,9 +1,6 @@
 FROM centos:centos6
 LABEL maintainer="USGS LSRD http://eros.usgs.gov"
 
-#ENV UNAME='espa'
-#ENV UGROUP='ie'
-
 RUN yum -y update && yum clean all
 
 RUN yum -y install epel-release
@@ -27,13 +24,13 @@ RUN /usr/local/bin/pip install -r requirements.txt && \
 RUN mkdir /espa-processing
 COPY processing /espa-processing/processing
 COPY test /espa-processing/test
-#RUN chown -R $UNAME:$UGROUP /home/$UNAME/ \
-RUN ln -s /espa-processing/ /src
+RUN ln -s /espa-processing/ /home/espa/src
+RUN ln -s /espa-processing/ /home/espatst/src
+RUN ln -s /espa-processing/ /home/espadev/src
 RUN ln -s /espa-storage/orders /output_product_cache
 
 # Update PYTHONPATH to find espa-product-formatter modules
 ENV PYTHONPATH=/usr/local/espa-product-formatter/python
 
-# Set the username and working directory
-#USER $UNAME
+# Set the working directory
 WORKDIR /
