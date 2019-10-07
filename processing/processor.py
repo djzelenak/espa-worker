@@ -64,6 +64,9 @@ class ProductProcessor(object):
         self._logger.info('Using distribution method [{}]'.
                           format(self._cfg.get('espa_distribution_method')))
 
+        # Establish the product owner
+        self._owner = self._cfg.get('espa_user')
+
         # Validate the parameters
         self.validate_parameters()
 
