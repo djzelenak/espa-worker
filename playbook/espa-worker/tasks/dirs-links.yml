@@ -3,7 +3,7 @@
 # Last Updated: See 'git log -p <filename>'
 # Recent Changes: See 'git log -p <filename>'
 
-- name: dirs-links|Directory - App User's Home
+- name: dirs-links|Directory - dev User's Home
   file:
     path: "/home/{{ apd_user }}"
     state: directory
@@ -11,7 +11,7 @@
     group: "{{ apd_group }}"
     mode: 0700
 
-- name: dirs-links|Directory - App User's Home
+- name: dirs-links|Directory - tst User's Home
   file:
     path: "/home/{{ apt_user }}"
     state: directory
@@ -65,3 +65,11 @@
     owner: root
     force: yes
 
+- name: dirs-links|Symlink - output_product_cache
+  file:
+    src: "/espa-storage/orders"
+    dest: "/output_product_cache"
+    state: link
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: 0777

@@ -329,18 +329,20 @@ def archive_log_files(order_id, product_id):
         full_logfile_path = os.path.abspath(logfile_path)
         log_name = os.path.basename(full_logfile_path)
         # Determine full destination
-        destination_file = os.path.join(destination_path, log_name)
+        destination_job_file = os.path.join(destination_path, log_name)
         # Copy it
-        shutil.copyfile(full_logfile_path, destination_file)
+        shutil.copyfile(full_logfile_path, destination_job_file)
 
         # Mapper log file
         full_logfile_path = os.path.abspath(WORKER_LOG_FILENAME)
         final_log_name = '-'.join([WORKER_LOG_PREFIX, order_id, product_id])
         final_log_name = '.'.join([final_log_name, 'log'])
         # Determine full destination
-        destination_file = os.path.join(destination_path, final_log_name)
+        destination_mapper_file = os.path.join(destination_path, final_log_name)
         # Copy it
-        shutil.copyfile(full_logfile_path, destination_file)
+        shutil.copyfile(full_logfile_path, destination_mapper_file)
+
+        return destination_path
 
     except Exception:
         # We don't care because we are at the end of processing

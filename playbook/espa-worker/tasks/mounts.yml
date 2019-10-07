@@ -3,6 +3,22 @@
 # Last Updated: See 'git log -p <filename>'
 # Recent Changes: See 'git log -p <filename>'
 
+- name: mounts|Create ESPA Storage Directory
+  file:
+    path: "/espa-storage"
+    state: directory
+    owner: root
+    group: "{{ app_group }}"
+    mode: 0755
+
+- name: mounts|Create ESPA Storage Orders Mount Point
+  file:
+    path: "/espa-storage/orders"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: 0775
+
 - name: mounts|Create Auxiliaries Mount Point
   file:
     path: "/usr/local/auxiliaries"

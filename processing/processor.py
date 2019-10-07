@@ -65,7 +65,8 @@ class ProductProcessor(object):
                           format(self._cfg.get('espa_distribution_method')))
 
         # Establish the product owner
-        self._owner = self._cfg.get('espa_user')
+        self._user = self._cfg.get('espa_user')
+        self._group = self._cfg.get('espa_group')
 
         # Validate the parameters
         self.validate_parameters()
@@ -172,6 +173,7 @@ class ProductProcessor(object):
 
         base_work_dir = self._cfg.get('espa_work_dir')
 
+
         # Get the absolute path to the directory, and default to the current
         # one
         if base_work_dir == '':
@@ -198,8 +200,8 @@ class ProductProcessor(object):
         self._work_dir = initialization.create_work_directory(self._product_dir)
         self._logger.info('Created directory [{}]'.format(self._work_dir))
 
+        # Will return the espa_distribution_dir if distribution_method is local
         self._output_dir = initialization.create_output_directory(self._product_dir)
-        self._logger.info('Created directory [{}]'.format(self._output_dir))
 
     def remove_product_directory(self):
         """Remove the product directory
@@ -240,11 +242,13 @@ class ProductProcessor(object):
             immutability = utilities.str2bool(self._cfg.get('immutable_distribution'))
 
             (product_file, cksum_file) = \
-                distribution.distribute_product(immutability,
-                                                product_name,
-                                                self._work_dir,
-                                                self._output_dir,
-                                                self._parms)
+                distribution.distribute_product(immutability=immutability,
+                                                product_name=product_name,
+                                                source_path=self._work_dir,
+                                                packaging_path=self._output_dir,
+                                                parms=self._parms,
+                                                user=self._user,
+                                                group=self._group)
         except Exception:
             self._logger.exception('An exception occurred delivering'
                                    ' the product')
@@ -522,7 +526,9 @@ class CDRProcessor(CustomizationProcessor):
                 distribution.distribute_statistics(immutability,
                                                    self._work_dir,
                                                    self._output_dir,
-                                                   self._parms)
+                                                   self._parms,
+                                                   self._user,
+                                                   self._group)
             except Exception:
                 self._logger.exception('An exception occurred delivering'
                                        ' the stats')

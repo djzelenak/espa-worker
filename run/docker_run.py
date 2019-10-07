@@ -48,7 +48,9 @@ def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactiv
         '--env ASTER_GED_SERVER_NAME=${ASTER_GED_SERVER_NAME}',
         '--env URS_MACHINE=${URS_MACHINE}',
         '--env URS_LOGIN=${URS_LOGIN}',
-        '--env URS_PASSWORD=${URS_PASSWORD}'
+        '--env URS_PASSWORD=${URS_PASSWORD}',
+        '--env ESPA_USER=${ESPA_USER}',
+        '--env ESPA_GROUP=${ESPA_GROUP}'
     ]
 
     image_tag = [

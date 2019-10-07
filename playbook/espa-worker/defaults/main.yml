@@ -10,14 +10,14 @@ app_gid: 502
 # test info
 apt_user: espatst
 apt_uid: 16342
-apt_group: ie
-apt_gid: 502
+apt_group: espatst
+apt_gid: 16342
 
 # dev info
 apd_user: espadev
 apd_uid: 16862
-apd_group: ie
-apd_gid: 502
+apd_group: espadev
+apd_gid: 602
 
 # Required system packages for ESPA
 espa_dependencies:

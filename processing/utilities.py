@@ -17,7 +17,7 @@ import json
 from collections import defaultdict
 from subprocess import check_output, CalledProcessError, check_call
 from config_utils import retrieve_pigz_cfg
-from logging_tools import get_base_logger
+from logging_tools import get_base_logger, EspaLogging
 
 base_logger = get_base_logger()
 cfg = config.config()
@@ -399,3 +399,29 @@ def get_sleep_duration(cfg, start_time, dont_sleep, key='espa_min_request_durati
     logger.info('Sleeping An Additional {0} Seconds'.format(seconds_to_sleep))
 
     return seconds_to_sleep
+
+def change_ownership(product_path, user, group):
+    """
+    Change the ownership of a product
+    Args:
+        product_path: The full path to a file or folder whose ownership will be updated
+        user: The new owner user
+        group: The new owner group
+
+    Returns:
+        None
+
+    """
+    try:
+        logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
+
+    except Exception:
+        logger = get_base_logger()
+
+    ownership = '{u}:{g}'.format(u=user, g=group)
+
+    cmd = ' '.join(['sudo', 'chown', '-R', ownership, product_path])
+    output = execute_cmd(cmd)
+
+    if len(output) > 0:
+        logger.info(output)
