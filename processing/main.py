@@ -159,7 +159,7 @@ def work(cfg, params, developer_sleep_mode=False):
             logger.debug('Attempting to set product error, order_id: {}\nproduct_id: {}'.format(order_id, product_id))
             logged_contents = EspaLogging.read_logger_file(settings.PROCESSING_LOGGER)
             error_log = "Processing Log: {}\n\nException: {}".format(logged_contents, e)
-            server.set_scene_error(product_id, order_id, processing_location, str(e))
+            server.set_scene_error(product_id, order_id, processing_location, error_log)
         except Exception as e3:
             logger.exception('Unable to reach ESPA API and set product error for order_id: {}\nproduct_id: {}\nerror: {}'.format(order_id, product_id, e3))
             raise e3
