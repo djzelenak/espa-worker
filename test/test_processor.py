@@ -5,7 +5,7 @@ import unittest
 from mock import patch
 from mocks import mock_api_response, mock_invalid_response
 import processing
-from processing.main import convert_json
+from processing.utilities import convert_json
 from processing import parameters, config, config_utils, processor, product_formatting
 
 class TestProcessor(unittest.TestCase):

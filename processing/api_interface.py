@@ -1,9 +1,17 @@
 import requests
 import logging
+import config
 
+from tenacity import retry
+from tenacity import stop_after_attempt
+from tenacity import wait_fixed
+
+from logging_tools import get_base_logger
+
+logger = get_base_logger()
 
 logging.getLogger('requests').setLevel(logging.WARNING)
-
+cfg = config.config()
 
 class APIException(Exception):
     """
@@ -17,8 +25,13 @@ class APIServer(object):
     Provide a more straightforward way of handling API calls
     """
     def __init__(self, base_url):
+        logger.debug("initializing APIServer object with url: {}".format(base_url))
         self.base = base_url
+        
+        # raise exception if cannot reach api
+        self.test_connection()
 
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(10), reraise=True)
     def request(self, method, resource=None, status=None, **kwargs):
         """
         Make a call into the API
@@ -48,53 +61,11 @@ class APIServer(object):
             raise APIException(e)
 
         if status and resp.status_code != status:
-            self._unexpected_status(resp.status_code, url)
+            msg = 'Received unexpected status code: {}\n for URL: {}'.format(resp.status_code, url)
+            logger.error(msg)
+            raise Exception(msg)
 
         return resp.json(), resp.status_code
-
-    def get_configuration(self, key):
-        """
-        Retrieve a configuration value
-
-        Args:
-            key: configuration key
-
-        Returns: value if it exists, otherwise None
-
-        """
-        config_url = '/configuration/{}'.format(key)
-
-        resp, status = self.request('get', config_url, status=200)
-
-        if key in resp.keys():
-            return resp[key]
-
-    def get_scenes_to_process(self, limit, user, priority, product_type):
-        """
-        Retrieve scenes/orders to begin processing in the system
-
-        Note: This method is not currently used by the espa-worker
-
-        Args:
-            limit: number of products to grab
-            user: specify a user
-            priority: depricated, legacy support
-            product_type: landsat and/or modis
-
-        Returns: list of dicts
-        """
-        params = ['record_limit={}'.format(limit) if limit else None,
-                  'for_user={}'.format(user) if user else None,
-                  'priority={}'.format(priority) if priority else None,
-                  'product_types={}'.format(product_type) if product_type else None]
-
-        query = '&'.join([q for q in params if q])
-
-        url = '/products?{}'.format(query)
-
-        resp, status = self.request('get', url, status=200)
-
-        return resp
 
     def update_status(self, prod_id, order_id, proc_loc, val):
         """
@@ -169,67 +140,13 @@ class APIServer(object):
 
         return resp
 
-    def queue_products(self, prod_list, status, job_name):
-        data_dict = {'order_name_tuple_list': prod_list,
-                     'processing_location': status,
-                     'job_name': job_name}
-
-        url = '/queue-products'
-
-        resp, status = self.request('post', url, json=data_dict, status=200)
-
-        return resp
-
-    def handle_orders(self):
-        """
-        Sends the handle_orders command to the API
-
-        Returns: True if successful
-        """
-        url = '/handle-orders'
-
-        resp, status = self.request('get', url, status=200)
-
-        return status == 200
-
-    @staticmethod
-    def _unexpected_status(code, url):
-        """
-        Throw exception for an unhandled http status
-
-        Args:
-            code: http status that was received
-            url: URL that was used
-        """
-        raise Exception('Received unexpected status code: {}\n'
-                        'for URL: {}'.format(code, url))
-
     def test_connection(self):
         """
         Tests the base URL for the class
         Returns: True if 200 status received, else False
         """
-        resp, status = self.request('get')
-
-        if status == 200:
-            return True
-
-        return False
-
-
-def api_connect(url):
-    """
-    Simple lead in method for using the API connection class
-
-    Args:
-        url: base URL to connect to
-
-    Returns: initialized APIServer object if successful connection
-             else None
-    """
-    api = APIServer(url)
-
-    if not api.test_connection():
-        return None
-
-    return api
+        logger.debug("testing ESPA API connection...")
+        # self.request will raise an exception on a non-200 status for the request
+        resp, status = self.request('get', status=200)
+        logger.debug("Successfully reached ESPA API!")
+        return True

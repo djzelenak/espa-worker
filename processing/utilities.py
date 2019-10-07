@@ -9,13 +9,74 @@ import os
 import errno
 import datetime
 import commands
+import config
 import random
 import resource
+import settings
+import json
 from collections import defaultdict
 from subprocess import check_output, CalledProcessError, check_call
 from config_utils import retrieve_pigz_cfg
+from logging_tools import get_base_logger
 
+base_logger = get_base_logger()
+cfg = config.config()
 PIGZ_WRAPPER_FILENAME = 'pigz_wrapper.sh'
+
+class NETRCException(Exception):
+    pass
+
+def build_netrc():
+    """
+    make a .netrc in the home dir
+    Returns:
+
+    """
+    try:
+        home = os.environ.get('HOME')
+        urs_machine = os.environ.get('URS_MACHINE')
+        urs_login = os.environ.get('URS_LOGIN')
+        urs_pw = os.environ.get('URS_PASSWORD')
+
+        if home is None:
+            base_logger.exception('No home directory found!')
+
+        if urs_machine is None or urs_login is None or urs_pw is None:
+            msg = 'URS credentials not found!'
+            base_logger.exception(msg)
+            raise NETRCException(msg)
+
+        netrc = os.path.join(home, '.netrc')
+
+        with open(netrc, 'w') as f:
+            f.write('machine {0}\n'.format(urs_machine))
+            f.write('login {0}\n'.format(urs_login))
+            f.write('password {0}'.format(urs_pw))
+  
+        return True
+    except Exception as e:
+        msg = "Exception encountered creating .netrc: {}".format(e)
+        base_logger.exception(msg)
+        raise NETRCException(msg)
+
+def convert_json(data):
+    if type(data) is str:
+        # return a list or dict
+        temp = json.loads(data)
+        if type(temp) is dict:
+            base_logger.warning('The input order data was a single dict, but the processing container'
+                                ' requires a list - placing the dict in a list object')
+            return [temp]
+        else:
+            return temp
+    elif type(data) in (list, dict):
+        # return a string
+        base_logger.warning('The input order data was a list or dict object - returning a string')
+        return json.dumps(data)
+    else:
+        msg = 'Non-compatible data type for input data of type {0}'.format(type(data))
+        base_logger.critical(msg)
+        raise Exception(msg)
 
 
 def date_from_year_doy(year, doy):
@@ -311,3 +372,30 @@ def str2bool(val):
 
     except AttributeError:
         raise TypeError('value {0} was not a string'.format(type(val)))
+
+def get_sleep_duration(cfg, start_time, dont_sleep, key='espa_min_request_duration_in_seconds'):
+    """Logs details and returns number of seconds to sleep
+    """
+    try:
+        logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
+
+    except Exception:
+        logger = get_base_logger()
+
+    # Determine if we need to sleep
+    end_time = datetime.datetime.now()
+    seconds_elapsed = (end_time - start_time).seconds
+    logger.info('Processing Time Elapsed {0} Seconds'.format(seconds_elapsed))
+
+    min_seconds = int((cfg.get(key)))
+
+    seconds_to_sleep = 1
+    if dont_sleep:
+        # We don't need to sleep
+        seconds_to_sleep = 1
+    elif seconds_elapsed < min_seconds:
+        seconds_to_sleep = (min_seconds - seconds_elapsed)
+
+    logger.info('Sleeping An Additional {0} Seconds'.format(seconds_to_sleep))
+
+    return seconds_to_sleep

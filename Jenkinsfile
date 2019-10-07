@@ -4,7 +4,7 @@ pipeline {
 
     //-- Job Build Parameters --\\
     parameters {
-        string(name: 'DOCKERTAG', defaultValue: '2.35.0-el7-beta.3', description: 'Docker image tagname')
+        string(name: 'DOCKERTAG', defaultValue: 'latest', description: 'Docker image tagname')
     }
 
     //-- Job Stages (Actions) --\\
@@ -19,7 +19,7 @@ pipeline {
                 echo 'Building Docker Image from Dockerfile.espa in project.'
 
                 script {
-                    def customImage = docker.build("usgseros/espa-worker:${env.DOCKERTAG}", "-f Dockerfile.espa .")
+                    def customImage = docker.build("usgseros/espa-worker:${env.DOCKERTAG}", ".")
                     echo "Docker image id in same script block is: ${customImage.id}"
 		 
                     // Make image object available to later stages
@@ -36,7 +36,10 @@ pipeline {
                 script {
                     // Test commands inside of the built image
                     CUSTOM_IMAGE.inside {
-			sh: """nose2 --with-coverage""", label: "Running unit tests"
+			            sh """
+			                cd /src
+			                nose2 --with-coverage
+			            """
                     }
                 }
             }
