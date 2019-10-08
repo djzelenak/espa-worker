@@ -25,7 +25,7 @@ import transfer
 
 
 def package_product(immutability, source_directory, destination_directory,
-                    product_name, user, group):
+                    product_name):
     '''
     Description:
       Package the contents of the source directory into a gzipped tarball
@@ -618,9 +618,7 @@ def distribute_product_local(immutability, product_name, source_path,
                      local_cksum_value) = package_product(immutability,
                                                           source_path,
                                                           packaging_path,
-                                                          product_name,
-                                                          user,
-                                                          group)
+                                                          product_name)
 
                     # Change the attributes on the files so that we can't
                     # remove them
@@ -631,8 +629,7 @@ def distribute_product_local(immutability, product_name, source_path,
                         if len(output) > 0:
                             logger.info(output)
 
-                    # change_ownership(product_file, user, group)
-                    # change_ownership(cksum_file, user, group)
+                    # Update the ownership based on the currently running ESPA environment
                     change_ownership(packaging_path, user, group)
 
                 except Exception:

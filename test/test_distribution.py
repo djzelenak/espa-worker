@@ -65,8 +65,7 @@ class TestDistribution(unittest.TestCase):
         mock_os_chmod.return_value = None
 
         product_full_path, cksum_full_path, cksum_value = \
-            distribution.package_product(True, '/source_directory', '/destination_directory', 'product_name',
-                                         'user', 'group')
+            distribution.package_product(True, '/source_directory', '/destination_directory', 'product_name')
 
         self.assertTrue(product_full_path == self.test_product_full_path_tar and
                         cksum_full_path == self.test_cksum_full_path and
