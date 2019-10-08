@@ -26,14 +26,3 @@
     name: "{{ apd_user }}"
     uid: "{{ apd_uid }}"
     group: "{{ app_group }}"
-
-- name: install sudo
-  yum:
-    name: sudo
-    state: installed
-
-- name: sudo without password for ie group
-  copy:
-    content: '%ie ALL=(ALL:ALL) NOPASSWD:ALL'
-    dest: /etc/sudoers.d/ie_nopasswd
-    mode: 0440

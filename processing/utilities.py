@@ -420,7 +420,7 @@ def change_ownership(product_path, user, group):
 
     ownership = '{u}:{g}'.format(u=user, g=group)
 
-    cmd = ' '.join(['sudo', 'chown', '-R', ownership, product_path])
+    cmd = ' '.join(['chown', '-R', ownership, product_path])
     output = execute_cmd(cmd)
 
     if len(output) > 0:
