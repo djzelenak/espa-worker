@@ -15,29 +15,29 @@
     uid: "{{ app_uid }}"
     group: "{{ app_group }}"
 
-- name: user-group|Add espatst group
-  group:
-    name: "{{ apt_group }}"
-    gid: "{{ apt_gid }}"
-    state: present
+#- name: user-group|Add espatst group
+#  group:
+#    name: "{{ apt_group }}"
+#    gid: "{{ apt_gid }}"
+#    state: present
 
 - name: user-group|Add espatst user
   user:
     name: "{{ apt_user }}"
     uid: "{{ apt_uid }}"
-    group: "{{ apt_group }}"
+    group: "{{ app_group }}"
 
-- name: user-group|Add espadev group
-  group:
-    name: "{{ apd_group }}"
-    gid: "{{ apd_gid }}"
-    state: present
+#- name: user-group|Add espadev group
+#  group:
+#    name: "{{ apd_group }}"
+#    gid: "{{ apd_gid }}"
+#    state: present
 
 - name: user-group|Add espadev user
   user:
     name: "{{ apd_user }}"
     uid: "{{ apd_uid }}"
-    group: "{{ apd_group }}"
+    group: "{{ app_group }}"
 
 - name: install sudo
   yum:

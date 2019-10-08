@@ -8,7 +8,7 @@
     path: "/home/{{ apd_user }}"
     state: directory
     owner: "{{ apd_user }}"
-    group: "{{ apd_group }}"
+    group: "{{ app_group }}"
     mode: 0700
 
 - name: dirs-links|Directory - tst User's Home
@@ -16,7 +16,7 @@
     path: "/home/{{ apt_user }}"
     state: directory
     owner: "{{ apt_user }}"
-    group: "{{ apt_group }}"
+    group: "{{ app_group }}"
     mode: 0700
 
 - name: dirs-links|Directory - App User's Home
