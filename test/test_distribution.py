@@ -110,7 +110,9 @@ class TestDistribution(unittest.TestCase):
         (product_file, cksum_file) = distribution.distribute_product_local(True,
                                                                            'product_name',
                                                                            '/source_path',
-                                                                           '/packaging_path')
+                                                                           '/packaging_path',
+                                                                           user='espa',
+                                                                           group='ie')
 
         self.assertTrue(product_file == self.test_product_full_path_tar and
                         cksum_file == self.test_cksum_full_path)
@@ -194,7 +196,9 @@ class TestDistribution(unittest.TestCase):
         distribution.distribute_statistics_local(immutability=True,
                                                  product_id='product_id',
                                                  source_path='/source',
-                                                 destination_path='/destination')
+                                                 destination_path='/destination',
+                                                 user='espa',
+                                                 group='ie')
         calls = [call('stats/band_1.csv', '/destination/stats/band_1.csv'),
                  call('stats/band_2.csv', '/destination/stats/band_2.csv'),
                  call('stats/band_3.csv', '/destination/stats/band_3.csv')]
@@ -217,11 +221,16 @@ class TestDistribution(unittest.TestCase):
         distribution.distribute_statistics(immutability=True,
                                            source_path='/source',
                                            packaging_path='/destination',
-                                           parms=params)
+                                           parms=params,
+                                           user='espa',
+                                           group='ie')
+
         mock_distribute_local.assert_called_once_with(True,
                                                       'LC08_L1TP_128058_20160608_20170324_01_T1',
                                                       '/source',
-                                                      '/destination/espa-bilbobaggins@usgs.gov-07012019-011111-111')
+                                                      '/destination/espa-bilbobaggins@usgs.gov-07012019-011111-111',
+                                                      'espa',
+                                                      'ie')
 
         # Second test remote
         mock_get_cache_hostname.return_value = 'hostname'
@@ -231,7 +240,9 @@ class TestDistribution(unittest.TestCase):
         distribution.distribute_statistics(immutability=True,
                                            source_path='/source',
                                            packaging_path='/destination',
-                                           parms=params)
+                                           parms=params,
+                                           user='espa',
+                                           group='ie')
 
         mock_distribute_remote.assert_called_once_with(True,
                                                        'LC08_L1TP_128058_20160608_20170324_01_T1',
@@ -259,15 +270,19 @@ class TestDistribution(unittest.TestCase):
         mock_distribute_local.return_value = 'product_file', 'cksum_file'
 
         product_file, cksum_file = distribution.distribute_product(immutability=True,
-                                        product_name='product_name',
-                                        source_path='/source',
-                                        packaging_path='/packaging_path',
-                                        parms=params)
+                                                                   product_name='product_name',
+                                                                   source_path='/source',
+                                                                   packaging_path='/packaging_path',
+                                                                   parms=params,
+                                                                   user='espa',
+                                                                   group='ie')
 
         mock_distribute_local.assert_called_once_with(True,
                                                       'product_name',
                                                       '/source',
-                                                      '/packaging_path/2016/128/58')
+                                                      '/packaging_path/2016/128/58',
+                                                      'espa',
+                                                      'ie')
 
         # Second test remote
         env = mock_environment()
@@ -275,10 +290,12 @@ class TestDistribution(unittest.TestCase):
         mock_distribute_remote.return_value = 'product_file', 'cksum_file'
 
         product_file, cksum_file = distribution.distribute_product(immutability=True,
-                                        product_name='product_name',
-                                        source_path='/source',
-                                        packaging_path='/packaging_path',
-                                        parms=params)
+                                                                   product_name='product_name',
+                                                                   source_path='/source',
+                                                                   packaging_path='/packaging_path',
+                                                                   parms=params,
+                                                                   user='espa',
+                                                                   group='ie')
 
         mock_distribute_remote.assert_called_once_with(True,
                                                        'product_name',

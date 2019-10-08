@@ -56,6 +56,7 @@ def config():
         de('espa_priority', None),
         de('espa_schema', '/usr/local/schema/espa_internal_metadata_v2_1.xsd'),
         de('espa_user', None),
+        de('espa_group', None),
         de('espa_work_dir', '/home/espa'),
         de('esun', '/usr/local/espa-cloud-masking/cfmask/static_data'),
         de('gdal_skip', default_gdal_skip_drivers),

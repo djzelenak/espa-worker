@@ -133,7 +133,8 @@ def work(cfg, params, developer_sleep_mode=False):
         # Sleep the number of seconds for minimum request duration
         sleep(utilities.get_sleep_duration(cfg, start_time, dont_sleep))
 
-        archive_log_files(order_id, product_id)
+        log_dir = archive_log_files(order_id, product_id)
+        utilities.change_ownership(log_dir, cfg.get('espa_user'), cfg.get('espa_group'))
 
         # Everything was successful so mark the scene complete
         server.mark_scene_complete(product_id, order_id,
@@ -151,7 +152,9 @@ def work(cfg, params, developer_sleep_mode=False):
             # Sleep the number of seconds for minimum request duration
             logger.debug('Attempting to archive log files for order_id: {}\nproduct_id: {}'.format(order_id, product_id))
             sleep(utilities.get_sleep_duration(cfg, start_time, dont_sleep))
-            archive_log_files(order_id, product_id)
+            log_dir = archive_log_files(order_id, product_id)
+            utilities.change_ownership(log_dir, cfg.get('espa_user'), cfg.get('espa_group'))
+
         except Exception as e2:
             logger.exception('Problem archiving log files. error: {}'.format(e2))
 

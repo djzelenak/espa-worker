@@ -18,6 +18,7 @@ import settings
 import utilities
 from logging_tools import EspaLogging
 from environment import Environment, DISTRIBUTION_METHOD_LOCAL
+from utilities import change_ownership
 from espa_exception import ESPAException
 import sensor
 import transfer
@@ -81,16 +82,15 @@ def package_product(immutability, source_directory, destination_directory,
     os.chdir(source_directory)
 
     try:
-        # Tar the files
-        logger.info("Packaging completed product to %s.tar.gz"
-                    % product_full_path)
-
         # Grab the files to tar and gzip
         product_files = glob.glob("*")
 
         # Execute tar with zipping, the full/path/*.tar.gz name is returned
         product_full_path = utilities.tar_files(product_full_path,
                                                 product_files, gzip=True)
+
+        logger.info("Packaging completed product to %s.tar.gz"
+                    % product_full_path)
 
         # Change file permissions
         logger.info("Changing file permissions on %s to 0644"
@@ -413,7 +413,7 @@ def distribute_statistics_remote(immutability, product_id, source_path,
 
 
 def distribute_statistics_local(immutability, product_id, source_path,
-                                destination_path):
+                                destination_path, user, group):
     '''
     Description:
         Copies the statistics to the specified directory on the local system
@@ -476,6 +476,8 @@ def distribute_statistics_local(immutability, product_id, source_path,
 
             logger.info("Copying {0} to {1}".format(filename, dest_file_path))
             shutil.copyfile(file_path, dest_file_path)
+
+        change_ownership(stats_path, user, group)
 
         # Change the attributes on the files so that we can't remove them
         if immutability:
@@ -591,7 +593,7 @@ def distribute_product_remote(immutability, product_name, source_path,
 
 
 def distribute_product_local(immutability, product_name, source_path,
-                             packaging_path):
+                             packaging_path, user, group):
 
     logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
@@ -627,8 +629,11 @@ def distribute_product_local(immutability, product_name, source_path,
                         if len(output) > 0:
                             logger.info(output)
 
+                    # Update the ownership based on the currently running ESPA environment
+                    change_ownership(packaging_path, user, group)
+
                 except Exception:
-                    logger.exception("An exception occurred processing %s"
+                    logger.exception("An exception occurred in distribution.distribute_product_local for %s"
                                      % product_name)
                     if sub_attempt < max_package_attempts:
                         sleep(sleep_seconds)  # sleep before trying again
@@ -660,7 +665,7 @@ def distribute_product_local(immutability, product_name, source_path,
 # API Implementation
 
 
-def distribute_statistics(immutability, source_path, packaging_path, parms):
+def distribute_statistics(immutability, source_path, packaging_path, parms, user, group):
     '''
     Description:
         Determines if the distribution method is set to local or remote and
@@ -677,6 +682,8 @@ def distribute_statistics(immutability, source_path, packaging_path, parms):
         package_dir - The full path on the local system for where the packaged
                       product should be placed under.
         parms - All the user and system defined parameters.
+        user - The user to take ownership.
+        group - The group to take ownership.
     '''
 
     env = Environment()
@@ -699,7 +706,7 @@ def distribute_statistics(immutability, source_path, packaging_path, parms):
         package_path = os.path.join(packaging_path, cache_path)
 
         distribute_statistics_local(immutability, product_id, source_path,
-                                    package_path)
+                                    package_path, user, group)
 
     else:  # remote
         env = Environment()
@@ -723,28 +730,29 @@ def distribute_statistics(immutability, source_path, packaging_path, parms):
 
 
 def distribute_product(immutability, product_name, source_path,
-                       packaging_path, parms):
-    '''
-    Description:
-        Determines if the distribution method is set to local or remote and
-        calls the correct distribution method.
-
-    Returns:
-      product_file - The full path to the product either on the local system
-                     or the remote destination.
-      cksum_value - The check sum value of the product.
+                       packaging_path, parms, user, group):
+    """
+    Determines if the distribution method is set to local or remote and
+    calls the correct distribution method.
 
     Args:
-        immutability - Wether or not to set the immutability flag on the
-                       product files
-        product_name - The name of the product.
-        source_path - The full path to of directory containing the data to
-                      package and distribute.
-        package_dir - The full path on the local system for where the packaged
-                      product should be placed under.
-        parms - All the user and system defined parameters.
-    '''
+        immutability: Whether or not to set the immutability flag on he
+                      product files.
+        product_name: The name of the product.
+        source_path: The full path to the directory containing the data to
+                     package and distribute.
+        packaging_path: The full path on the local system for where the packaged
+                        product should be placed under.
+        parms: All the user and system defined parameters.
+        user: The user to take ownership.
+        group: The group to take ownership.
 
+    Returns:
+      product_file: The full path to the product either on the local system
+                     or the remote destination.
+      cksum_value: The check sum value of the product.
+
+    """
     env = Environment()
 
     distribution_method = env.get_distribution_method()
@@ -773,7 +781,9 @@ def distribute_product(immutability, product_name, source_path,
             distribute_product_local(immutability,
                                      product_name,
                                      source_path,
-                                     package_path)
+                                     package_path,
+                                     user,
+                                     group)
 
     else:  # remote
         # Use the remote cache path
