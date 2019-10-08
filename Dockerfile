@@ -33,6 +33,5 @@ RUN chown -R $UNAME:$UGROUP /home/$UNAME/ \
 # Update PYTHONPATH to find espa-product-formatter modules
 ENV PYTHONPATH=/usr/local/espa-product-formatter/python
 
-# Set the username and working directory
-USER $UNAME
+# Set the working directory
 WORKDIR /home/$UNAME
