@@ -96,9 +96,10 @@ class TestDistribution(unittest.TestCase):
                         destination_cksum_file == self.test_cksum_full_path)
 
     @patch('processing.distribution.EspaLogging.get_logger')
+    @patch('processing.distribution.find_owner')
     @patch('processing.distribution.package_product')
     @patch('processing.distribution.utilities.execute_cmd')
-    def test_distribute_product_local(self, mock_execute_cmd, mock_package_product, mock_logger):
+    def test_distribute_product_local(self, mock_execute_cmd, mock_package_product, mock_find_owner, mock_logger):
         """
         Make sure the local product distribution is functioning as expected given certain inputs
         """
@@ -106,6 +107,8 @@ class TestDistribution(unittest.TestCase):
                                              self.test_cksum_full_path,
                                              self.test_cksum_value)
         mock_execute_cmd.return_value = 'cmd output'
+
+        mock_find_owner.return_value = 'espa'
 
         (product_file, cksum_file) = distribution.distribute_product_local(True,
                                                                            'product_name',
