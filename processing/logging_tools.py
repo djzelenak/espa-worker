@@ -342,7 +342,7 @@ def archive_log_files(order_id, product_id):
         # Copy it
         shutil.copyfile(full_logfile_path, destination_mapper_file)
 
-        return destination_path
+        return destination_path, destination_job_file, destination_mapper_file
 
     except Exception:
         # We don't care because we are at the end of processing

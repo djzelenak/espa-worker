@@ -18,7 +18,7 @@ import settings
 import utilities
 from logging_tools import EspaLogging
 from environment import Environment, DISTRIBUTION_METHOD_LOCAL
-from utilities import change_ownership
+from utilities import change_ownership, find_owner
 from espa_exception import ESPAException
 import sensor
 import transfer
@@ -477,6 +477,10 @@ def distribute_statistics_local(immutability, product_id, source_path,
             logger.info("Copying {0} to {1}".format(filename, dest_file_path))
             shutil.copyfile(file_path, dest_file_path)
 
+            # change ownership for each individual stats file
+            change_ownership(dest_file_path, user, group)
+
+        # change ownership of the stats dir (non-recursively)
         change_ownership(stats_path, user, group)
 
         # Change the attributes on the files so that we can't remove them
@@ -630,7 +634,12 @@ def distribute_product_local(immutability, product_name, source_path,
                             logger.info(output)
 
                     # Update the ownership based on the currently running ESPA environment
-                    change_ownership(packaging_path, user, group)
+                    final_product = os.path.join(packaging_path, product_name)
+                    # change ownership for the delivered tar bundle
+                    change_ownership(final_product, user, group)
+                    # change ownership for the order directory if necessary
+                    if find_owner(packaging_path) != user:
+                        change_ownership(packaging_path, user, group)
 
                 except Exception:
                     logger.exception("An exception occurred in distribution.distribute_product_local for %s"
