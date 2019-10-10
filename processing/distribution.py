@@ -634,9 +634,9 @@ def distribute_product_local(immutability, product_name, source_path,
                             logger.info(output)
 
                     # Update the ownership based on the currently running ESPA environment
-                    final_product = os.path.join(packaging_path, product_name)
-                    # change ownership for the delivered tar bundle
-                    change_ownership(final_product, user, group)
+                    # change ownership for the delivered tar bundle and cksum file
+                    change_ownership(product_file, user, group)
+                    change_ownership(cksum_file, user, group)
                     # change ownership for the order directory if necessary
                     if find_owner(packaging_path) != user:
                         change_ownership(packaging_path, user, group)
