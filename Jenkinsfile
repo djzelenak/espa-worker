@@ -55,7 +55,7 @@ pipeline {
                         // List installed pip packages inside container
                         sh 'pip list'
 
-                        sh 'nose2 --fail-fast'
+                        sh 'nose2 --fail-fast --with-coverage'
                     }
                 }
             }
