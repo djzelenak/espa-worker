@@ -6,7 +6,7 @@ pipeline {
     WORKER_VERSION = readFile "${env.WORKSPACE}/version.txt"
 
     //-- Remove '/' character from the git branch name if it is present
-    WORKER_BRANCH = sh(script: "(${env.BRANCH_NAME} | tr  / -)", , returnStdout: true).trim()
+    WORKER_BRANCH= sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD | tr / -').trim()
 
     //-- Reference the docker hub repo for the worker
     WORKER_REPO = "usgseros/espa-worker"
