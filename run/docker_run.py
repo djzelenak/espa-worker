@@ -1,3 +1,12 @@
+"""
+This is a wrapper script to docker run for launching an espa-worker
+container with the appropriate volume mounts and environment variables defined
+- granted you have them in a local shell script or something along those lines.
+
+This is mainly used for testing a new image during development and should not be used
+to deploy a worker in a production capacity.
+"""
+
 
 import os
 import sys
@@ -5,15 +14,34 @@ import commands
 import argparse
 import json
 
+# environment variables required by the container
+ENV = ['AUX_DIR',
+       'ESPA_STORAGE',
+       'ESPA_API',
+       'ESPA_USER',
+       'ESPA_GROUP',
+       'URS_MACHINE',
+       'URS_LOGIN',
+       'URS_PASSWORD',
+       'ASTER_GED_SERVER_NAME']
+
+
 def check_env():
+    """
+    Make sure that the required environment variables are defined
+    locally so they can be applied to the container.
 
-    if not os.environ.get('AUX_DIR'):
-        print('ENV must have AUX_DIR set')
-        sys.exit(1)
+    Returns:
+        bool
 
-    if not os.environ.get('ESPA_STORAGE'):
-        print('ENV must have ESPA_STORAGE set')
-        sys.exit(1)
+    """
+    for env in ENV:
+        if not os.environ.get(env):
+            print('Current environment must have {} set'.format(env))
+
+            return False
+
+    return True
 
 
 def convert_json(in_data):
@@ -24,15 +52,20 @@ def convert_json(in_data):
     return None
 
 
-def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactive=False, user='espa'):
+def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactive=False, user=None, test=False):
     """
-    Build the command line argument that calls docker run with the requested parameters
+    Build the command line argument that calls `docker run` with the requested parameters
 
     Args:
-        data (str):
-        image (str):
-        tag (str):
-        interactive (bool):
+        data (str): This is a formatted JSON response from the ESPA API containing all of
+                    the information required to process an order.
+        image (str): The name of the docker image.
+        tag (str): The docker tag
+        interactive (bool): You can issue this flag to run the container in the background, it
+                            can then be accessed via `docker exec -it <containerID> /bin/bash`.
+                            Note - you'll have to manually stop the container afterwards.
+        user (str): The active user inside the container
+        test (bool): If true, will run unit tests inside the container
 
     Returns:
         str
@@ -43,26 +76,52 @@ def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactiv
         '--mount type=bind,source=${ESPA_STORAGE},destination=/espa-storage/orders',
     ]
 
-    envs = [
-        '--env ESPA_API=${ESPA_API}',
-        '--env ASTER_GED_SERVER_NAME=${ASTER_GED_SERVER_NAME}',
-        '--env URS_MACHINE=${URS_MACHINE}',
-        '--env URS_LOGIN=${URS_LOGIN}',
-        '--env URS_PASSWORD=${URS_PASSWORD}'
-    ]
+    # e.g. '--env AUX_DIR=${AUX_DIR}'
+    envs = ['--env {e}=${{{e}}}'.format(e=e) for e in ENV]
 
     image_tag = [
-        '{0}:{1}'.format(image, tag),
+        '{i}:{t}'.format(i=image, t=tag)
     ]
+
+    # Only run the unit tests and then exit the container
+    if test:
+        cmd = ['docker run',
+               '--rm']
+
+        workdir = ['--workdir', '/home/espa/espa-processing']
+
+        # cmd.extend(mounts)
+        # cmd.extend(envs)
+        cmd.extend(workdir)
+        cmd.extend(image_tag)
+
+        call = ['nose2 --with-coverage']
+        cmd.extend(call)
+
+        return ' '.join(cmd)
 
     if interactive:
         cmd = ['docker run',
                '-it',
                '--rm']
-               
+
+        run = ['/bin/bash']
+
+        cmd.extend(mounts)
+        cmd.extend(envs)
+        if user:
+            user = ['--user {}'.format(user)]
+            cmd.extend(user)
+        cmd.extend(image_tag)
+        cmd.extend(run)
+
+        return ' '.join(cmd)
+
+    # only include the JSON stored in the data object if we're running non-interactively
     else:
         data = [
-            "'{0}'".format(convert_json(data))  # This converts the json back into a string
+            # This converts the json back into a string
+            "'{0}'".format(convert_json(data))
         ]
 
         cmd = ['docker run',
@@ -72,22 +131,16 @@ def build_cmd(data=None, image='usgseros/espa-worker', tag='devtest', interactiv
 
         run = ['/src/processing/main.py']
 
-#    if user:
-#        user = ['--user',
-#                user]
-#
-#        cmd.extend(user)
-
-    cmd.extend(mounts)
-    cmd.extend(envs)
-    cmd.extend(image_tag)
-#    cmd.extend(run)
-
-    if not interactive and data is not None:
+        cmd.extend(mounts)
+        cmd.extend(envs)
+        if user:
+            user = ['--user {}'.format(user)]
+            cmd.extend(user)
+        cmd.extend(image_tag)
         cmd.extend(run)
         cmd.extend(data)
 
-    return ' '.join(cmd)
+        return ' '.join(cmd)
 
 
 def execute_cmd(cmd):
@@ -102,7 +155,6 @@ def execute_cmd(cmd):
     Raises:
         Exception(message)
     """
-    output = ''
     (status, output) = commands.getstatusoutput(cmd)
 
     message = ''
@@ -129,7 +181,7 @@ def cli():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--image', dest='image', type=str, metavar='STR', default='usgseros/espa-worker',
-                         help='Specify the name of the docker image')
+                        help='Specify the name of the docker image')
 
     parser.add_argument('--tag', dest='tag', type=str, metavar='STR', default='devtest',
                         help='Specify the docker image tagname to use')
@@ -143,6 +195,9 @@ def cli():
     parser.add_argument('--user', default='espa', metavar='USER',
                         help='Enter a username for the container environment')
 
+    parser.add_argument('--test', action='store_true',
+                        help='Run unit tests inside the container and do nothing else')
+
     args = parser.parse_args()
 
     return args
@@ -151,7 +206,8 @@ def cli():
 def main():
     args = cli()
 
-    check_env()
+    if not check_env():
+        sys.exit(1)
 
     cmd = build_cmd(**vars(args))
 

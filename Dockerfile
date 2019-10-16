@@ -17,7 +17,11 @@ RUN ansible-playbook /tmp/ansible/espa-worker.yml && \
 
 # We need to clear out this older version of numpy
 RUN rm -rf /usr/local/lib/python2.7/site-packages/numpy*
-RUN /usr/local/bin/pip install numpy==1.16.2 lxml==3.6.0 netcdf4==1.4.2
+
+# Install any remaining python packages
+COPY requirements.txt /
+RUN /usr/local/bin/pip install -r requirements.txt && \
+    rm -f requirements.txt
 
 # Copy over the espa-worker processing scripts
 RUN mkdir /home/$UNAME/espa-processing
@@ -29,6 +33,5 @@ RUN chown -R $UNAME:$UGROUP /home/$UNAME/ \
 # Update PYTHONPATH to find espa-product-formatter modules
 ENV PYTHONPATH=/usr/local/espa-product-formatter/python
 
-# Set the username and working directory
-USER $UNAME
+# Set the working directory
 WORKDIR /home/$UNAME

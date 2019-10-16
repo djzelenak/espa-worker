@@ -3,6 +3,22 @@
 # Last Updated: See 'git log -p <filename>'
 # Recent Changes: See 'git log -p <filename>'
 
+- name: dirs-links|Directory - dev User's Home
+  file:
+    path: "/home/{{ apd_user }}"
+    state: directory
+    owner: "{{ apd_user }}"
+    group: "{{ app_group }}"
+    mode: 0700
+
+- name: dirs-links|Directory - tst User's Home
+  file:
+    path: "/home/{{ apt_user }}"
+    state: directory
+    owner: "{{ apt_user }}"
+    group: "{{ app_group }}"
+    mode: 0700
+
 - name: dirs-links|Directory - App User's Home
   file:
     path: "/home/{{ app_user }}"
