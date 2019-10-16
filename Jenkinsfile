@@ -2,8 +2,17 @@ pipeline {
     //-- Run on any available worker (agent) --\\
     agent any
 
+    //-- Read the worker version number
     env.WORKER_VERSION = readFile "${env.WORKSPACE}/version.txt"
     echo "Worker version ${env.WORKER_VERSION}"
+
+    //-- Remove '/' character from the git branch name if it is present
+    env.WORKER_BRANCH = git rev-parse --abbrev-ref HEAD | tr / -
+    echo "Current worker branch ${env.BRANCH}"
+
+    //-- Reference the docker hub repo for the worker
+    env.WORKER_REPO = "usgseros/espa-worker"
+    echo "Worker repo is referenced as ${env.WORKER_REPO}"
 
     //-- Job Stages (Actions) --\\
     stages {
@@ -20,7 +29,8 @@ pipeline {
                 echo 'Building Docker Image from Dockerfile in project.'
 
                 script {
-                    def customImage = docker.build("usgseros/espa-worker:${env.BRANCH_NAME}-${env.WORKER_VERSION}", ".")
+                    //-- Build the image no matter which branch we are on
+                    def customImage = docker.build("${env.WORKER_REPO}:${env.WORKER_BRANCH}-${env.WORKER_VERSION}", ".")
                     echo "Docker image id in same script block is: ${customImage.id}"
 
                     // Make image object available to later stages
@@ -56,15 +66,15 @@ pipeline {
                 echo 'Deploy steps here.'
                 echo 'Push image to docker hub registry'
                 script {
-                    // Build for any branch, but only push for develop and master branches
-                    if (env.BRANCH_NAME == 'master') {
+                    // Only push to docker hub for develop and master branches
+                    if (env.WORKER_BRANCH == 'master') {
                         // Specify the Dockerhub registry and Jenkins stored credentials
                         docker.withRegistry('https://index.docker.io/v1/', 'espa-docker-hub-credentials') {
                             // Push previously built image to registry
                             CUSTOM_IMAGE.push()
                         }
                     }
-                    if (env.BRANCH_NAME == 'develop') {
+                    if (env.WORKER_BRANCH == 'develop') {
                         // Specify the Dockerhub registry and Jenkins stored credentials
                         docker.withRegistry('https://index.docker.io/v1/', 'espa-docker-hub-credentials') {
                             // Push previously built image to registry
