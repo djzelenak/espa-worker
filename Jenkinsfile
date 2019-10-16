@@ -22,6 +22,7 @@ pipeline {
                 echo "Worker version ${env.WORKER_VERSION}"
                 echo "Current worker branch ${env.WORKER_BRANCH}"
                 echo "Worker repo is referenced as ${env.WORKER_REPO}"
+                echo "env BRANCH_NAME is ${env.BRANCH_NAME}"
 
                 // Update workspace timestamp to prevent nightly cleanup script from removing workspace during a job run
                 sh script: """
@@ -41,7 +42,7 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        stage('Test_1') {
             steps {
                 echo 'Testing steps here.'
                 echo "Docker image id in this stage is: ${CUSTOM_IMAGE.id}"
@@ -54,6 +55,16 @@ pipeline {
                         // List installed pip packages inside container
                         sh 'pip list'
                     }
+                }
+            }
+        }
+
+        stage('Test_2') {
+            steps {
+                echo 'Testing steps here.'
+                echo "Docker image id in this stage is: ${CUSTOM_IMAGE.id}"
+
+                script {
                     CUSTOM_IMAGE.withRun {
                         // Run unit tests from within the working directory
                         '--workdir /home/espa/espa-processing'
