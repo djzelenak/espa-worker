@@ -3,17 +3,18 @@ pipeline {
     agent any
     environment {
     //-- Read the worker version number
-    def WORKER_VERSION = readFile "${env.WORKSPACE}/version.txt"
-    echo 'Worker version ${WORKER_VERSION}'
+    WORKER_VERSION = readFile "${env.WORKSPACE}/version.txt"
 
     //-- Remove '/' character from the git branch name if it is present
-    def WORKER_BRANCH = sh 'git rev-parse --abbrev-ref HEAD | tr / -'
-    echo 'Current worker branch ${WORKER_BRANCH}'
+    WORKER_BRANCH = sh 'git rev-parse --abbrev-ref HEAD | tr / -'
 
     //-- Reference the docker hub repo for the worker
-    def WORKER_REPO = "usgseros/espa-worker"
-    echo 'Worker repo is referenced as ${WORKER_REPO}'
+    WORKER_REPO = "usgseros/espa-worker"
     }
+    
+    echo 'Worker version ${env.WORKER_VERSION}'
+    echo 'Current worker branch ${env.WORKER_BRANCH}'
+    echo 'Worker repo is referenced as ${env.WORKER_REPO}'
 
     //-- Job Stages (Actions) --\\
     stages {
