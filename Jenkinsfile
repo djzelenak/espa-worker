@@ -11,10 +11,6 @@ pipeline {
     //-- Reference the docker hub repo for the worker
     WORKER_REPO = "usgseros/espa-worker"
     }
-    
-    echo 'Worker version ${env.WORKER_VERSION}'
-    echo 'Current worker branch ${env.WORKER_BRANCH}'
-    echo 'Worker repo is referenced as ${env.WORKER_REPO}'
 
     //-- Job Stages (Actions) --\\
     stages {
@@ -22,6 +18,10 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Build steps here.'
+
+                echo 'Worker version ${env.WORKER_VERSION}'
+                echo 'Current worker branch ${env.WORKER_BRANCH}'
+                echo 'Worker repo is referenced as ${env.WORKER_REPO}'
 
                 // Update workspace timestamp to prevent nightly cleanup script from removing workspace during a job run
                 sh script: """
