@@ -19,9 +19,9 @@ pipeline {
             steps {
                 echo 'Build steps here.'
 
-                echo 'Worker version ${env.WORKER_VERSION}'
-                echo 'Current worker branch ${env.WORKER_BRANCH}'
-                echo 'Worker repo is referenced as ${env.WORKER_REPO}'
+                echo "Worker version ${env.WORKER_VERSION}"
+                echo "Current worker branch ${env.WORKER_BRANCH}"
+                echo "Worker repo is referenced as ${env.WORKER_REPO}"
 
                 // Update workspace timestamp to prevent nightly cleanup script from removing workspace during a job run
                 sh script: """
