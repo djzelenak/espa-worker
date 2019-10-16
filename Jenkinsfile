@@ -7,7 +7,7 @@ pipeline {
     echo "Worker version ${env.WORKER_VERSION}"
 
     //-- Remove '/' character from the git branch name if it is present
-    env.WORKER_BRANCH = git rev-parse --abbrev-ref HEAD | tr / -
+    env.WORKER_BRANCH = sh 'git rev-parse --abbrev-ref HEAD | tr / -'
     echo "Current worker branch ${env.BRANCH}"
 
     //-- Reference the docker hub repo for the worker
