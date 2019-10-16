@@ -2,10 +2,8 @@ pipeline {
     //-- Run on any available worker (agent) --\\
     agent any
 
-    env.WORKER_VERSION = $(head -n1 version.txt)
+    env.WORKER_VERSION = readFile "${env.WORKSPACE}/version.txt"
     echo "Worker version ${env.WORKER_VERSION}"
-
-    echo "Working on env.BRANCH_NAME"
 
     //-- Job Stages (Actions) --\\
     stages {
