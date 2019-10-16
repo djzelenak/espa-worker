@@ -7,7 +7,7 @@ pipeline {
 
     //-- Remove '/' character from the git branch name if it is present
     //-- Important note: Jenkins configuration must include 'Check out to matching local branch'
-    WORKER_BRANCH= sh(returnStdout: true, script: "git rev-parse --abbrev-ref HEAD | tr / -").trim()
+    WORKER_BRANCH = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD | tr / -').trim()
 
     //-- Reference the docker hub repo for the worker
     WORKER_REPO = "usgseros/espa-worker"
@@ -23,7 +23,6 @@ pipeline {
                 echo "Worker version ${env.WORKER_VERSION}"
                 echo "Current worker branch ${env.WORKER_BRANCH}"
                 echo "Worker repo is referenced as ${env.WORKER_REPO}"
-                echo "env BRANCH_NAME is ${env.BRANCH_NAME}"
 
                 // Update workspace timestamp to prevent nightly cleanup script from removing workspace during a job run
                 sh script: """
@@ -55,6 +54,8 @@ pipeline {
                         sh 'python -V'
                         // List installed pip packages inside container
                         sh 'pip list'
+
+                        sh 'nose2 test/ --fail-fast'
                     }
                 }
             }
@@ -69,7 +70,7 @@ pipeline {
                     CUSTOM_IMAGE.withRun {
                         // Run unit tests from within the working directory
                         '--workdir /home/espa/espa-processing'
-                        'nose2 --with-coverage'
+                        'nose2 --with-coverage --fail-fast'
                     }
                 }
             }
@@ -95,7 +96,7 @@ pipeline {
                             CUSTOM_IMAGE.push()
                         }
                     } else {
-                    echo 'Not publishing image'
+                    echo "Not publishing image for branch ${env.BRANCH_NAME}"
                     }
                 }
             }
