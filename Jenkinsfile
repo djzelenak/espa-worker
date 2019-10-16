@@ -1,9 +1,17 @@
 pipeline {
     //-- Run on any available worker (agent) --\\
     agent any
+    environment {
+    //-- Read the worker version number
+    WORKER_VERSION = readFile "${env.WORKSPACE}/version.txt"
 
-    env.WORKER_VERSION = readFile "${env.WORKSPACE}/version.txt"
-    echo "Worker version ${env.WORKER_VERSION}"
+    //-- Remove '/' character from the git branch name if it is present
+    //-- Important note: Jenkins configuration must include 'Check out to matching local branch'
+    WORKER_BRANCH = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD | tr / -').trim()
+
+    //-- Reference the docker hub repo for the worker
+    WORKER_REPO = "usgseros/espa-worker"
+    }
 
     //-- Job Stages (Actions) --\\
     stages {
@@ -11,6 +19,10 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Build steps here.'
+
+                echo "Worker version ${env.WORKER_VERSION}"
+                echo "Current worker branch ${env.WORKER_BRANCH}"
+                echo "Worker repo is referenced as ${env.WORKER_REPO}"
 
                 // Update workspace timestamp to prevent nightly cleanup script from removing workspace during a job run
                 sh script: """
@@ -20,7 +32,8 @@ pipeline {
                 echo 'Building Docker Image from Dockerfile in project.'
 
                 script {
-                    def customImage = docker.build("usgseros/espa-worker:${env.BRANCH_NAME}-${env.WORKER_VERSION}", ".")
+                    //-- Build the image no matter which branch we are on
+                    def customImage = docker.build("${WORKER_REPO}:${WORKER_BRANCH}-${WORKER_VERSION}", ".")
                     echo "Docker image id in same script block is: ${customImage.id}"
 
                     // Make image object available to later stages
@@ -41,11 +54,8 @@ pipeline {
                         sh 'python -V'
                         // List installed pip packages inside container
                         sh 'pip list'
-                    }
-                    CUSTOM_IMAGE.withRun {
-                        // Run unit tests from within the working directory
-                        --workdir '/home/espa/espa-processing'
-                        'nose2 --with-coverage'
+
+                        sh 'nose2 --fail-fast --with-coverage'
                     }
                 }
             }
@@ -56,22 +66,22 @@ pipeline {
                 echo 'Deploy steps here.'
                 echo 'Push image to docker hub registry'
                 script {
-                    // Build for any branch, but only push for develop and master branches
-                    if (env.BRANCH_NAME == 'master') {
+                    // Only push to docker hub for develop and master branches
+                    if (WORKER_BRANCH == 'master') {
                         // Specify the Dockerhub registry and Jenkins stored credentials
                         docker.withRegistry('https://index.docker.io/v1/', 'espa-docker-hub-credentials') {
                             // Push previously built image to registry
                             CUSTOM_IMAGE.push()
                         }
                     }
-                    if (env.BRANCH_NAME == 'develop') {
+                    if (WORKER_BRANCH == 'develop') {
                         // Specify the Dockerhub registry and Jenkins stored credentials
                         docker.withRegistry('https://index.docker.io/v1/', 'espa-docker-hub-credentials') {
                             // Push previously built image to registry
                             CUSTOM_IMAGE.push()
                         }
                     } else {
-                    echo 'Not publishing image'
+                    echo "Not publishing image for branch ${env.BRANCH_NAME}"
                     }
                 }
             }
