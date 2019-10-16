@@ -6,6 +6,7 @@ pipeline {
     WORKER_VERSION = readFile "${env.WORKSPACE}/version.txt"
 
     //-- Remove '/' character from the git branch name if it is present
+    //-- Important note: Jenkins configuration must include 'Check out to matching local branch'
     WORKER_BRANCH= sh(returnStdout: true, script: "git rev-parse --abbrev-ref HEAD | tr / -").trim()
 
     //-- Reference the docker hub repo for the worker
