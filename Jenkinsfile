@@ -54,7 +54,7 @@ pipeline {
                     }
                     CUSTOM_IMAGE.withRun {
                         // Run unit tests from within the working directory
-                        --workdir '/home/espa/espa-processing'
+                        '--workdir /home/espa/espa-processing'
                         'nose2 --with-coverage'
                     }
                 }
