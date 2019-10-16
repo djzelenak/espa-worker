@@ -14,6 +14,8 @@ import random
 import resource
 import settings
 import json
+from pwd import getpwuid
+from os import stat
 from collections import defaultdict
 from subprocess import check_output, CalledProcessError, check_call
 from config_utils import retrieve_pigz_cfg
@@ -400,13 +402,14 @@ def get_sleep_duration(cfg, start_time, dont_sleep, key='espa_min_request_durati
 
     return seconds_to_sleep
 
-def change_ownership(product_path, user, group):
+def change_ownership(product_path, user, group, recursive=False):
     """
     Change the ownership of a product
     Args:
         product_path: The full path to a file or folder whose ownership will be updated
         user: The new owner user
         group: The new owner group
+        recursive: Whether or not to apply chown recursively
 
     Returns:
         None
@@ -419,9 +422,24 @@ def change_ownership(product_path, user, group):
         logger = get_base_logger()
 
     ownership = '{u}:{g}'.format(u=user, g=group)
-
-    cmd = ' '.join(['chown', '-R', ownership, product_path])
+    if recursive:
+        cmd = ' '.join(['chown', '-R', ownership, product_path])
+    else:
+        cmd = ' '.join(['chown', ownership, product_path])
     output = execute_cmd(cmd)
 
     if len(output) > 0:
         logger.info(output)
+
+
+def find_owner(input_path):
+    """
+    Return the owner name for a given input path
+    Args:
+        input_path (str): The full path to a file or directory
+
+    Returns:
+        str
+
+    """
+    return getpwuid(stat(input_path).st_uid).pw_name
