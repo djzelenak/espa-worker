@@ -4,10 +4,9 @@ import os
 import socket
 import sys
 
-from functools import partial
 from time import sleep
 
-### espa-processing imports
+# espa-processing imports
 import config
 import parameters
 import processor
@@ -15,11 +14,12 @@ import settings
 import sensor
 import utilities
 
-from api_interface import APIServer, APIException
-from environment import Environment
-from logging_tools import EspaLogging, get_base_logger, get_stdout_handler, get_stderr_handler, archive_log_files
+from api_interface import APIServer
+from logging_tools import (EspaLogging, get_base_logger, get_stdout_handler,
+                           get_stderr_handler, archive_log_files)
 
 base_logger = get_base_logger()
+
 
 def work(cfg, params, developer_sleep_mode=False):
     """
@@ -191,20 +191,28 @@ def main(data=None):
 
         if not data:
             parser = argparse.ArgumentParser()
-            parser.add_argument(dest="data", action="store", metavar="JSON", type=utilities.convert_json,
-                                help="response from the API containing order information")
+            parser.add_argument(dest="data", action="store", metavar="JSON",
+                                type=utilities.convert_json,
+                                help="response from the API"
+                                      "containing order information")
             args = parser.parse_args()
             data = args.data
 
         base_logger.info('order data - {0}'.format(data))
+
         for d in data:
             result = work(cfg, d)
             base_logger.info('processing.work executed for data {} successfully? {}'.format(d, result))
+
+        # Exit normally
+        sys.exit(0)
+
     except Exception as e:
         msg = 'ESPA Worker error, problem executing main.main\nError: {}'.format(e)
         base_logger.exception(msg)
         # Exit with 1 so Container and Task know there was a problem and report to the framework appropriately
         sys.exit(msg)
+
 
 if __name__ == '__main__':
     main()
