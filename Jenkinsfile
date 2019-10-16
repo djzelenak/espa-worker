@@ -1,7 +1,7 @@
 pipeline {
     //-- Run on any available worker (agent) --\\
     agent any
-
+    environment {
     //-- Read the worker version number
     def WORKER_VERSION = readFile "${env.WORKSPACE}/version.txt"
     echo 'Worker version ${WORKER_VERSION}'
@@ -13,6 +13,7 @@ pipeline {
     //-- Reference the docker hub repo for the worker
     def WORKER_REPO = "usgseros/espa-worker"
     echo 'Worker repo is referenced as ${WORKER_REPO}'
+    }
 
     //-- Job Stages (Actions) --\\
     stages {
