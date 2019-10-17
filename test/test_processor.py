@@ -139,3 +139,10 @@ class TestProcessor(unittest.TestCase):
         # Expect to return the mock current work dir
         result = proc.check_work_dir(test_path)
         self.assertEqual('/home/andromeda', result)
+
+    def test_failure(self):
+        """
+        This test is meant to fail
+        """
+        answer = False
+        self.assertTrue(answer)
