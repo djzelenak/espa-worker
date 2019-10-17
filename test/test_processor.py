@@ -1,12 +1,34 @@
 
 import os
+import sys
 import copy
 import unittest
+import logging
 from mock import patch
 from mocks import mock_api_response, mock_invalid_response
 import processing
+from processing.logging_tools import EspaLogging, LevelFilter
 from processing.utilities import convert_json
 from processing import parameters, config, config_utils, processor, product_formatting
+
+EspaLogging.configure_base_logger()
+# Initially set to the base logger
+base_logger = EspaLogging.get_logger('base')
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# Add logging to stdout and stderr
+stdout_handler = logging.StreamHandler(sys.stdout)
+stdout_handler.setLevel(logging.DEBUG)
+stdout_handler.setFormatter(formatter)
+stdout_handler.addFilter(LevelFilter(10, 20))
+base_logger.addHandler(stdout_handler)
+
+stderr_handler = logging.StreamHandler(sys.stderr)
+stderr_handler.setLevel(logging.WARNING)
+stderr_handler.setFormatter(formatter)
+stderr_handler.addFilter(LevelFilter(30, 50))
+base_logger.addHandler(stderr_handler)
 
 class TestProcessor(unittest.TestCase):
     def setUp(self):
@@ -100,3 +122,20 @@ class TestProcessor(unittest.TestCase):
                 if code == 'MYD':
                     self.assertTrue(type(pp) == processing.processor.ModisAQUAProcessor)
 
+    @patch('processing.processor.EspaLogging.get_logger')
+    @patch('processing.processor.os.path.exists')
+    @patch('processing.processor.os.getcwd')
+    def test_check_work_dir(self, mock_getcwd, mock_exists, mock_logger):
+        test_path = '/mnt/mesos/sandbox'
+        mock_exists.return_value = True
+        proc = processor.ProductProcessor(self.cfg, self.params)
+        # Expect to return the input test_path unchanged
+        result = proc.check_work_dir(test_path)
+        self.assertEqual(test_path, result)
+
+        test_path = ''
+        mock_getcwd.return_value = '/home/andromeda'
+        mock_exists.return_value = False
+        # Expect to return the mock current work dir
+        result = proc.check_work_dir(test_path)
+        self.assertEqual('/home/andromeda', result)

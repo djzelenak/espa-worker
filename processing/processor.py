@@ -171,17 +171,8 @@ class ProductProcessor(object):
         product_id = self._parms['product_id']
         order_id = self._parms['orderid']
 
-        base_work_dir = self._cfg.get('espa_work_dir')
-
-
-        # Get the absolute path to the directory, and default to the current
-        # one
-        if base_work_dir == '':
-            # If the directory is empty, use the current working directory
-            base_work_dir = os.getcwd()
-        else:
-            # Get the absolute path
-            base_work_dir = os.path.abspath(base_work_dir)
+        # Get the absolute path to the directory, and default to the current one
+        base_work_dir = self.check_work_dir(self._cfg.get('espa_work_dir'))
 
         # Create the product directory name
         product_dirname = '-'.join([str(order_id), str(product_id)])
@@ -301,6 +292,30 @@ class ProductProcessor(object):
             self.remove_product_directory()
 
         return (destination_product_file, destination_cksum_file)
+
+    def check_work_dir(self, path):
+        """
+        Make sure that the base work dir exists, if not, set it to something safe
+        Args:
+            path (str): The full path to a base working directory
+        Returns:
+            str
+        """
+        fallback = '/home/espa'
+
+        if not os.path.exists(path) or path == '':
+            path = os.path.abspath(fallback)
+            self._logger.warning('Processing work directory not found, trying {}'.format(path))
+
+        if not os.path.exists(path):
+            path = os.getcwd()
+            self._logger.warning('Fallback working directory option is not valid, setting to {}'.format(path))
+            return path
+        else:
+            # Path as it was given is OK..get the absolute path
+            path = os.path.abspath(path)
+            self._logger.info('Working directory is set to {}'.format(path))
+            return path
 
 
 class CustomizationProcessor(ProductProcessor):
