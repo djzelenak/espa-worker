@@ -1,15 +1,17 @@
-
-'''
+"""
 Description: Module to extract embedded information from Product IDs and
              supply configured values for each product
 
 License: NASA Open Source Agreement 1.3
-'''
+"""
 
 
+import sys
 import re
 import datetime
 from collections import namedtuple
+from logging_tools import EspaLogging
+import settings
 
 
 """Sensor information that is extracted from the details available in the
@@ -29,7 +31,8 @@ SensorInfo = namedtuple('SensorInfo', ['product_prefix',
                                        'horizontal',
                                        'vertical',
                                        'path',
-                                       'row'])
+                                       'row',
+                                       'tile'])
 
 
 """Supported Sensor Codes
@@ -45,6 +48,9 @@ TERRA_SENSOR_CODE = 'MOD'
 AQUA_SENSOR_CODE = 'MYD'
 
 VIIRS_SENSOR_CODE = 'VNP'
+
+SENTINEL2A_SENSOR_CODE = 'S2A'
+SENTINEL2B_SENSOR_CODE = 'S2B'
 
 """Default pixel sizes based on the input products
 """
@@ -68,7 +74,9 @@ DEFAULT_PIXEL_SIZE = {
         'LT5': 30,
         'LT05': 30,
         'LT4': 30,
-        'LT04': 30
+        'LT04': 30,
+        'S2A': 10,
+        'S2B': 10
     },
     'dd': {
         '09A1': 0.00449155,
@@ -89,7 +97,9 @@ DEFAULT_PIXEL_SIZE = {
         'LT5': 0.0002695,
         'LT05': 0.0002695,
         'LT4': 0.0002695,
-        'LT04': 0.0002695
+        'LT04': 0.0002695,
+        'S2A': 0.0008983,
+        'S2B': 0.0008983
         }
 }
 
@@ -136,7 +146,8 @@ def landsat_sensor_info(product_id):
                       sensor_name=sensor_name,
                       default_pixel_size=default_pixel_size,
                       horizontal=0, vertical=0,
-                      path=path, row=row)
+                      path=path, row=row,
+                      tile='')
 
 
 def modis_sensor_info(product_id):
@@ -186,7 +197,9 @@ def modis_sensor_info(product_id):
                       sensor_name=sensor_name,
                       default_pixel_size=default_pixel_size,
                       horizontal=horizontal, vertical=vertical,
-                      path=0, row=0)
+                      path=0, row=0,
+                      tile='')
+
 
 def viirs_sensor_info(product_id):
     """Determine information from VIIRS Product ID
@@ -231,7 +244,51 @@ def viirs_sensor_info(product_id):
                       sensor_name=sensor_name,
                       default_pixel_size=default_pixel_size,
                       horizontal=horizontal, vertical=vertical,
-                      path=0, row=0)
+                      path=0, row=0,
+                      tile='')
+
+
+def sentinel2_sensor_info(product_id):
+    """Determine information from Product ID
+    Example ID:
+    S2A_MSI_L1C_T16TDS_20190723_20190723_01_T1
+    """
+    logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
+
+    (sensor_code, sensor, proc_level, tile, date_acq, date_proc, version, tier) = product_id.split('_')
+
+    date_acquired = datetime.datetime.strptime(date_acq, '%Y%m%d').date()
+
+    # Determine the product prefix
+    product_prefix = ('{sc}{s}{p}{t:>06}{d:>08}{v:>02}{tr:>02}'
+                      .format(sc=sensor_code,
+                              s=sensor,
+                              p=proc_level,
+                              t=tile,
+                              d=date_acq,
+                              v=version,
+                              tr=tier))
+
+    # Determine the default pixel sizes
+    meters = DEFAULT_PIXEL_SIZE['meters'][sensor_code]
+    dd = DEFAULT_PIXEL_SIZE['dd'][sensor_code]
+
+    default_pixel_size = {'meters': meters, 'dd': dd}
+
+    # Sensor string is used in plotting
+    sensor_name = None
+    if is_sentinel2a(product_id):
+        sensor_name = 'SENTINEL-2A'
+    elif is_sentinel2b(product_id):
+        sensor_name = 'SENTINEL-2B'
+
+    return SensorInfo(product_prefix=product_prefix,
+                      date_acquired=date_acquired,
+                      sensor_name=sensor_name,
+                      default_pixel_size=default_pixel_size,
+                      horizontal=0, vertical=0,
+                      path=0, row=0,
+                      tile=tile)
 
 
 """Map Landsat regular expressions for supported products to the correct
@@ -331,6 +388,21 @@ VIIRS_REGEXP_MAPPING = {
                 viirs_sensor_info)
 }
 
+"""Map Sentinel regular expression for supported products to the correct
+   Product ID parser
+
+   Example Product ID Format:
+       L1C_T16TDS_A021330_20190723T170012 (newer format)
+       S2A_OPER_MSI_L1C_TL_MTI__20151218T183704_20151218T200553_A002555_T13UDA_N02_01_01 (old format)
+"""
+SENTINEL_REGEXP_MAPPING = {
+        's2a': (r's2a_\w{3}_[a-z0-9]{3}_[a-z0-9]{6}_\d{8})_\d{8}_\d{2}_[a-z0-9]{2}',
+                sentinel2_sensor_info),
+        's2b': (r's2a_\w{3}_[a-z0-9]{3}_[a-z0-9]{6}_\d{8})_\d{8}_\d{2}_[a-z0-9]{2}',
+                sentinel2_sensor_info)
+}
+
+
 def is_landsat4(a):
     return a.upper().startswith(LT04_SENSOR_CODE)
 
@@ -377,6 +449,18 @@ def is_modis(a):
 
 def is_viirs(a):
     return a.upper().startswith(VIIRS_SENSOR_CODE)
+
+
+def is_sentinel2a(a):
+    return a.upper().startswith(SENTINEL2A_SENSOR_CODE)
+
+
+def is_sentinel2b(a):
+    return a.upper().startswith(SENTINEL2B_SENSOR_CODE)
+
+
+def is_sentinel2(a):
+    return any([is_sentinel2a(a), is_sentinel2b(a)])
 
 
 class ProductNotImplemented(NotImplementedError):
@@ -434,7 +518,7 @@ class sensor_memoize(object):
 
 @sensor_memoize
 def info(product_id):
-    """Return an class instance for the correct Sensor
+    """Return a class instance for the correct Sensor
 
     Args:
         product_id (str): The Product ID for the requested product.  Can also
@@ -454,6 +538,9 @@ def info(product_id):
 
     elif is_viirs(product_id):
         mapping = VIIRS_REGEXP_MAPPING
+
+    elif is_sentinel2(product_id):
+        mapping = SENTINEL_REGEXP_MAPPING
 
     test_id = product_id.lower()
 

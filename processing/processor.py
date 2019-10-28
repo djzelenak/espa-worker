@@ -1,4 +1,3 @@
-
 '''
 Description: Implements the processors which generate the products the system
              is capable of producing.
@@ -28,6 +27,7 @@ import staging
 import transfer
 import distribution
 import product_formatting
+from espa_exception import ESPAException
 
 
 class ProductProcessor(object):
@@ -55,7 +55,7 @@ class ProductProcessor(object):
             self._parms = parms
             self._logger.debug('PARMS: {0}'.format(self._parms))
         else:
-            raise Exception('Input parameters was of type [{}],'
+            raise ESPAException('Input parameters was of type [{}],'
                             ' where dict is required'.format(type(parms)))
 
         self._cfg = cfg
@@ -240,12 +240,12 @@ class ProductProcessor(object):
                                                 parms=self._parms,
                                                 user=self._user,
                                                 group=self._group)
-        except Exception:
-            self._logger.exception('An exception occurred delivering'
-                                   ' the product')
-            raise
+        except (Exception, ESPAException):
+            msg = 'An Exception occurred delivering the product'
+            self._logger.exception(msg)
+            raise ESPAException(msg)
 
-        self._logger.info('*** Product Delivery Complete ***')
+        self._logger.info('*** Product Delivery CompletFe ***')
 
         # Let the caller know where we put these on the destination system
         return (product_file, cksum_file)
@@ -433,9 +433,9 @@ class CustomizationProcessor(ProductProcessor):
                     output = subprocess.check_output(cmd)
                 except subprocess.CalledProcessError as error:
                     self._logger.info(error.output)
-                    self._logger.exception('An exception occurred during'
-                                           ' product customization')
-                    raise
+                    msg = 'An exception occurred during product customization'
+                    self._logger.exception(msg)
+                    raise ESPAException(msg)
                 if len(output) > 0:
                     self._logger.info(output)
 
@@ -517,7 +517,6 @@ class CDRProcessor(CustomizationProcessor):
                                   ' class'.format(self.remove_products_from_xml
                                                   .__name__))
 
-
     def generate_statistics(self):
         """Generates statistics if required for the processor
 
@@ -544,10 +543,10 @@ class CDRProcessor(CustomizationProcessor):
                                                    self._parms,
                                                    self._user,
                                                    self._group)
-            except Exception:
-                self._logger.exception('An exception occurred delivering'
-                                       ' the stats')
-                raise
+            except (Exception, ESPAException):
+                msg = 'An exception occurred delivering the stats'
+                self._logger.exception(msg)
+                raise ESPAException(msg)
 
             self._logger.info('*** Statistics Distribution Complete ***')
 
@@ -680,16 +679,16 @@ class LandsatProcessor(CDRProcessor):
         # Always generate TOA and BT (for cfmask_based_water_detection)
         # Also, generate SR input if needed, but do not deliver it in output
         self.requires_sr_input = any(
-                options[x] for x in [
-                    'include_sr',
-                    'include_sr_nbr',
-                    'include_sr_nbr2',
-                    'include_sr_ndvi',
-                    'include_sr_ndmi',
-                    'include_sr_savi',
-                    'include_sr_msavi',
-                    'include_sr_evi',
-                    'include_dswe'
+            options[x] for x in [
+                'include_sr',
+                'include_sr_nbr',
+                'include_sr_nbr2',
+                'include_sr_ndvi',
+                'include_sr_ndmi',
+                'include_sr_savi',
+                'include_sr_msavi',
+                'include_sr_evi',
+                'include_dswe'
             ])
 
     def stage_input_data(self):
@@ -774,7 +773,6 @@ class LandsatProcessor(CDRProcessor):
 
         cmd = None
         if options['include_dswe'] or options['include_st']:
-
             cmd = ['build_elevation_band.py',
                    '--xml', self._xml_filename]
 
@@ -1008,7 +1006,7 @@ class LandsatProcessor(CDRProcessor):
                        '--keep-intermediate-data',
                        '--st_algorithm', options['st_algorithm'],
                        '--reanalysis', options['reanalysis_source']]
-            else: # Split Window
+            else:  # Split Window
                 cmd = ['surface_temperature.py',
                        '--xml', self._xml_filename,
                        '--keep-intermediate-data',
@@ -1117,7 +1115,6 @@ class LandsatProcessor(CDRProcessor):
         if not options['keep_intermediate_data']:
             products_to_remove.append(
                 order2product['keep_intermediate_data'])
-
 
         # Always remove the elevation data
         products_to_remove.append('elevation')
@@ -1360,15 +1357,15 @@ class LandsatOLIProcessor(LandsatOLITIRSProcessor):
         options = self._parms['options']
 
         if options['include_sr'] is True:
-            raise Exception('include_sr is an unavailable product option'
+            raise ESPAException('include_sr is an unavailable product option'
                             ' for OLI-Only data')
 
         if options['include_sr_thermal'] is True:
-            raise Exception('include_sr_thermal is an unavailable product'
+            raise ESPAException('include_sr_thermal is an unavailable product'
                             ' option for OLI-Only data')
 
         if options['include_dswe'] is True:
-            raise Exception('include_dswe is an unavailable product option'
+            raise ESPAException('include_dswe is an unavailable product option'
                             ' for OLI-Only data')
 
     def generate_spectral_indices(self):
@@ -1657,6 +1654,469 @@ class ModisTERRAProcessor(ModisProcessor):
         super(ModisTERRAProcessor, self).__init__(cfg, parms)
 
 
+class SentinelProcessor(CDRProcessor):
+    """
+    Implements the common processing between all of the Sentinel
+    processors
+    """
+
+    def __init__(self, cfg, parms):
+        super(SentinelProcessor, self).__init__(cfg, parms)
+
+        self._zip_filename = None
+        self._unpackage_dir = None
+
+    def validate_parameters(self):
+        """Validates the parameters required for the processor"""
+
+        # Call the base class parameter validation
+        super(SentinelProcessor, self).validate_parameters()
+
+        self._logger.info('Validating [SentinelProcessor] parameters')
+
+        options = self._parms['options']
+
+        # Force these parameters to false if not provided
+        # They are the required includes for product generation
+        required_includes = ['include_s2_sr',
+                             'include_s2_evi',
+                             'include_s2_msavi',
+                             'include_s2_nbr',
+                             'include_s2_nbr2',
+                             'include_s2_ndmi',
+                             'include_s2_ndvi',
+                             'include_s2_savi',
+                             'include_statistics']
+
+        for parameter in required_includes:
+            if not parameters.test_for_parameter(options, parameter):
+                self._logger.warning('[{}] parameter missing defaulting to'
+                                     ' False'.format(parameter))
+                options[parameter] = False
+
+        # Determine if we need to build products
+        if (not options['include_s2_sr'] and
+                not options['include_s2_nbr'] and
+                not options['include_s2_nbr2'] and
+                not options['include_s2_ndvi'] and
+                not options['include_s2_ndmi'] and
+                not options['include_s2_savi'] and
+                not options['include_s2_msavi'] and
+                not options['include_s2_evi']):
+
+            self._logger.info('***NO SCIENCE PRODUCTS CHOSEN***')
+            self._build_products = False
+        else:
+            self._build_products = True
+
+        # Generate SR input if needed, but do not deliver it in output
+        self.requires_sr_input = any(
+            options[x] for x in [
+                'include_s2_sr',
+                'include_s2_nbr',
+                'include_s2_nbr2',
+                'include_s2_ndvi',
+                'include_s2_ndmi',
+                'include_s2_savi',
+                'include_s2_msavi',
+                'include_s2_evi'
+            ])
+
+    def stage_input_data(self):
+        """Stages the input data required for the processor
+        """
+        product_id = self._parms['product_id']
+        download_url = self._parms['download_url']
+
+        file_name = ''.join([product_id,
+                             settings.S2_INPUT_FILENAME_EXTENSION])
+        staged_file = os.path.join(self._stage_dir, file_name)
+
+        # Download the source data
+        transfer.download_file_url(download_url, staged_file)
+
+        self._zip_filename = os.path.basename(staged_file)
+        work_file = os.path.join(self._work_dir, self._zip_filename)
+
+        # Copy the staged data to the work directory
+        shutil.copyfile(staged_file, work_file)
+        os.unlink(staged_file)
+
+        cmd = ['unpackage_s2.py',
+               '-i {0}'.format(work_file),
+               '-o {0}'.format(self._work_dir)]
+
+        cmd = ' '.join(cmd)
+        self._logger.info(' '.join(['UNPACKAGE SENTINEL COMMAND:', cmd]))
+
+        output = ''
+        try:
+            output = utilities.execute_cmd(cmd)
+        finally:
+            if len(output) > 0:
+                self._logger.info(output)
+            os.unlink(work_file)
+            self._logger.info('Cleaned original Sentinel-2 .zip package {0}'.format(work_file))
+
+        # Move the extracted sentinel-2 files into the top level of the working directory
+        # and clean up empty .SAFE folder
+        cmd = ['mv {f}/*.SAFE/* {f}'.format(f=self._work_dir),
+               '&&',
+               'rm -rf {0}/*.SAFE'.format(self._work_dir)]
+        cmd = ' '.join(cmd)
+        output = ''
+        try:
+            output = utilities.execute_cmd(cmd)
+        finally:
+            if len(output) > 0:
+                self._logger.info(output)
+                self._logger.info('Completed staging Sentinel-2 files in working directory')
+
+    def convert_to_raw_binary(self):
+        """Converts the Sentinel input data to our internal raw binary
+           format
+        """
+        options = self._parms['options']
+
+        # Build a command line arguments list
+        cmd = ['convert_sentinel_to_espa']
+
+        if not options['include_source_data']:
+            cmd.append('--del_src_files')
+
+        # Turn the list into a string
+        cmd = ' '.join(cmd)
+        self._logger.info(' '.join(['CONVERT SENTINEL TO ESPA COMMAND:', cmd]))
+
+        output = ''
+        try:
+            output = utilities.execute_cmd(cmd)
+        finally:
+            if len(output) > 0:
+                self._logger.info(output)
+
+            # Change back to the working directory
+            os.chdir(self._work_dir)
+
+    def sr_command_line(self):
+        """Returns the command line required to generate surface reflectance
+
+        Evaluates the options requested by the user to define the command
+        line string to use, or returns None indicating nothing todo.
+
+        Note:
+            Provides the L4, L5, and L7 command line.  L8 processing overrides
+            this method.
+        """
+
+        options = self._parms['options']
+
+        cmd = ['surface_reflectance.py', '--xml', self._xml_filename]
+
+        if not self.requires_sr_input:
+            cmd.extend(['--process_sr', 'False'])
+
+        return ' '.join(cmd)
+
+    def generate_sr_products(self):
+        """Generates surface reflectance products
+        """
+
+        cmd = self.sr_command_line()
+
+        # Only if required
+        if cmd is not None:
+
+            self._logger.info(' '.join(['SENTINEL-2 SURFACE REFLECTANCE COMMAND:', cmd]))
+
+            output = ''
+            try:
+                output = utilities.execute_cmd(cmd)
+            finally:
+                if len(output) > 0:
+                    self._logger.info(output)
+
+    def generate_spectral_indices(self):
+        """Generates the requested spectral indices
+        """
+
+        options = self._parms['options']
+
+        cmd = None
+        if (options['include_s2_nbr'] or
+                options['include_s2_nbr2'] or
+                options['include_s2_ndvi'] or
+                options['include_s2_ndmi'] or
+                options['include_s2_savi'] or
+                options['include_s2_msavi'] or
+                options['include_s2_evi']):
+
+            cmd = ['spectral_indices.py', '--xml', self._xml_filename]
+
+            # Add the specified index options
+            if options['include_s2_nbr']:
+                cmd.append('--nbr')
+            if options['include_s2_nbr2']:
+                cmd.append('--nbr2')
+            if options['include_s2_ndvi']:
+                cmd.append('--ndvi')
+            if options['include_s2_ndmi']:
+                cmd.append('--ndmi')
+            if options['include_s2_savi']:
+                cmd.append('--savi')
+            if options['include_s2_msavi']:
+                cmd.append('--msavi')
+            if options['include_s2_evi']:
+                cmd.append('--evi')
+
+            cmd = ' '.join(cmd)
+
+        # Only if required
+        if cmd is not None:
+
+            self._logger.info(' '.join(['SENTINEL-2 SPECTRAL INDICES COMMAND:', cmd]))
+
+            output = ''
+            try:
+                output = utilities.execute_cmd(cmd)
+            finally:
+                if len(output) > 0:
+                    self._logger.info(output)
+
+    def build_science_products(self):
+        """Build the science products requested by the user
+        """
+
+        # Nothing to do if the user did not specify anything to build
+        if not self._build_products:
+            return
+
+        self._logger.info('[SentinelProcessor] Building Science Products')
+
+        # Change to the working directory
+        current_directory = os.getcwd()
+        os.chdir(self._work_dir)
+
+        try:
+            self.convert_to_raw_binary()
+
+            self.generate_sr_products()
+
+            self.generate_spectral_indices()
+
+        finally:
+            # Change back to the previous directory
+            os.chdir(current_directory)
+
+    def remove_products_from_xml(self):
+        """Remove the specified products from the XML file
+
+        The file is read into memory, processed, and written back out without
+        the specified products.
+
+        Specific for Sentinel-2 products
+        """
+
+        # Nothing to do if the user did not specify anything to build
+        if not self._build_products:
+            return
+
+        options = self._parms['options']
+
+        # Map order options to the products in the XML files
+        # TODO: Figure out Sentinel-2 values
+        order2product = {
+            'source_data': ['MSIL1C'],
+            'include_s2_sr': 'sr_refl',
+            'keep_intermediate_data': 'intermediate_data'
+        }
+
+        # If nothing to do just return
+        if self._xml_filename is None:
+            return
+
+        # Remove generated products that were not requested
+        products_to_remove = []
+        if not options['include_customized_source_data']:
+            products_to_remove.extend(
+                order2product['source_data'])
+        if not options['include_s2_sr']:
+            products_to_remove.append(
+                order2product['include_s2_sr'])
+        if not options['keep_intermediate_data']:
+            products_to_remove.append(
+                order2product['keep_intermediate_data'])
+
+        if products_to_remove is not None:
+            # Create and load the metadata object
+            espa_metadata = Metadata(xml_filename=self._xml_filename)
+
+            # Search for and remove the items
+            for band in espa_metadata.xml_object.bands.band:
+                if band.attrib['product'] in products_to_remove:
+                    self.remove_band_from_xml(band)
+
+            # Validate the XML
+            espa_metadata.validate()
+
+            # Write it to the XML file
+            espa_metadata.write(xml_filename=self._xml_filename)
+
+            del espa_metadata
+
+    def cleanup_work_dir(self):
+        """Cleanup all the intermediate non-products and the science
+           products not requested
+        """
+
+        product_id = self._parms['product_id']
+        options = self._parms['options']
+
+        # TODO: Determine which S2 files need to be removed
+        # Define intermediate files that need to be removed before product
+        # tarball generation
+        intermediate_files = [
+            'lndsr.*.txt',
+            'lndcal.*.txt',
+            'LogReport*',
+            '*_elevation.*'
+        ]
+
+        # Define L1 source files that may need to be removed before product
+        # tarball generation
+        l1_source_files = [
+            'L*.TIF',
+            'README.GTF',
+            '*gap_mask*',
+            'L*_GCP.txt',
+            'L*_VER.jpg',
+            'L*_VER.txt',
+        ]
+
+        # Change to the working directory
+        current_directory = os.getcwd()
+        os.chdir(self._work_dir)
+
+        try:
+            non_products = []
+            # Remove the intermediate non-product files
+            if not options['keep_intermediate_data']:
+                for item in intermediate_files:
+                    non_products.extend(glob.glob(item))
+
+            # Add level 1 source files if not requested
+            if not options['include_source_data']:
+                for item in l1_source_files:
+                    non_products.extend(glob.glob(item))
+
+            if len(non_products) > 0:
+                cmd = ' '.join(['rm', '-rf'] + non_products)
+                self._logger.info(' '.join(['REMOVING INTERMEDIATE DATA'
+                                            ' COMMAND:', cmd]))
+
+                output = ''
+                try:
+                    output = utilities.execute_cmd(cmd)
+                finally:
+                    if len(output) > 0:
+                        self._logger.info(output)
+
+            self.remove_products_from_xml()
+
+        finally:
+            # Change back to the previous directory
+            os.chdir(current_directory)
+
+    def generate_statistics(self):
+        """Generates statistics if required for the processor
+        """
+
+        options = self._parms['options']
+
+        # Nothing to do if the user did not specify anything to build
+        if not self._build_products or not options['include_statistics']:
+            return
+
+        # Generate the stats for each stat'able' science product
+
+        # Hold the wild card strings in a type based dictionary
+        files_to_search_for = dict()
+
+        """
+        # These original L1C bands may be included at a later date
+        s2_toa_bands = list()
+        s2_toa_bands.extend(['*_B0{x}.img'.format(x=x) for x in range(1, 10)])
+        s2_toa_bands.extend(['*_B{x}.img'.format(x=x) for x in range(10, 13)])
+        s2_toa_bands.append('*_B8A.img')
+        """
+
+        s2_sr_bands = list()
+        s2_sr_bands.extend(['*_sr_band[1-12].img'])
+        s2_sr_bands.extend(['*_sr_band8a.img'])
+        s2_sr_bands.extend(['*_sr_aerosol.img'])
+
+        # The types must match the types in settings.py
+        files_to_search_for['SR'] = s2_sr_bands
+        # files_to_search_for['TOA'] = s2_toa_bands
+        files_to_search_for['INDEX'] = ['*_nbr.img', '*_nbr2.img',
+                                        '*_ndmi.img', '*_ndvi.img',
+                                        '*_evi.img', '*_savi.img',
+                                        '*_msavi.img']
+
+        # Build a command line arguments list
+        cmd = ['espa_statistics.py',
+               '--work_directory', self._work_dir,
+               "--files_to_search_for '{}'".format(json.dumps(files_to_search_for))]
+
+        # Turn the list into a string
+        cmd = ' '.join(cmd)
+        self._logger.info(' '.join(['SUMMARY LANDSAT STATISTICS COMMAND:', cmd]))
+
+        output = ''
+        try:
+            output = utilities.execute_cmd(cmd)
+        finally:
+            if len(output) > 0:
+                self._logger.info(output)
+
+    def get_product_name(self):
+        """Build the product name from the product information and current
+           time
+        """
+        # product_id = self._parms['product_id']
+        product_id = None
+        if self._product_name is None:
+            prods = os.listdir(self._work_dir)
+            for prod in prods:
+                if os.path.basename(prod).startswith('S2'):
+                    product_id = os.path.splitext(os.path.basename(prod))[0]
+                    break
+
+            if product_id is None:
+                msg = "Unable to determine ESPA-formatted product id"
+                self._logger.exception(msg)
+                raise ESPAException(msg)
+
+            # Get the current time information
+            ts = datetime.datetime.today()
+
+            # Extract stuff from the product information
+            product_prefix = sensor.info(product_id).product_prefix
+
+            product_name = ('{0}-SC{1}{2}{3}{4}{5}{6}'
+                            .format(product_prefix,
+                                    str(ts.year).zfill(4),
+                                    str(ts.month).zfill(2),
+                                    str(ts.day).zfill(2),
+                                    str(ts.hour).zfill(2),
+                                    str(ts.minute).zfill(2),
+                                    str(ts.second).zfill(2)))
+
+            self._product_name = product_name
+
+        return self._product_name
+
+
 class VIIRSProcessor(CDRProcessor):
     """Implements the common processing between all of the VIIRS
        processors
@@ -1935,6 +2395,7 @@ class PlotProcessor(ProductProcessor):
         AQUA_NAME_DAILY = 'Aqua 09GA'
         VIIRS_NAME = 'Viirs'
         VIIRS_NAME_DAILY = 'Viirs 09GA'
+        S2_NAME = 'Sentinel 2 MSI'
 
         SearchInfo = namedtuple('SearchInfo', ('key', 'filter_list'))
 
@@ -1948,7 +2409,7 @@ class PlotProcessor(ProductProcessor):
         _sr_swir_viirs_b3_info = [SearchInfo(VIIRS_NAME,
                                              ['VNP*SurfReflect_I3_1.stats'])]
 
-        # SR (L4-L7 B5) (L8 B6) (MODIS B6) (VIIRS B3)
+        # SR (L4-L7 B5) (L8 B6) (MODIS B6) (VIIRS B3) (S2 B11)
         _sr_swir1_info = [SearchInfo(L4_NAME, ['LT4*_sr_band5.stats',
                                                'LT04*_sr_band5.stats']),
                           SearchInfo(L5_NAME, ['LT5*_sr_band5.stats',
@@ -1957,6 +2418,7 @@ class PlotProcessor(ProductProcessor):
                                                'LE07*_sr_band5.stats']),
                           SearchInfo(L8_NAME, ['LC8*_sr_band6.stats',
                                                'LC08*_sr_band6.stats']),
+                          SearchInfo(S2_NAME, ['S2*_sr_band11.stats']),
                           SearchInfo(TERRA_NAME, ['MOD*sur_refl_b06*.stats']),
                           SearchInfo(AQUA_NAME, ['MYD*sur_refl_b06*.stats']),
 
@@ -1972,7 +2434,7 @@ class PlotProcessor(ProductProcessor):
         _rrs_swir2_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band7.stats'])]
         _chlor_a_info = [SearchInfo(L8_NAME, ['L[C,O]08*_chlor_a.stats'])]
 
-        # SR (L4-L8 B7) (MODIS B7)
+        # SR (L4-L8 B7) (MODIS B7) (S2 B12)
         _sr_swir2_info = [SearchInfo(L4_NAME, ['LT4*_sr_band7.stats',
                                                'LT04*_sr_band7.stats']),
                           SearchInfo(L5_NAME, ['LT5*_sr_band7.stats',
@@ -1981,14 +2443,16 @@ class PlotProcessor(ProductProcessor):
                                                'LE07*_sr_band7.stats']),
                           SearchInfo(L8_NAME, ['LC8*_sr_band7.stats',
                                                'LC08*_sr_band7.stats']),
+                          SearchInfo(S2_NAME, ['S2*_sr_band12.stats']),
                           SearchInfo(TERRA_NAME, ['MOD*sur_refl_b07*.stats']),
                           SearchInfo(AQUA_NAME, ['MYD*sur_refl_b07*.stats'])]
 
-        # SR (L8 B1)  coastal aerosol
+        # SR (L8 B1)  (SENTINEL-2 AB B1) coastal aerosol
         _sr_coastal_info = [SearchInfo(L8_NAME, ['LC8*_sr_band1.stats',
-                                                 'LC08*_sr_band1.stats'])]
+                                                 'LC08*_sr_band1.stats']),
+                            SearchInfo(S2_NAME, ['S2*_sr_band1.stats'])]
 
-        # SR (L4-L7 B1) (L8 B2) (MODIS B3)
+        # SR (L4-L7 B1) (L8 B2) (MODIS B3) (S2 B2)
         _sr_blue_info = [SearchInfo(L4_NAME, ['LT4*_sr_band1.stats',
                                               'LT04*_sr_band1.stats']),
                          SearchInfo(L5_NAME, ['LT5*_sr_band1.stats',
@@ -1997,10 +2461,11 @@ class PlotProcessor(ProductProcessor):
                                               'LE07*_sr_band1.stats']),
                          SearchInfo(L8_NAME, ['LC8*_sr_band2.stats',
                                               'LC08*_sr_band2.stats']),
+                         SearchInfo(S2_NAME, ['S2*_sr_band2.stats']),
                          SearchInfo(TERRA_NAME, ['MOD*sur_refl_b03*.stats']),
                          SearchInfo(AQUA_NAME, ['MYD*sur_refl_b03*.stats'])]
 
-        # SR (L4-L7 B2) (L8 B3) (MODIS B4)
+        # SR (L4-L7 B2) (L8 B3) (MODIS B4) (S2 B3)
         _sr_green_info = [SearchInfo(L4_NAME, ['LT4*_sr_band2.stats',
                                                'LT04*_sr_band2.stats']),
                           SearchInfo(L5_NAME, ['LT5*_sr_band2.stats',
@@ -2009,10 +2474,11 @@ class PlotProcessor(ProductProcessor):
                                                'LE07*_sr_band2.stats']),
                           SearchInfo(L8_NAME, ['LC8*_sr_band3.stats',
                                                'LC08*_sr_band3.stats']),
+                          SearchInfo(S2_NAME, ['S2*_sr_band3.stats']),
                           SearchInfo(TERRA_NAME, ['MOD*sur_refl_b04*.stats']),
                           SearchInfo(AQUA_NAME, ['MYD*sur_refl_b04*.stats'])]
 
-        # SR (L4-L7 B3) (L8 B4) (MODIS B1) (VIIRS B1)
+        # SR (L4-L7 B3) (L8 B4) (MODIS B1) (VIIRS B1) (S2 B4)
         _sr_red_info = [SearchInfo(L4_NAME, ['LT4*_sr_band3.stats',
                                              'LT04*_sr_band3.stats']),
                         SearchInfo(L5_NAME, ['LT5*_sr_band3.stats',
@@ -2021,12 +2487,12 @@ class PlotProcessor(ProductProcessor):
                                              'LE07*_sr_band3.stats']),
                         SearchInfo(L8_NAME, ['LC8*_sr_band4.stats',
                                              'LC08*_sr_band4.stats']),
+                        SearchInfo(S2_NAME, ['S2*_sr_band4.stats']),
                         SearchInfo(TERRA_NAME, ['MOD*sur_refl_b01*.stats']),
                         SearchInfo(AQUA_NAME, ['MYD*sur_refl_b01*.stats']),
-
                         SearchInfo(VIIRS_NAME, ['VNP*SurfReflect_I1*.stats'])]
 
-        # SR (L4-L7 B4) (L8 B5) (MODIS B2) (VIIRS B2)
+        # SR (L4-L7 B4) (L8 B5) (MODIS B2) (VIIRS B2) (S2 B8)
         _sr_nir_info = [SearchInfo(L4_NAME, ['LT4*_sr_band4.stats',
                                              'LT04*_sr_band4.stats']),
                         SearchInfo(L5_NAME, ['LT5*_sr_band4.stats',
@@ -2035,14 +2501,23 @@ class PlotProcessor(ProductProcessor):
                                              'LE07*_sr_band4.stats']),
                         SearchInfo(L8_NAME, ['LC8*_sr_band5.stats',
                                              'LC08*_sr_band5.stats']),
+                        SearchInfo(S2_NAME, ['S2*_sr_band8.stats']),
                         SearchInfo(TERRA_NAME, ['MOD*sur_refl_b02*.stats']),
                         SearchInfo(AQUA_NAME, ['MYD*sur_refl_b02*.stats']),
 
                         SearchInfo(VIIRS_NAME, ['VNP*SurfReflect_I2*.stats'])]
 
-        # SR (L8 B9)
+        # Only Sentinel 2
+        _sr_b5_info = [SearchInfo(S2_NAME, ['S2*_sr_band5.stats'])]
+        _sr_b6_info = [SearchInfo(S2_NAME, ['S2*_sr_band6.stats'])]
+        _sr_b7_info = [SearchInfo(S2_NAME, ['S2*_sr_band7.stats'])]
+        _sr_b8a_info = [SearchInfo(S2_NAME, ['S2*_sr_band8a.stats'])]
+        _sr_b9_info = [SearchInfo(S2_NAME, ['S2*_sr_band9.stats'])]
+
+        # SR (L8 B9) (S2 B10)
         _sr_cirrus_info = [SearchInfo(L8_NAME, ['LC8*_sr_band9.stats',
-                                                'LC08*_sr_band9.stats'])]
+                                                'LC08*_sr_band9.stats']),
+                           SearchInfo(S2_NAME, ['S2*_sr_band10.stats'])]
 
         # Only Landsat TOA band 6(L4-7) band 10(L8) band 11(L8)
         _bt_thermal_info = [SearchInfo(L4_NAME, ['LT4*_bt_band6.stats',
@@ -2167,7 +2642,7 @@ class PlotProcessor(ProductProcessor):
         _lst_night_info = [SearchInfo(TERRA_NAME, ['MOD*LST_Night_*.stats']),
                            SearchInfo(AQUA_NAME, ['MYD*LST_Night_*.stats'])]
 
-        # MODIS, VIIRS, and Landsat NDVI files
+        # MODIS, VIIRS, Sentinel, and Landsat NDVI files
         _ndvi_info = [SearchInfo(L4_NAME, ['LT4*_sr_ndvi.stats',
                                            'LT04*_sr_ndvi.stats']),
                       SearchInfo(L5_NAME, ['LT5*_sr_ndvi.stats',
@@ -2176,13 +2651,14 @@ class PlotProcessor(ProductProcessor):
                                            'LE07*_sr_ndvi.stats']),
                       SearchInfo(L8_NAME, ['LC8*_sr_ndvi.stats',
                                            'LC08*_sr_ndvi.stats']),
+                      SearchInfo(S2_NAME, ['S2*_sr_ndvi.stats']),
                       SearchInfo(TERRA_NAME, ['MOD*_NDVI.stats']),
                       SearchInfo(AQUA_NAME, ['MYD*_NDVI.stats']),
                       SearchInfo(TERRA_NAME_DAILY, ['MOD*_sr_ndvi.stats']),
                       SearchInfo(AQUA_NAME_DAILY, ['MYD*_sr_ndvi.stats']),
                       SearchInfo(VIIRS_NAME_DAILY, ['VNP*_sr_ndvi.stats'])]
 
-        # MODIS and Landsat EVI files
+        # MODIS, Sentinel, and Landsat EVI files
         _evi_info = [SearchInfo(L4_NAME, ['LT4*_sr_evi.stats',
                                           'LT04*_sr_evi.stats']),
                      SearchInfo(L5_NAME, ['LT5*_sr_evi.stats',
@@ -2191,10 +2667,11 @@ class PlotProcessor(ProductProcessor):
                                           'LE07*_sr_evi.stats']),
                      SearchInfo(L8_NAME, ['LC8*_sr_evi.stats',
                                           'LC08*_sr_evi.stats']),
+                     SearchInfo(S2_NAME, ['S2*_sr_evi.stats']),
                      SearchInfo(TERRA_NAME, ['MOD*_EVI.stats']),
                      SearchInfo(AQUA_NAME, ['MYD*_EVI.stats'])]
 
-        # Only Landsat SAVI files
+        # Sentinel and Landsat SAVI files
         _savi_info = [SearchInfo(L4_NAME, ['LT4*_sr_savi.stats',
                                            'LT04*_sr_savi.stats']),
                       SearchInfo(L5_NAME, ['LT5*_sr_savi.stats',
@@ -2202,9 +2679,10 @@ class PlotProcessor(ProductProcessor):
                       SearchInfo(L7_NAME, ['LE7*_sr_savi.stats',
                                            'LE07*_sr_savi.stats']),
                       SearchInfo(L8_NAME, ['LC8*_sr_savi.stats',
-                                           'LC08*_sr_savi.stats'])]
+                                           'LC08*_sr_savi.stats']),
+                      SearchInfo(S2_NAME, ['S2*_sr_savi.stats'])]
 
-        # Only Landsat MSAVI files
+        # Sentinel and Landsat MSAVI files
         _msavi_info = [SearchInfo(L4_NAME, ['LT4*_sr_msavi.stats',
                                             'LT04*_sr_msavi.stats']),
                        SearchInfo(L5_NAME, ['LT5*_sr_msavi.stats',
@@ -2212,9 +2690,10 @@ class PlotProcessor(ProductProcessor):
                        SearchInfo(L7_NAME, ['LE7*_sr_msavi.stats',
                                             'LE07*_sr_msavi.stats']),
                        SearchInfo(L8_NAME, ['LC8*_sr_msavi.stats',
-                                            'LC08*_sr_msavi.stats'])]
+                                            'LC08*_sr_msavi.stats']),
+                       SearchInfo(S2_NAME, ['S2*_sr_msavi.stats'])]
 
-        # Only Landsat NBR files
+        # Sentinel and Landsat NBR files
         _nbr_info = [SearchInfo(L4_NAME, ['LT4*_sr_nbr.stats',
                                           'LT04*_sr_nbr.stats']),
                      SearchInfo(L5_NAME, ['LT5*_sr_nbr.stats',
@@ -2222,9 +2701,10 @@ class PlotProcessor(ProductProcessor):
                      SearchInfo(L7_NAME, ['LE7*_sr_nbr.stats',
                                           'LE07*_sr_nbr.stats']),
                      SearchInfo(L8_NAME, ['LC8*_sr_nbr.stats',
-                                          'LC08*_sr_nbr.stats'])]
+                                          'LC08*_sr_nbr.stats']),
+                     SearchInfo(S2_NAME, ['S2*_sr_nbr.stats'])]
 
-        # Only Landsat NBR2 files
+        # Sentinel and Landsat NBR2 files
         _nbr2_info = [SearchInfo(L4_NAME, ['LT4*_sr_nbr2.stats',
                                            'LT04*_sr_nbr2.stats']),
                       SearchInfo(L5_NAME, ['LT5*_sr_nbr2.stats',
@@ -2232,9 +2712,10 @@ class PlotProcessor(ProductProcessor):
                       SearchInfo(L7_NAME, ['LE7*_sr_nbr2.stats',
                                            'LE07*_sr_nbr2.stats']),
                       SearchInfo(L8_NAME, ['LC8*_sr_nbr2.stats',
-                                           'LC08*_sr_nbr2.stats'])]
+                                           'LC08*_sr_nbr2.stats']),
+                      SearchInfo(S2_NAME, ['S2*_sr_nrb2.stats'])]
 
-        # Only Landsat NDMI files
+        # Sentinel and Landsat NDMI files
         _ndmi_info = [SearchInfo(L4_NAME, ['LT4*_sr_ndmi.stats',
                                            'LT04*_sr_ndmi.stats']),
                       SearchInfo(L5_NAME, ['LT5*_sr_ndmi.stats',
@@ -2242,7 +2723,8 @@ class PlotProcessor(ProductProcessor):
                       SearchInfo(L7_NAME, ['LE7*_sr_ndmi.stats',
                                            'LE07*_sr_ndmi.stats']),
                       SearchInfo(L8_NAME, ['LC8*_sr_ndmi.stats',
-                                           'LC08*_sr_ndmi.stats'])]
+                                           'LC08*_sr_ndmi.stats']),
+                      SearchInfo(S2_NAME, ['S2*_sr_ndmi.stats'])]
 
         self.work_list = [(_sr_coastal_info, 'SR COASTAL AEROSOL'),
                           (_sr_blue_info, 'SR Blue'),
@@ -2254,6 +2736,11 @@ class PlotProcessor(ProductProcessor):
                           (_sr_cirrus_info, 'SR CIRRUS'),
                           (_sr_swir_modis_b5_info, 'SR SWIR B5'),
                           (_sr_swir_viirs_b3_info, 'SR SWIR B3'),
+                          (_sr_b5_info, 'Sentinel-2 SR B5'),
+                          (_sr_b6_info, 'Sentinel-2 SR B6'),
+                          (_sr_b7_info, 'Sentinel-2 SR B7'),
+                          (_sr_b8a_info, 'Sentinel-2 SR B8'),
+                          (_sr_b9_info, 'Sentinel-2 SR B9'),
                           (_bt_thermal_info, 'BT Thermal'),
                           (_toa_coastal_info, 'TOA COASTAL AEROSOL'),
                           (_toa_blue_info, 'TOA Blue'),
@@ -2405,6 +2892,9 @@ def get_instance(cfg, parms):
 
     elif sensor.is_viirs(product_id):
         return VIIRSProcessor(cfg, parms)
+
+    elif sensor.is_sentinel(product_id):
+        return SentinelProcessor(cfg, parms)
 
     else:
         raise NotImplementedError('A processor for [{}] has not been'
