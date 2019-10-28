@@ -134,8 +134,9 @@ class TestProcessor(unittest.TestCase):
         self.assertEqual(test_path, result)
 
         test_path = ''
-        mock_getcwd.return_value = '/home/andromeda'
+        mock_result = '/home/somewhere'
+        mock_getcwd.return_value = mock_result
         mock_exists.return_value = False
         # Expect to return the mock current work dir
         result = proc.check_work_dir(test_path)
-        self.assertEqual('/home/andromeda', result)
+        self.assertEqual(mock_result, result)
