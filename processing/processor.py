@@ -13,6 +13,7 @@ import datetime
 import copy
 import subprocess
 from collections import namedtuple
+import re
 
 from espa import Metadata
 
@@ -245,7 +246,7 @@ class ProductProcessor(object):
             self._logger.exception(msg)
             raise ESPAException(msg)
 
-        self._logger.info('*** Product Delivery CompletFe ***')
+        self._logger.info('*** Product Delivery Complete ***')
 
         # Let the caller know where we put these on the destination system
         return (product_file, cksum_file)
@@ -1985,12 +1986,10 @@ class SentinelProcessor(CDRProcessor):
         # Define L1 source files that may need to be removed before product
         # tarball generation
         l1_source_files = [
-            'L*.TIF',
-            'README.GTF',
-            '*gap_mask*',
-            'L*_GCP.txt',
-            'L*_VER.jpg',
-            'L*_VER.txt',
+            # TODO perhaps eventually we will want to add the option to deliver these
+            r'MTD_MSIL1C\.xml',
+            r'MTD_TL\.xml',
+            r'_B[0-9,A-Z]'
         ]
 
         # Change to the working directory
@@ -2007,7 +2006,7 @@ class SentinelProcessor(CDRProcessor):
             # Add level 1 source files if not requested
             if not options['include_source_data']:
                 for item in l1_source_files:
-                    non_products.extend(glob.glob(item))
+                    non_products.extend([f for f in os.listdir('.') if re.search(item, f)])
 
             if len(non_products) > 0:
                 cmd = ' '.join(['rm', '-rf'] + non_products)
@@ -2045,14 +2044,11 @@ class SentinelProcessor(CDRProcessor):
         """
         # These original L1C bands may be included at a later date
         s2_toa_bands = list()
-        s2_toa_bands.extend(['*_B0{x}.img'.format(x=x) for x in range(1, 10)])
-        s2_toa_bands.extend(['*_B{x}.img'.format(x=x) for x in range(10, 13)])
-        s2_toa_bands.append('*_B8A.img')
+        s2_toa_bands.extend([*_B[0-9,A-Z].img])
         """
 
         s2_sr_bands = list()
-        s2_sr_bands.extend(['*_sr_band[1-12].img'])
-        s2_sr_bands.extend(['*_sr_band8a.img'])
+        s2_sr_bands.extend(['*_sr_band[1-9,a-z].img'])
         s2_sr_bands.extend(['*_sr_aerosol.img'])
 
         # The types must match the types in settings.py
