@@ -251,23 +251,21 @@ def viirs_sensor_info(product_id):
 def sentinel2_sensor_info(product_id):
     """Determine information from Product ID
     Example ID:
-    S2A_MSI_L1C_T16TDS_20190723_20190723_01_T1
+    S2A_MSI_L1C_T16TDS_20190723_20190723
     """
     logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
-    (sensor_code, sensor, proc_level, tile, date_acq, date_proc, version, tier) = product_id.split('_')
+    (sensor_code, sensor, proc_level, tile, date_acq, date_proc) = product_id.split('_')
 
     date_acquired = datetime.datetime.strptime(date_acq, '%Y%m%d').date()
 
     # Determine the product prefix
-    product_prefix = ('{sc}{s}{p}{t:>06}{d:>08}{v:>02}{tr:>02}'
+    product_prefix = ('{sc}{s}{p}{t:>06}{d:>08}'
                       .format(sc=sensor_code,
                               s=sensor,
                               p=proc_level,
                               t=tile,
-                              d=date_acq,
-                              v=version,
-                              tr=tier))
+                              d=date_acq))
 
     # Determine the default pixel sizes
     meters = DEFAULT_PIXEL_SIZE['meters'][sensor_code]
@@ -281,6 +279,45 @@ def sentinel2_sensor_info(product_id):
         sensor_name = 'SENTINEL-2A'
     elif is_sentinel2b(product_id):
         sensor_name = 'SENTINEL-2B'
+
+    return SensorInfo(product_prefix=product_prefix,
+                      date_acquired=date_acquired,
+                      sensor_name=sensor_name,
+                      default_pixel_size=default_pixel_size,
+                      horizontal=0, vertical=0,
+                      path=0, row=0,
+                      tile=tile)
+
+
+def sentinel2_sensor_info_original(product_id):
+    """Used for validation of the input product_id from M2M and
+    for returning the default pixel size if necessary.
+
+    These are things that occur before we have the ESPA
+    formatted product id to work with.
+
+    ********** WARNING not to be used for processing! **********
+    """
+    # These are pseudo values just used for filler
+    sensor_code, sensor, proc_level, tile, date_acq, date_proc = 'S2A', 'MSI', 'L1C', 'TTTXXX', '19000101', '19000101'
+
+    date_acquired = datetime.datetime.strptime(date_acq, '%Y%m%d').date()
+
+    # Determine the product prefix
+    product_prefix = ('{sc}{s}{p}{t}{d}'
+                      .format(sc=sensor_code,
+                              s=sensor,
+                              p=proc_level,
+                              t=tile,
+                              d=date_acq))
+
+    # Determine the default pixel sizes
+    meters = DEFAULT_PIXEL_SIZE['meters'][sensor_code]
+    dd = DEFAULT_PIXEL_SIZE['dd'][sensor_code]
+
+    default_pixel_size = {'meters': meters, 'dd': dd}
+
+    sensor_name = 'S2A'
 
     return SensorInfo(product_prefix=product_prefix,
                       date_acquired=date_acquired,
@@ -391,15 +428,20 @@ VIIRS_REGEXP_MAPPING = {
 """Map Sentinel regular expression for supported products to the correct
    Product ID parser
 
-   Example Product ID Format:
-       L1C_T16TDS_A021330_20190723T170012 (newer format)
-       S2A_OPER_MSI_L1C_TL_MTI__20151218T183704_20151218T200553_A002555_T13UDA_N02_01_01 (old format)
+   Example ESPA-formatted Product ID:
+       S2A_MSI_L1C_T16TDS_20190723_20190723
 """
 SENTINEL_REGEXP_MAPPING = {
-        's2a': (r's2a_\w{3}_[a-z0-9]{3}_[a-z0-9]{6}_\d{8})_\d{8}_\d{2}_[a-z0-9]{2}',
+        's2a': (r's2a_\w{3}_[a-z0-9]{3}_[a-z0-9]{6}_\d{8})_\d{8}',
                 sentinel2_sensor_info),
-        's2b': (r's2a_\w{3}_[a-z0-9]{3}_[a-z0-9]{6}_\d{8})_\d{8}_\d{2}_[a-z0-9]{2}',
-                sentinel2_sensor_info)
+        's2b': (r's2b_\w{3}_[a-z0-9]{3}_[a-z0-9]{6}_\d{8})_\d{8}',
+                sentinel2_sensor_info),
+        # include the regex matching the input product Id (new and old)
+        # used in main.py for validating the sensor prior to processing
+        's2_m2m': (r'^l1c_{1}\w{1}\d{2}\w{3}_{1}\w{1}\d{6}_{1}\d{8}\w{1}\d{6}|s2[a,b]{1}_{1}\w{4}_{1}\w{3}_{1}\w{'
+                     r'1}\d{1}\w{1}_{1}\w{2}_{1}\w{3}_{2}\d{8}\w{1}\d{6}_{1}\d{8}\w{1}\d{6}_{1}\w{1}\d{6}_{1}\w{1}\d{'
+                     r'2}\w{3}_{1}\w{1}\d{2}_{1}\d{2}_{1}\d{2}$',
+                   sentinel2_sensor_info_original)
 }
 
 
