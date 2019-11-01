@@ -2048,7 +2048,7 @@ class SentinelProcessor(CDRProcessor):
         """
 
         s2_sr_bands = list()
-        s2_sr_bands.extend(['*_sr_band[1-9,a-z].img'])
+        s2_sr_bands.extend(['*_sr_band*.img'])
         s2_sr_bands.extend(['*_sr_aerosol.img'])
 
         # The types must match the types in settings.py
@@ -2081,11 +2081,15 @@ class SentinelProcessor(CDRProcessor):
         """
         # product_id = self._parms['product_id']
         product_id = None
+
+        # For sentinel-2 we want to work with the ESPA formatting
+        # as opposed to the original product_id returned by M2M
         if self._product_name is None:
             prods = os.listdir(self._work_dir)
             for prod in prods:
-                if os.path.basename(prod).startswith('S2'):
-                    product_id = os.path.splitext(os.path.basename(prod))[0]
+                # Use the scene name taken from the XML filename
+                if prod.startswith('S2') and prod.endswith('.xml'):
+                    product_id = os.path.splitext(prod)[0]
                     break
 
             if product_id is None:
