@@ -65,6 +65,7 @@ def config():
         de('include_resource_report', False, eval),  # TO-DO: do better
         de('init_sleep_seconds', 5, int),
         de('ledaps_aux_dir', os.path.join(aux_dir, 'L17')),
+        de('lasrc_aux_dir', os.path.join(aux_dir, 'L8')),
         de('l8_aux_dir', os.path.join(aux_dir, 'L8')),
         de('modtran_data_dir', os.path.join(aux_dir, 'MODTRAN_DATA')),
         de('modtran_data_path', os.path.join(aux_dir, 'MODTRAN_DATA')),

@@ -5,8 +5,11 @@ LANDSAT_INPUT_FILENAME_EXTENSION = '.tar.gz'
 # Filename extension for Modis based input products
 MODIS_INPUT_FILENAME_EXTENSION = '.hdf'
 
-# Filename extension for VIIRS based input proudcts
+# Filename extension for VIIRS based input products
 VIIRS_INPUT_FILENAME_EXTENSION = '.h5'
+
+# Filename extension for Sentinel-2 based input products
+S2_INPUT_FILENAME_EXTENSION = '.zip'
 
 # Path to the completed orders
 ESPA_REMOTE_CACHE_DIRECTORY = '/data2/science_lsrd/LSRD/orders'
@@ -43,6 +46,7 @@ SINUSOIDAL_SPHERE_RADIUS = 6371007.181
 # Some defines for common pixels sizes in decimal degrees
 DEG_FOR_30_METERS = 0.0002695
 DEG_FOR_15_METERS = (DEG_FOR_30_METERS / 2.0)
+DEG_FOR_10_METERS = (DEG_FOR_30_METERS / 3.0)
 DEG_FOR_1_METER = (DEG_FOR_30_METERS / 30.0)
 
 # Supported datums - the strings for them
@@ -111,11 +115,22 @@ BAND_TYPE_STAT_RANGES = {
     'EMIS': {
         'UPPER_BOUND': 255,
         'LOWER_BOUND': 1
+    },
+    # Sentinel-2 A,B
+    'S2_SR': {
+        'UPPER_BOUND': 16000,
+        'LOWER_BOUND': -2000
+    },
+    'S2_INDEX': {
+        'UPPER_BOUND': 10000,
+        'LOWER_BOUND': -10000
     }
 }
 
+
 MODIS_LST_SCALE = 0.02
 LANDSAT_ST_SCALE = 0.1
+SENTINEL_SR_SCALE = 0.0001
 
 
 '''

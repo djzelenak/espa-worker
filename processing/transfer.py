@@ -1,9 +1,8 @@
-
-'''
-Description: Provides routines for transfering files.
+"""
+Description: Provides routines for transferring files.
 
 License: NASA Open Source Agreement 1.3
-'''
+"""
 
 import os
 import shutil
@@ -17,14 +16,13 @@ from time import sleep
 import settings
 import utilities
 from logging_tools import EspaLogging
-from utilities import execute_cmd
 
 
 def copy_files_to_directory(source_files, destination_directory):
-    '''
+    """
     Description:
       Use unix 'cp' to copy files from one place to another on the localhost.
-    '''
+    """
 
     logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
@@ -47,10 +45,10 @@ def copy_files_to_directory(source_files, destination_directory):
 
 
 def move_files_to_directory(source_files, destination_directory):
-    '''
+    """
     Description:
       Move files from one place to another on the localhost.
-    '''
+    """
 
     logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
@@ -73,11 +71,11 @@ def move_files_to_directory(source_files, destination_directory):
 
 
 def remote_copy_file_to_file(source_host, source_file, destination_file):
-    '''
+    """
     Description:
       Use unix 'cp' to copy a file from one place to another on a remote
       machine using ssh.
-    '''
+    """
 
     logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
@@ -99,7 +97,7 @@ def remote_copy_file_to_file(source_host, source_file, destination_file):
 
 
 def ftp_from_remote_location(username, pword, host, remotefile, localfile):
-    '''
+    """
     Description:
       Transfers files from a remote location to the local machine using ftplib.
 
@@ -114,7 +112,7 @@ def ftp_from_remote_location(username, pword, host, remotefile, localfile):
     Returns: None
 
     Errors: Raises Exception() in the event of error
-    '''
+    """
 
     logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
@@ -146,7 +144,7 @@ def ftp_from_remote_location(username, pword, host, remotefile, localfile):
 
 
 def ftp_to_remote_location(username, pword, localfile, host, remotefile):
-    '''
+    """
     Description:
       Transfers files from the local machine to a remote location using ftplib.
 
@@ -161,7 +159,7 @@ def ftp_to_remote_location(username, pword, localfile, host, remotefile):
     Returns: None
 
     Errors: Raises Exception() in the event of error
-    '''
+    """
 
     logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
@@ -189,7 +187,7 @@ def ftp_to_remote_location(username, pword, localfile, host, remotefile):
 
 def scp_transfer_file(source_host, source_file,
                       destination_host, destination_file):
-    '''
+    """
     Description:
       Using SCP transfer a file from a source location to a destination
       location.
@@ -199,7 +197,7 @@ def scp_transfer_file(source_host, source_file,
         and destination system
       - If wild cards are to be used with the source, then the destination
         file must be a directory.  ***No checking is performed in this code***
-    '''
+    """
 
     logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
@@ -240,7 +238,7 @@ def scp_transfer_file(source_host, source_file,
 
 def scp_transfer_directory(source_host, source_directory,
                            destination_host, destination_directory):
-    '''
+    """
     Description:
       Using SCP transfer a directory from a source location to a destination
       location.
@@ -248,7 +246,7 @@ def scp_transfer_directory(source_host, source_directory,
     Note:
       - It is assumed ssh has been setup for access between the localhost
         and destination system
-    '''
+    """
 
     logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
@@ -288,64 +286,19 @@ def scp_transfer_directory(source_host, source_directory,
 
 
 def http_transfer_file(download_url, destination_file):
-    '''
+    """
     Description:
       Using http transfer a file from a source location to a destination
       file on the localhost.
-    '''
+    """
 
     logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
-
     logger.info(download_url)
 
-# First way
-#    file_size = 0
-#    retrieved_bytes = 0
-#    with closing(requests.get(download_url, stream=True)) as req:
-#        if not req.ok:
-#            raise Exception("Transfer Failed - HTTP - Reason(%s)"
-#                            % req.reason)
-#
-#        file_size = int(req.headers['content-length'])
-#
-#        with open(destination_file, 'wb') as local_fd:
-#            for data_chunk in req.iter_content(settings.TRANSFER_BLOCK_SIZE):
-#                local_fd.write(data_chunk)
-#                retrieved_bytes += len(data_chunk)
-#
-#    if retrieved_bytes != file_size:
-#        raise Exception("Transfer Failed - HTTP - Retrieved %d"
-#                        " out of %d bytes" % (retrieved_bytes, file_size))
-#    else:
-#        logger.info("Transfer Complete - HTTP")
-
-# Second way
-#    req = None
-#    try:
-#        req = requests.get(download_url)
-#
-#        if not req.ok:
-#            logger.error("Transfer Failed - HTTP")
-#            req.raise_for_status()
-#
-#        with open(destination_file, 'wb') as local_fd:
-#            local_fd.write(req.content)
-#    except:
-#        logger.error("Transfer Failed - HTTP")
-#        raise
-#    finally:
-#        if req is not None:
-#            req.close()
-
-# Third way
     session = requests.Session()
-
     session.mount('http://', HTTPAdapter(max_retries=1))
     session.mount('https://', HTTPAdapter(max_retries=1))
 
-    # retry_attempt = 0
-    # done = False
-    # while not done:
     req = None
     try:
         # Use .netrc credentials by default since no auth= specified
@@ -359,13 +312,9 @@ def http_transfer_file(download_url, destination_file):
         with open(destination_file, 'wb') as local_fd:
             local_fd.write(req.content)
 
-        # done = True
-
     except Exception:
         logger.exception("Transfer Issue - HTTP - {0}".format(download_url))
         msg = "Connection timed out"
-        # if retry_attempt > 2:
-        # retry_attempt += 1
 
         # Sleep randomly from 1 to 10 minutes before raising the exception
         sleep_seconds = int(random.random() * 540) + 60
@@ -384,10 +333,10 @@ def http_transfer_file(download_url, destination_file):
 
 
 def download_file_url(download_url, destination_file):
-    '''
+    """
     Description:
         Using a URL download the specified file to the destination.
-    '''
+    """
 
     download_url = urllib2.unquote(download_url)
 
@@ -406,7 +355,7 @@ def transfer_file(source_host, source_file,
                   destination_host, destination_file,
                   source_username=None, source_pw=None,
                   destination_username=None, destination_pw=None):
-    '''
+    """
     Description:
       Using cp/FTP/SCP transfer a file from a source location to a destination
       location.
@@ -414,7 +363,7 @@ def transfer_file(source_host, source_file,
     Notes:
       We are not doing anything significant here other then some logic and
       fallback to SCP if FTP fails.
-    '''
+    """
 
     logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 

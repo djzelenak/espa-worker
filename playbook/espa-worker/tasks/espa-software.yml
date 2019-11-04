@@ -3,9 +3,11 @@
 # Last Updated: See 'git log -p <filename>'
 # Recent Changes: See 'git log -p <filename>'
 
-# ---- ESPA SYSTEM REQUIREMENTS ---- #
+# ------------ ESPA SYSTEM REQUIREMENTS ----------- #
+# (espa_dependencies defined in external vars file) #
+# ------------------------------------------------- #
 
-# Install required system packages (espa_dependencies defined in external vars file)
+# Install required system packages
 - name: espa-software|Install ESPA required system packages
   yum:
     name: "{{ espa_dependencies }}"
@@ -35,7 +37,9 @@
     enabled: yes
     metadata_expire: 300
 
-# ---- ESPA SOFTWARE RELEASE GROUP ---- #
+# ---------- ESPA SOFTWARE RELEASE GROUP ---------- #
+# (software versions defined in external vars file) #
+# ------------------------------------------------- #
 
 # Install python from espa repo
 - name: espa-software|Install LSRD Python
@@ -159,6 +163,13 @@
     src: "espa_software/python_get-pip.py"
     dest: "/root/get-pip.py"
   when: pip_path.stat.exists == False
+
+# Link to the opj2_decompress executable
+- name: espa-software|Link opj2_decompress to opj_decompress
+  file:
+    src: "/usr/bin/opj2_decompress"
+    dest: "/usr/bin/opj_decompress"
+    state: link
 
 # Install pip into LSRD Python site packages if pip did not exist
 - name: espa-software|No Pip - Install pip using LSRD Python (/usr/local/bin/python)
