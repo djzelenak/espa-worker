@@ -2893,7 +2893,7 @@ def get_instance(cfg, parms):
     elif sensor.is_viirs(product_id):
         return VIIRSProcessor(cfg, parms)
 
-    elif sensor.is_sentinel(product_id):
+    elif sensor.is_sentinel2(product_id):
         return SentinelProcessor(cfg, parms)
 
     else:
