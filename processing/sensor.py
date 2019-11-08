@@ -5,14 +5,12 @@ Description: Module to extract embedded information from Product IDs and
 License: NASA Open Source Agreement 1.3
 """
 
-
 import sys
 import re
 import datetime
 from collections import namedtuple
 from logging_tools import EspaLogging
 import settings
-
 
 """Sensor information that is extracted from the details available in the
    Product ID.  Some Items are built from the details, while others are
@@ -33,7 +31,6 @@ SensorInfo = namedtuple('SensorInfo', ['product_prefix',
                                        'path',
                                        'row',
                                        'tile'])
-
 
 """Supported Sensor Codes
 """
@@ -100,7 +97,7 @@ DEFAULT_PIXEL_SIZE = {
         'LT04': 0.0002695,
         'S2A': 0.0008983,
         'S2B': 0.0008983
-        }
+    }
 }
 
 
@@ -351,7 +348,6 @@ LANDSAT_COLLECTION_REGEXP_MAPPING = {
              landsat_sensor_info)
 }
 
-
 """Map MODIS regular expressions for supported products to the correct
    Product ID parser
 
@@ -432,16 +428,17 @@ VIIRS_REGEXP_MAPPING = {
        S2A_MSI_L1C_T16TDS_20190723_20190723
 """
 SENTINEL_REGEXP_MAPPING = {
-        's2a': (r's2a_\w{3}_[a-z0-9]{3}_[a-z0-9]{6}_\d{8})_\d{8}',
-                sentinel2_sensor_info),
-        's2b': (r's2b_\w{3}_[a-z0-9]{3}_[a-z0-9]{6}_\d{8})_\d{8}',
-                sentinel2_sensor_info),
-        # include the regex matching the input product Id (new and old)
-        # used in main.py for validating the sensor prior to processing
-        's2_m2m': (r'^l1c_{1}\w{1}\d{2}\w{3}_{1}\w{1}\d{6}_{1}\d{8}\w{1}\d{6}|s2[a,b]{1}_{1}\w{4}_{1}\w{3}_{1}\w{'
-                     r'1}\d{1}\w{1}_{1}\w{2}_{1}\w{3}_{2}\d{8}\w{1}\d{6}_{1}\d{8}\w{1}\d{6}_{1}\w{1}\d{6}_{1}\w{1}\d{'
-                     r'2}\w{3}_{1}\w{1}\d{2}_{1}\d{2}_{1}\d{2}$',
-                   sentinel2_sensor_info_original)
+    's2a': (r's2a_\w{3}_[a-z0-9]{3}_[a-z0-9]{6}_\d{8}_\d{8}',
+            sentinel2_sensor_info),
+    's2b': (r's2b_\w{3}_[a-z0-9]{3}_[a-z0-9]{6}_\d{8}_\d{8}',
+            sentinel2_sensor_info),
+    # include the regex matching the input product Id (new and old)
+    # used in main.py for validating the sensor prior to processing
+    # S2A_OPER_MSI_L1C_TL_SGS__20151224T003938_20151224T053341_A002630_T55MDN_N02_01_01
+    's2_m2m': (r'^l1c_{1}\w{1}\d{2}\w{3}_{1}\w{1}\d{6}_{1}\d{8}\w{1}\d{6}|s2[a,b]{1}_{1}\w{4}_{1}\w{3}_{1}\w{' \
+               r'1}\d{1}\w{1}_{1}\w{2}_{1}\w{3}_{2}\d{8}\w{1}\d{6}_{1}\d{8}\w{1}\d{6}_{1}\w{1}\d{6}_{1}\w{1}\d{' \
+               r'2}\w{3}_{1}\w{1}\d{2}_{1}\d{2}_{1}\d{2}$',
+               sentinel2_sensor_info_original)
 }
 
 
@@ -546,6 +543,8 @@ class sensor_memoize(object):
             product_id = temp_id[:MODIS_COLLECTION_ID_LENGTH]
         elif is_viirs(temp_id):
             product_id = temp_id[:VIIRS_COLLECTION_ID_LENGTH]
+        elif is_sentinel2(temp_id):
+            product_id = temp_id
         else:
             raise ProductNotImplemented('[{0}] is not a supported product'
                                         .format(temp_id))
