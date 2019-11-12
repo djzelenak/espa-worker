@@ -1810,12 +1810,6 @@ class SentinelProcessor(CDRProcessor):
             if self._xml_filename is None:
                 raise ESPAException("Could not locate the Sentinel-2 ESPA-formatted XML file")
 
-            # Change back to the working directory
-            # os.chdir(self._work_dir)
-
-            # Change back to the working directory
-            # os.chdir(self._work_dir)
-
     def sr_command_line(self):
         """Returns the command line required to generate surface reflectance
 
