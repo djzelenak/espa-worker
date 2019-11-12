@@ -54,7 +54,7 @@ def config():
         de('espa_land_mass_polygon', os.path.join(aux_dir, 'land_water_polygon/land_no_buf.ply')),
         de('espa_min_request_duration_in_seconds', 0, int),
         de('espa_priority', None),
-        de('espa_schema', '/usr/local/schema/espa_internal_metadata_v2_1.xsd'),
+        de('espa_schema', '/usr/local/schema/espa_internal_metadata_v2_2.xsd'),
         de('espa_user', None),
         de('espa_group', None),
         de('espa_work_dir', '/mnt/mesos/sandbox'),
