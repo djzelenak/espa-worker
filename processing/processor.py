@@ -1666,6 +1666,7 @@ class SentinelProcessor(CDRProcessor):
 
         self._zip_filename = None
         self._unpackage_dir = None
+        self._xml_filename = None
 
     def validate_parameters(self):
         """Validates the parameters required for the processor"""
@@ -1796,8 +1797,18 @@ class SentinelProcessor(CDRProcessor):
             if len(output) > 0:
                 self._logger.info(output)
 
-            # Change back to the working directory
-            os.chdir(self._work_dir)
+            # We need to set the proper XML filename since the espa-formatted name is different
+            # from the original Scene ID
+            work_dir_files = os.listdir(self._work_dir)
+            for f in work_dir_files:
+                if f.endswith('.xml') and f.startswith('S2'):
+                    self._logger.info('Using espa-formatted XML file {}'.format(f))
+                    self._xml_filename = f
+                    break
+
+            # If we didn't find the ESPA-formatted XML, then something is wrong
+            if self._xml_filename is None:
+                raise ESPAException("Could not locate the Sentinel-2 ESPA-formatted XML file")
 
     def sr_command_line(self):
         """Returns the command line required to generate surface reflectance
@@ -2893,7 +2904,7 @@ def get_instance(cfg, parms):
     elif sensor.is_viirs(product_id):
         return VIIRSProcessor(cfg, parms)
 
-    elif sensor.is_sentinel(product_id):
+    elif sensor.is_sentinel2(product_id):
         return SentinelProcessor(cfg, parms)
 
     else:
