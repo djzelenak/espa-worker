@@ -1984,7 +1984,6 @@ class SentinelProcessor(CDRProcessor):
         product_id = self._parms['product_id']
         options = self._parms['options']
 
-        # TODO: Determine which S2 files need to be removed
         # Define intermediate files that need to be removed before product
         # tarball generation
         intermediate_files = [
@@ -2406,7 +2405,7 @@ class PlotProcessor(ProductProcessor):
         AQUA_NAME_DAILY = 'Aqua 09GA'
         VIIRS_NAME = 'Viirs'
         VIIRS_NAME_DAILY = 'Viirs 09GA'
-        S2_NAME = 'Sentinel 2 MSI'
+        S2_NAME = 'Sentinel 2'
 
         SearchInfo = namedtuple('SearchInfo', ('key', 'filter_list'))
 
