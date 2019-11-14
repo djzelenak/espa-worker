@@ -6,6 +6,7 @@ License: NASA Open Source Agreement 1.3
 '''
 
 import os
+from os.path import expanduser
 import shutil
 import glob
 import json
@@ -173,7 +174,7 @@ class ProductProcessor(object):
         order_id = self._parms['orderid']
 
         # Get the absolute path to the directory, and default to the current one
-        base_work_dir = self.check_work_dir(self._cfg.get('espa_work_dir'))
+        base_work_dir = self.check_mesos_sandbox(self._cfg.get('espa_work_dir'))
 
         # Create the product directory name
         product_dirname = '-'.join([str(order_id), str(product_id)])
@@ -294,30 +295,27 @@ class ProductProcessor(object):
 
         return (destination_product_file, destination_cksum_file)
 
-    def check_work_dir(self, path):
+    def check_mesos_sandbox(self, path):
         """
-        Make sure that the base work dir exists, if not, set it to something safe
+        Make sure that the base work dir exists.  If not, try setting it
+        to the current user's home directory.
         Args:
             path (str): The full path to a base working directory
         Returns:
             str
         """
-        fallback = '/home/espa'
+        default = '/home/espa'
 
-        if not os.path.exists(path) or path == '':
-            path = os.path.abspath(fallback)
-            self._logger.warning('Processing work directory not found, trying {}'.format(path))
+        path = os.path.abspath(path)
 
-        if not os.path.exists(path):
-            path = os.getcwd()
-            self._logger.warning('Fallback working directory option is not valid, setting to {}'.format(path))
-            return path
-        else:
-            # Path as it was given is OK..get the absolute path
-            path = os.path.abspath(path)
+        if os.path.exists(path):
             self._logger.info('Working directory is set to {}'.format(path))
             return path
 
+        else:
+            path = os.path.abspath(default)
+            self._logger.warning('Mesos sandbox not found, setting base work directory to {}'.format(path))
+            return path
 
 class CustomizationProcessor(ProductProcessor):
     """Provides the super class implementation for customization processing
@@ -2511,7 +2509,7 @@ class PlotProcessor(ProductProcessor):
                                              'LE07*_sr_band4.stats']),
                         SearchInfo(L8_NAME, ['LC8*_sr_band5.stats',
                                              'LC08*_sr_band5.stats']),
-                        SearchInfo(S2_NAME, ['S2*_sr_band8.stats']),
+                        SearchInfo(S2_NAME, ['S2*_sr_band8a.stats']),
                         SearchInfo(TERRA_NAME, ['MOD*sur_refl_b02*.stats']),
                         SearchInfo(AQUA_NAME, ['MYD*sur_refl_b02*.stats']),
 
@@ -2521,7 +2519,7 @@ class PlotProcessor(ProductProcessor):
         _sr_b5_info = [SearchInfo(S2_NAME, ['S2*_sr_band5.stats'])]
         _sr_b6_info = [SearchInfo(S2_NAME, ['S2*_sr_band6.stats'])]
         _sr_b7_info = [SearchInfo(S2_NAME, ['S2*_sr_band7.stats'])]
-        _sr_b8a_info = [SearchInfo(S2_NAME, ['S2*_sr_band8a.stats'])]
+        _sr_b8_info = [SearchInfo(S2_NAME, ['S2*_sr_band8.stats'])]
         _sr_b9_info = [SearchInfo(S2_NAME, ['S2*_sr_band9.stats'])]
 
         # SR (L8 B9) (S2 B10)
@@ -2746,11 +2744,11 @@ class PlotProcessor(ProductProcessor):
                           (_sr_cirrus_info, 'SR CIRRUS'),
                           (_sr_swir_modis_b5_info, 'SR SWIR B5'),
                           (_sr_swir_viirs_b3_info, 'SR SWIR B3'),
-                          (_sr_b5_info, 'Sentinel-2 SR B5'),
-                          (_sr_b6_info, 'Sentinel-2 SR B6'),
-                          (_sr_b7_info, 'Sentinel-2 SR B7'),
-                          (_sr_b8a_info, 'Sentinel-2 SR B8'),
-                          (_sr_b9_info, 'Sentinel-2 SR B9'),
+                          (_sr_b5_info, 'Vegetation Red Edge B5'),
+                          (_sr_b6_info, 'Vegetation Red Edge B6'),
+                          (_sr_b7_info, 'Vegetation Red Edge B7'),
+                          (_sr_b8_info, 'Wide Band NIR B8'),
+                          (_sr_b9_info, 'Water Vapor B9'),
                           (_bt_thermal_info, 'BT Thermal'),
                           (_toa_coastal_info, 'TOA COASTAL AEROSOL'),
                           (_toa_blue_info, 'TOA Blue'),

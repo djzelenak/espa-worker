@@ -124,19 +124,17 @@ class TestProcessor(unittest.TestCase):
 
     @patch('processing.processor.EspaLogging.get_logger')
     @patch('processing.processor.os.path.exists')
-    @patch('processing.processor.os.getcwd')
-    def test_check_work_dir(self, mock_getcwd, mock_exists, mock_logger):
+    def test_check_work_dir(self, mock_exists, mock_logger):
         test_path = '/mnt/mesos/sandbox'
         mock_exists.return_value = True
         proc = processor.ProductProcessor(self.cfg, self.params)
         # Expect to return the input test_path unchanged
-        result = proc.check_work_dir(test_path)
+        result = proc.check_mesos_sandbox(test_path)
         self.assertEqual(test_path, result)
 
         test_path = ''
-        mock_result = '/home/somewhere'
-        mock_getcwd.return_value = mock_result
+        expected_result = '/home/espa'
         mock_exists.return_value = False
         # Expect to return the mock current work dir
-        result = proc.check_work_dir(test_path)
-        self.assertEqual(mock_result, result)
+        result = proc.check_mesos_sandbox(test_path)
+        self.assertEqual(expected_result, result)
