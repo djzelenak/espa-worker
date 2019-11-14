@@ -22,6 +22,8 @@ default_gdal_skip_drivers = 'aaigrid ace2 adrg aig airsar arg blx bmp bsb bt ceo
                             'rs2 rst saga sar_ceos sdts sgi snodas srp srtmhgt terragen til ' \
                             'usgsdem vrt xpm xyz zmap'
 
+default_work_dir = '/home/espa'
+
 
 def export_environment_variables(cfg):
     """Export the configuration to environment variables
@@ -57,7 +59,7 @@ def config():
         de('espa_schema', '/usr/local/schema/espa_internal_metadata_v2_2.xsd'),
         de('espa_user', None),
         de('espa_group', None),
-        de('espa_work_dir', '/mnt/mesos/sandbox'),
+        de('espa_work_dir', default_work_dir),
         de('esun', '/usr/local/espa-cloud-masking/cfmask/static_data'),
         de('gdal_skip', default_gdal_skip_drivers),
         de('ias_data_dir', os.path.join(aux_dir, 'gls-dem')),

@@ -117,7 +117,7 @@ BAND_TYPE_STAT_RANGES = {
         'LOWER_BOUND': 1
     },
     # Sentinel-2 A,B
-    'S2_SR': {
+    'SENTINEL_2_SR': {
         'UPPER_BOUND': 16000,
         'LOWER_BOUND': -2000
     },
