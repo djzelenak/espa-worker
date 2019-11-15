@@ -2099,7 +2099,7 @@ class SentinelProcessor(CDRProcessor):
         if options['include_statistics']:
 
             # regex pattern to match the espa-formatted Sentinel-2 naming convention
-            pattern = r's2[a,b]_\w{3}_[a-z,0-9]{3}_[a-z,0-9]{6}_[0-9]{8}_[0-9]{8}'
+            pattern = r'S2[A,B]_\w{3}_[A-Z,0-9]{3}_[A-Z,0-9]{6}_[0-9]{8}_[0-9]{8}'
 
             p = re.compile(pattern)
 
@@ -2107,9 +2107,9 @@ class SentinelProcessor(CDRProcessor):
 
             s2_product_id = None
             for f in files:
-                match = p.search(os.path.basename(f).lower())
+                match = p.search(os.path.basename(f))
                 if match is not None:
-                    s2_product_id = match.group().upper()
+                    s2_product_id = match.group()
                     break
 
             if s2_product_id is not None:
