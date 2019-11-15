@@ -414,22 +414,27 @@ def distribute_statistics_remote(immutability, product_id, source_path,
 
 def distribute_statistics_local(immutability, product_id, source_path,
                                 destination_path, user, group):
-    '''
-    Description:
-        Copies the statistics to the specified directory on the local system
+    """
+    Copies the statistics to the specified directory on the local system
 
-    Parameters:
-        product_id - The unique product ID associated with the files.
-        source_path - The full path to where the statistics files to
-                      distribute reside.
-        destination_path - The full path on the local system to copy the
-                           statistics files into.
+    Args:
+        immutability (bool): If True, change the file attributes for immutability.
+        product_id (str): The unique product ID associated with the files.
+        source_path (str): The full path to where the statistics files to
+                           distribute reside.
+        destination_path (str): The full path on the local system to copy the
+                                statistics files into.
+        user (str): The user to take ownership.
+        group (str): The group to take ownership.
 
     Note:
-        - It is assumed a stats directory exists under the source_path
-        - A stats directory will be created under the destination path
-    '''
+        - It is assumed a stats directory exists under the source_path.
+        - A stats directory will be created under the destination path.
 
+    Returns:
+        None
+
+    """
     logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
 
     d_name = 'stats'
@@ -675,26 +680,26 @@ def distribute_product_local(immutability, product_name, source_path,
 
 
 def distribute_statistics(immutability, source_path, packaging_path, parms, user, group):
-    '''
-    Description:
-        Determines if the distribution method is set to local or remote and
-        calls the correct distribution method.
+    """
+    Determines if the distribution method is set to local or remote
+    and calls the correct distribution method.
+
+    Args:
+        immutability (bool): If True, change the file attributes for immutability.
+        source_path (str): The full path to directory containing the data to
+                           package and distribute.
+        packaging_path (str): The full path on the local system for where the packaged
+                              product should be placed under.
+        parms (dict): All the user and system defined parameters.
+        user (str): The user to take ownership.
+        group (str): The group to take ownership.
 
     Returns:
-      product_file - The full path to the product either on the local system
-                     or the remote destination.
-      cksum_value - The check sum value of the product.
+        product_file (str): The full path to the product either on the local system
+                            or the remote destination.
+        cksum_value (str): The check sum value of the product.
 
-    Parameters:
-        source_path - The full path to of directory containing the data to
-                      package and distribute.
-        package_dir - The full path on the local system for where the packaged
-                      product should be placed under.
-        parms - All the user and system defined parameters.
-        user - The user to take ownership.
-        group - The group to take ownership.
-    '''
-
+    """
     env = Environment()
 
     distribution_method = env.get_distribution_method()
