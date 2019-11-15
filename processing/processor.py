@@ -2083,6 +2083,60 @@ class SentinelProcessor(CDRProcessor):
             if len(output) > 0:
                 self._logger.info(output)
 
+    def distribute_statistics(self):
+        """
+        Distributes statistics if required for the processor.
+
+        Note:
+            We override the CDRProcessor method when processing a
+            Sentinel-2 scene because the product ID given by the ESPA API
+            is different from the espa_product_formatter outputs for Sentinel-2.
+
+        """
+
+        options = self._parms['options']
+
+        if options['include_statistics']:
+
+            # regex pattern to match the espa-formatted Sentinel-2 naming convention
+            pattern = r's2[a,b]_\w{3}_[a-z,0-9]{3}_[a-z,0-9]{6}_[0-9]{8}_[0-9]{8}'
+
+            p = re.compile(pattern)
+
+            files = glob.glob(os.path.join(self._work_dir, '*'))
+
+            s2_product_id = None
+            for f in files:
+                match = p.search(os.path.basename(f).lower())
+                if match is not None:
+                    s2_product_id = match.group().upper()
+                    break
+
+            if s2_product_id is not None:
+                s2_parms = copy.deepcopy(self._parms)
+                s2_parms['product_id'] = s2_product_id
+
+            else:
+                msg = 'Unable to determine the ESPA Sentinel-2 Product ID'
+                self._logger.exception(msg)
+                raise ESPAException(msg)
+
+            try:
+                immutability = utilities.str2bool(self._cfg.get('immutable_distribution'))
+
+                distribution.distribute_statistics(immutability,
+                                                   self._work_dir,
+                                                   self._output_dir,
+                                                   s2_parms,
+                                                   self._user,
+                                                   self._group)
+            except (Exception, ESPAException):
+                msg = 'An exception occurred delivering the stats'
+                self._logger.exception(msg)
+                raise ESPAException(msg)
+
+            self._logger.info('*** Statistics Distribution Complete ***')
+
     def get_product_name(self):
         """Build the product name from the product information and current
            time
