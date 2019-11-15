@@ -1,15 +1,16 @@
-
 import os
 import sys
 import copy
 import unittest
 import logging
 from mock import patch
-from mocks import mock_api_response, mock_invalid_response
+from mocks import mock_api_response, mock_invalid_response, mock_s2_order
 import processing
 from processing.logging_tools import EspaLogging, LevelFilter
 from processing.utilities import convert_json
 from processing import parameters, config, config_utils, processor, product_formatting
+from processing.processor import SentinelProcessor
+from processing.distribution import distribute_statistics
 
 EspaLogging.configure_base_logger()
 # Initially set to the base logger
@@ -30,6 +31,7 @@ stderr_handler.setFormatter(formatter)
 stderr_handler.addFilter(LevelFilter(30, 50))
 base_logger.addHandler(stderr_handler)
 
+
 class TestProcessor(unittest.TestCase):
     def setUp(self):
         self.cfg = config.config()
@@ -44,7 +46,9 @@ class TestProcessor(unittest.TestCase):
             'LT05': 'LT05_L1TP_023028_20111001_20160830_01_T1',
             'MOD': 'MOD09GA.A2019221.h11v04.006.2019223030533',
             'MYD': 'MYD09GA.A2019221.h11v04.006.2019223030533',
-            'VNP': 'VNP09GA.A2019221.h11v04.001.2019222084825'
+            'VNP': 'VNP09GA.A2019221.h11v04.001.2019222084825',
+            'S2_OLD': 'S2A_OPER_MSI_L1C_TL_SGS__20160807T170937_20160807T221135_A005886_T16TDS_N02_04_01',
+            'S2_NEW': 'L1C_T16TDS_A021330_20190723T170012'
         }
 
     def tearDown(self):
@@ -77,7 +81,7 @@ class TestProcessor(unittest.TestCase):
         Make sure that we are setting the environment variables required for processing
         """
         config.export_environment_variables(self.cfg)
-        
+
         for _env in self.cfg.keys():
             self.assertTrue(_env.upper() in os.environ.keys())
 
@@ -106,7 +110,7 @@ class TestProcessor(unittest.TestCase):
         for code, scene in self.scene_to_instance.items():
             if code != 'LT08':
                 params['product_id'] = scene
-                pp=processor.get_instance(self.cfg, params)
+                pp = processor.get_instance(self.cfg, params)
                 if code == 'LT05' or code == 'LT04':
                     self.assertTrue(type(pp) == processing.processor.LandsatTMProcessor)
                 if code == 'LE07':
@@ -121,6 +125,10 @@ class TestProcessor(unittest.TestCase):
                     self.assertTrue(type(pp) == processing.processor.ModisTERRAProcessor)
                 if code == 'MYD':
                     self.assertTrue(type(pp) == processing.processor.ModisAQUAProcessor)
+                if code == 'S2_OLD':
+                    self.assertTrue(type(pp) == processing.processor.SentinelProcessor)
+                if code == 'S2_NEW':
+                    self.assertTrue(type(pp) == processing.processor.SentinelProcessor)
 
     @patch('processing.processor.EspaLogging.get_logger')
     @patch('processing.processor.os.path.exists')
@@ -138,3 +146,30 @@ class TestProcessor(unittest.TestCase):
         # Expect to return the mock current work dir
         result = proc.check_mesos_sandbox(test_path)
         self.assertEqual(expected_result, result)
+
+    @patch('processing.processor.EspaLogging.get_logger')
+    @patch('processing.processor.glob.glob')
+    @patch('processing.processor.os.path.join')
+    @patch('processing.processor.distribution.distribute_statistics')
+    def test_sentinel2_distribute_statistics(self, mock_distribute_statistics, mock_join, mock_glob, mock_logger):
+        """
+        Make sure that we can correctly identify the ESPA-formatted Sentinel Scene ID
+        """
+        mock_distribute_statistics.return_value = None
+        mock_join.return_value = '/working/*'
+
+        # just need a few bands, really one would suffice
+        # Also note, these don't have to match the scene the mock order
+        mock_glob.return_value = [
+            '/working/S2A_MSI_L1C_T16TDS_20160807_20160808_sr_aerosol.tif',
+            '/working/S2A_MSI_L1C_T16TDS_20160807_20160808_sr_band3.tif',
+            '/working/S2A_MSI_L1C_T16TDS_20160807_20160808_sr_band8.tif',
+            '/working/S2A_MSI_L1C_T16TDS_20160807_20160808_sr_band10.tif'
+        ]
+
+        params = mock_s2_order[0]
+
+        pp = SentinelProcessor(cfg=self.cfg, parms=params)
+
+        # The test passes if this does not raise an ESPAException
+        pp.distribute_statistics()
