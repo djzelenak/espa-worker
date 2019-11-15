@@ -2721,7 +2721,7 @@ class PlotProcessor(ProductProcessor):
                                            'LE07*_sr_nbr2.stats']),
                       SearchInfo(L8_NAME, ['LC8*_sr_nbr2.stats',
                                            'LC08*_sr_nbr2.stats']),
-                      SearchInfo(S2_NAME, ['S2*_sr_nrb2.stats'])]
+                      SearchInfo(S2_NAME, ['S2*_sr_nbr2.stats'])]
 
         # Sentinel and Landsat NDMI files
         _ndmi_info = [SearchInfo(L4_NAME, ['LT4*_sr_ndmi.stats',
