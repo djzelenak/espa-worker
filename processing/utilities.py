@@ -324,9 +324,10 @@ def tar_files(tarred_full_path, file_list, gzip=False):
         # Raise and retain the callstack
         raise Exception(msg)
 
-    # If zipping was chosen, clean up the pigz wrapper script 
-    if gzip:
-        os.unlink(PIGZ_WRAPPER_FILENAME)
+    finally:
+        # If zipping was chosen, clean up the pigz wrapper script
+        if gzip:
+            os.unlink(PIGZ_WRAPPER_FILENAME)
 
     return target
 

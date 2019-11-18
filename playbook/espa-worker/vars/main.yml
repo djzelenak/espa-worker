@@ -32,7 +32,7 @@ espa_l2qa_tools: 1.7.2
 espa_laorca: 1.0.0
 espa_surface_reflectance: 1.0.14
 espa_surface_reflectance_ledaps: 3.4.0
-espa_surface_reflectance_lasrc: 2.0.0
+espa_surface_reflectance_lasrc: 2.0.0-3.20191118071552
 espa_surface_temperature: 2.5.0
 espa_surface_temperature_rit: 2.5.0
 espa_spectral_indices: 2.9.0
@@ -41,7 +41,7 @@ espa_surface_water_extent_cfbwd: 1.1.0
 espa_surface_water_extent_dswe: 2.3.0
 espa_elevation: 2.3.1
 espa_reprojection: 1.1.1
-espa_plotting: 0.5.0
+espa_plotting: 0.5.0-3.20191118072428
 gdal_espa: 1.11.1
 proj_espa: 4.8.0
 modtran_espa: 5.3.2

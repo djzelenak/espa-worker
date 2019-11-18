@@ -1934,7 +1934,6 @@ class SentinelProcessor(CDRProcessor):
         options = self._parms['options']
 
         # Map order options to the products in the XML files
-        # TODO: Figure out Sentinel-2 values
         order2product = {
             'source_data': ['MSIL1C'],
             'include_s2_sr': 'sr_refl',
@@ -2082,6 +2081,60 @@ class SentinelProcessor(CDRProcessor):
         finally:
             if len(output) > 0:
                 self._logger.info(output)
+
+    def distribute_statistics(self):
+        """
+        Distributes statistics if required for the processor.
+
+        Note:
+            We override the CDRProcessor method when processing a
+            Sentinel-2 scene because the product ID given by the ESPA API
+            is different from the espa_product_formatter outputs for Sentinel-2.
+
+        """
+
+        options = self._parms['options']
+
+        if options['include_statistics']:
+
+            # regex pattern to match the espa-formatted Sentinel-2 naming convention
+            pattern = r'S2[A,B]_\w{3}_[A-Z,0-9]{3}_[A-Z,0-9]{6}_[0-9]{8}_[0-9]{8}'
+
+            p = re.compile(pattern)
+
+            files = glob.glob(os.path.join(self._work_dir, '*'))
+
+            s2_product_id = None
+            for f in files:
+                match = p.search(os.path.basename(f))
+                if match is not None:
+                    s2_product_id = match.group()
+                    break
+
+            if s2_product_id is not None:
+                s2_parms = copy.deepcopy(self._parms)
+                s2_parms['product_id'] = s2_product_id
+
+            else:
+                msg = 'Unable to determine the ESPA Sentinel-2 Product ID'
+                self._logger.exception(msg)
+                raise ESPAException(msg)
+
+            try:
+                immutability = utilities.str2bool(self._cfg.get('immutable_distribution'))
+
+                distribution.distribute_statistics(immutability,
+                                                   self._work_dir,
+                                                   self._output_dir,
+                                                   s2_parms,
+                                                   self._user,
+                                                   self._group)
+            except (Exception, ESPAException):
+                msg = 'An exception occurred delivering the stats'
+                self._logger.exception(msg)
+                raise ESPAException(msg)
+
+            self._logger.info('*** Statistics Distribution Complete ***')
 
     def get_product_name(self):
         """Build the product name from the product information and current
@@ -2520,12 +2573,10 @@ class PlotProcessor(ProductProcessor):
         _sr_b6_info = [SearchInfo(S2_NAME, ['S2*_sr_band6.stats'])]
         _sr_b7_info = [SearchInfo(S2_NAME, ['S2*_sr_band7.stats'])]
         _sr_b8_info = [SearchInfo(S2_NAME, ['S2*_sr_band8.stats'])]
-        _sr_b9_info = [SearchInfo(S2_NAME, ['S2*_sr_band9.stats'])]
 
-        # SR (L8 B9) (S2 B10)
+        # SR (L8 B9)
         _sr_cirrus_info = [SearchInfo(L8_NAME, ['LC8*_sr_band9.stats',
-                                                'LC08*_sr_band9.stats']),
-                           SearchInfo(S2_NAME, ['S2*_sr_band10.stats'])]
+                                                'LC08*_sr_band9.stats'])]
 
         # Only Landsat TOA band 6(L4-7) band 10(L8) band 11(L8)
         _bt_thermal_info = [SearchInfo(L4_NAME, ['LT4*_bt_band6.stats',
@@ -2721,7 +2772,7 @@ class PlotProcessor(ProductProcessor):
                                            'LE07*_sr_nbr2.stats']),
                       SearchInfo(L8_NAME, ['LC8*_sr_nbr2.stats',
                                            'LC08*_sr_nbr2.stats']),
-                      SearchInfo(S2_NAME, ['S2*_sr_nrb2.stats'])]
+                      SearchInfo(S2_NAME, ['S2*_sr_nbr2.stats'])]
 
         # Sentinel and Landsat NDMI files
         _ndmi_info = [SearchInfo(L4_NAME, ['LT4*_sr_ndmi.stats',
@@ -2748,7 +2799,6 @@ class PlotProcessor(ProductProcessor):
                           (_sr_b6_info, 'Vegetation Red Edge B6'),
                           (_sr_b7_info, 'Vegetation Red Edge B7'),
                           (_sr_b8_info, 'Wide Band NIR B8'),
-                          (_sr_b9_info, 'Water Vapor B9'),
                           (_bt_thermal_info, 'BT Thermal'),
                           (_toa_coastal_info, 'TOA COASTAL AEROSOL'),
                           (_toa_blue_info, 'TOA Blue'),
