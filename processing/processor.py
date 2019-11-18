@@ -1934,7 +1934,6 @@ class SentinelProcessor(CDRProcessor):
         options = self._parms['options']
 
         # Map order options to the products in the XML files
-        # TODO: Figure out Sentinel-2 values
         order2product = {
             'source_data': ['MSIL1C'],
             'include_s2_sr': 'sr_refl',
@@ -2574,12 +2573,10 @@ class PlotProcessor(ProductProcessor):
         _sr_b6_info = [SearchInfo(S2_NAME, ['S2*_sr_band6.stats'])]
         _sr_b7_info = [SearchInfo(S2_NAME, ['S2*_sr_band7.stats'])]
         _sr_b8_info = [SearchInfo(S2_NAME, ['S2*_sr_band8.stats'])]
-        _sr_b9_info = [SearchInfo(S2_NAME, ['S2*_sr_band9.stats'])]
 
-        # SR (L8 B9) (S2 B10)
+        # SR (L8 B9)
         _sr_cirrus_info = [SearchInfo(L8_NAME, ['LC8*_sr_band9.stats',
-                                                'LC08*_sr_band9.stats']),
-                           SearchInfo(S2_NAME, ['S2*_sr_band10.stats'])]
+                                                'LC08*_sr_band9.stats'])]
 
         # Only Landsat TOA band 6(L4-7) band 10(L8) band 11(L8)
         _bt_thermal_info = [SearchInfo(L4_NAME, ['LT4*_bt_band6.stats',
@@ -2802,7 +2799,6 @@ class PlotProcessor(ProductProcessor):
                           (_sr_b6_info, 'Vegetation Red Edge B6'),
                           (_sr_b7_info, 'Vegetation Red Edge B7'),
                           (_sr_b8_info, 'Wide Band NIR B8'),
-                          (_sr_b9_info, 'Water Vapor B9'),
                           (_bt_thermal_info, 'BT Thermal'),
                           (_toa_coastal_info, 'TOA COASTAL AEROSOL'),
                           (_toa_blue_info, 'TOA Blue'),
