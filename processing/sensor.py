@@ -1,16 +1,16 @@
-
-'''
+"""
 Description: Module to extract embedded information from Product IDs and
              supply configured values for each product
 
 License: NASA Open Source Agreement 1.3
-'''
+"""
 
-
+import sys
 import re
 import datetime
 from collections import namedtuple
-
+from logging_tools import EspaLogging
+import settings
 
 """Sensor information that is extracted from the details available in the
    Product ID.  Some Items are built from the details, while others are
@@ -29,8 +29,8 @@ SensorInfo = namedtuple('SensorInfo', ['product_prefix',
                                        'horizontal',
                                        'vertical',
                                        'path',
-                                       'row'])
-
+                                       'row',
+                                       'tile'])
 
 """Supported Sensor Codes
 """
@@ -45,6 +45,12 @@ TERRA_SENSOR_CODE = 'MOD'
 AQUA_SENSOR_CODE = 'MYD'
 
 VIIRS_SENSOR_CODE = 'VNP'
+
+SENTINEL2_L1_OLD_ID = 'S2A'  # Sentinel-2B did not exist prior to the new ESA formatting
+SENTINEL2_L1_NEW_ID = 'L1C'  # Sentinel-2 A and B will follow this pattern with new formatting
+SENTINEL2A_ESPA = 'S2A'
+SENTINEL2B_ESPA = 'S2B'
+
 
 """Default pixel sizes based on the input products
 """
@@ -68,7 +74,9 @@ DEFAULT_PIXEL_SIZE = {
         'LT5': 30,
         'LT05': 30,
         'LT4': 30,
-        'LT04': 30
+        'LT04': 30,
+        'S2A': 10,
+        'S2B': 10
     },
     'dd': {
         '09A1': 0.00449155,
@@ -89,8 +97,10 @@ DEFAULT_PIXEL_SIZE = {
         'LT5': 0.0002695,
         'LT05': 0.0002695,
         'LT4': 0.0002695,
-        'LT04': 0.0002695
-        }
+        'LT04': 0.0002695,
+        'S2A': 0.0008983,
+        'S2B': 0.0008983
+    }
 }
 
 
@@ -136,7 +146,8 @@ def landsat_sensor_info(product_id):
                       sensor_name=sensor_name,
                       default_pixel_size=default_pixel_size,
                       horizontal=0, vertical=0,
-                      path=path, row=row)
+                      path=path, row=row,
+                      tile='')
 
 
 def modis_sensor_info(product_id):
@@ -186,7 +197,9 @@ def modis_sensor_info(product_id):
                       sensor_name=sensor_name,
                       default_pixel_size=default_pixel_size,
                       horizontal=horizontal, vertical=vertical,
-                      path=0, row=0)
+                      path=0, row=0,
+                      tile='')
+
 
 def viirs_sensor_info(product_id):
     """Determine information from VIIRS Product ID
@@ -231,7 +244,91 @@ def viirs_sensor_info(product_id):
                       sensor_name=sensor_name,
                       default_pixel_size=default_pixel_size,
                       horizontal=horizontal, vertical=vertical,
-                      path=0, row=0)
+                      path=0, row=0,
+                      tile='')
+
+
+def sentinel2_sensor_info(product_id):
+    """Determine information from Product ID
+    Example ID:
+    S2A_MSI_L1C_T16TDS_20190723_20190723
+
+    Note:
+        - This assumes the ESPA formatted Sentinel-2 naming convention
+    """
+    logger = EspaLogging.get_logger(settings.PROCESSING_LOGGER)
+
+    (sensor_code, sensor, proc_level, tile, date_acq, date_proc) = product_id.split('_')
+
+    date_acquired = datetime.datetime.strptime(date_acq, '%Y%m%d').date()
+
+    # Determine the product prefix
+    product_prefix = ('{sc}{s}{p}{t:>06}{d:>08}'
+                      .format(sc=sensor_code,
+                              s=sensor,
+                              p=proc_level,
+                              t=tile,
+                              d=date_acq))
+
+    # Determine the default pixel sizes
+    meters = DEFAULT_PIXEL_SIZE['meters'][sensor_code]
+    dd = DEFAULT_PIXEL_SIZE['dd'][sensor_code]
+
+    default_pixel_size = {'meters': meters, 'dd': dd}
+
+    # Sensor string is used in plotting
+    sensor_name = None
+    if is_sentinel2_l1_old(product_id):
+        sensor_name = 'SENTINEL-2A'
+    elif is_sentinel2_l1_new(product_id):
+        sensor_name = 'SENTINEL-2B'
+
+    return SensorInfo(product_prefix=product_prefix,
+                      date_acquired=date_acquired,
+                      sensor_name=sensor_name,
+                      default_pixel_size=default_pixel_size,
+                      horizontal=0, vertical=0,
+                      path=0, row=0,
+                      tile=tile)
+
+
+def sentinel2_sensor_info_original(product_id):
+    """Used for validation of the input product_id from M2M and
+    for returning the default pixel size if necessary.
+
+    These are things that occur before we have the ESPA
+    formatted product id to work with.
+
+    ********** WARNING not to be used for processing! **********
+    """
+    # These are pseudo values just used for filler
+    sensor_code, sensor, proc_level, tile, date_acq, date_proc = 'S2A', 'MSI', 'L1C', 'TTTXXX', '19000101', '19000101'
+
+    date_acquired = datetime.datetime.strptime(date_acq, '%Y%m%d').date()
+
+    # Determine the product prefix
+    product_prefix = ('{sc}{s}{p}{t}{d}'
+                      .format(sc=sensor_code,
+                              s=sensor,
+                              p=proc_level,
+                              t=tile,
+                              d=date_acq))
+
+    # Determine the default pixel sizes
+    meters = DEFAULT_PIXEL_SIZE['meters'][sensor_code]
+    dd = DEFAULT_PIXEL_SIZE['dd'][sensor_code]
+
+    default_pixel_size = {'meters': meters, 'dd': dd}
+
+    sensor_name = 'S2A'
+
+    return SensorInfo(product_prefix=product_prefix,
+                      date_acquired=date_acquired,
+                      sensor_name=sensor_name,
+                      default_pixel_size=default_pixel_size,
+                      horizontal=0, vertical=0,
+                      path=0, row=0,
+                      tile=tile)
 
 
 """Map Landsat regular expressions for supported products to the correct
@@ -256,7 +353,6 @@ LANDSAT_COLLECTION_REGEXP_MAPPING = {
     'lo08': (r'^lo08_[a-z0-9]{4}_\d{6}_\d{8}_\d{8}_\d{2}_[a-z0-9]{2}$',
              landsat_sensor_info)
 }
-
 
 """Map MODIS regular expressions for supported products to the correct
    Product ID parser
@@ -331,6 +427,27 @@ VIIRS_REGEXP_MAPPING = {
                 viirs_sensor_info)
 }
 
+"""Map Sentinel regular expression for supported products to the correct
+   Product ID parser
+
+   Example ESPA-formatted Product ID:
+       S2A_MSI_L1C_T16TDS_20190723_20190723
+"""
+SENTINEL_REGEXP_MAPPING = {
+    's2a': (r's2a_\w{3}_[a-z0-9]{3}_[a-z0-9]{6}_\d{8}_\d{8}',
+            sentinel2_sensor_info),
+    's2b': (r's2b_\w{3}_[a-z0-9]{3}_[a-z0-9]{6}_\d{8}_\d{8}',
+            sentinel2_sensor_info),
+    # include the regex matching the input product Id (new and old)
+    # used in main.py for validating the sensor prior to processing
+    # S2A_OPER_MSI_L1C_TL_SGS__20151224T003938_20151224T053341_A002630_T55MDN_N02_01_01
+    's2_m2m': (r'^l1c_{1}\w{1}\d{2}\w{3}_{1}\w{1}\d{6}_{1}\d{8}\w{1}\d{6}|s2[a,b]{1}_{1}\w{4}_{1}\w{3}_{1}\w{' \
+               r'1}\d{1}\w{1}_{1}\w{2}_{1}\w{3}_{2}\d{8}\w{1}\d{6}_{1}\d{8}\w{1}\d{6}_{1}\w{1}\d{6}_{1}\w{1}\d{' \
+               r'2}\w{3}_{1}\w{1}\d{2}_{1}\d{2}_{1}\d{2}$',
+               sentinel2_sensor_info_original)
+}
+
+
 def is_landsat4(a):
     return a.upper().startswith(LT04_SENSOR_CODE)
 
@@ -379,6 +496,27 @@ def is_viirs(a):
     return a.upper().startswith(VIIRS_SENSOR_CODE)
 
 
+def is_sentinel2_l1_old(a):
+    return a.upper().startswith(SENTINEL2_L1_OLD_ID)
+
+
+def is_sentinel2_l1_new(a):
+    return a.upper().startswith(SENTINEL2_L1_NEW_ID)
+
+
+def is_sentinel2a_espa(a):
+    return a.upper().startswith(SENTINEL2A_ESPA)
+
+
+def is_sentinel2b_espa(a):
+    return a.upper().startswith(SENTINEL2B_ESPA)
+
+
+def is_sentinel2(a):
+    return any([is_sentinel2_l1_old(a), is_sentinel2_l1_new(a),
+                is_sentinel2a_espa(a), is_sentinel2b_espa(a)])
+
+
 class ProductNotImplemented(NotImplementedError):
     """Thrown when trying to instantiate an unsupported product
     """
@@ -420,6 +558,8 @@ class sensor_memoize(object):
             product_id = temp_id[:MODIS_COLLECTION_ID_LENGTH]
         elif is_viirs(temp_id):
             product_id = temp_id[:VIIRS_COLLECTION_ID_LENGTH]
+        elif is_sentinel2(temp_id):
+            product_id = temp_id
         else:
             raise ProductNotImplemented('[{0}] is not a supported product'
                                         .format(temp_id))
@@ -434,7 +574,7 @@ class sensor_memoize(object):
 
 @sensor_memoize
 def info(product_id):
-    """Return an class instance for the correct Sensor
+    """Return a class instance for the correct Sensor
 
     Args:
         product_id (str): The Product ID for the requested product.  Can also
@@ -454,6 +594,9 @@ def info(product_id):
 
     elif is_viirs(product_id):
         mapping = VIIRS_REGEXP_MAPPING
+
+    elif is_sentinel2(product_id):
+        mapping = SENTINEL_REGEXP_MAPPING
 
     test_id = product_id.lower()
 

@@ -1,9 +1,8 @@
-
-'''
+"""
 Description: Utility module for espa-processing.
 
 License: NASA Open Source Agreement 1.3
-'''
+"""
 
 import os
 import errno
@@ -19,14 +18,17 @@ from os import stat
 from collections import defaultdict
 from subprocess import check_output, CalledProcessError, check_call
 from config_utils import retrieve_pigz_cfg
+from espa_exception import ESPAException
 from logging_tools import get_base_logger, EspaLogging
 
 base_logger = get_base_logger()
 cfg = config.config()
 PIGZ_WRAPPER_FILENAME = 'pigz_wrapper.sh'
 
+
 class NETRCException(Exception):
     pass
+
 
 def build_netrc():
     """
@@ -54,31 +56,29 @@ def build_netrc():
             f.write('machine {0}\n'.format(urs_machine))
             f.write('login {0}\n'.format(urs_login))
             f.write('password {0}'.format(urs_pw))
-  
+
         return True
     except Exception as e:
         msg = "Exception encountered creating .netrc: {}".format(e)
         base_logger.exception(msg)
         raise NETRCException(msg)
 
+
 def convert_json(data):
     if type(data) is str:
-        # return a list or dict
+        # return a list
         temp = json.loads(data)
         if type(temp) is dict:
-            base_logger.warning('The input order data was a single dict, but the processing container'
-                                ' requires a list - placing the dict in a list object')
             return [temp]
         else:
             return temp
     elif type(data) in (list, dict):
         # return a string
-        base_logger.warning('The input order data was a list or dict object - returning a string')
         return json.dumps(data)
     else:
         msg = 'Non-compatible data type for input data of type {0}'.format(type(data))
         base_logger.critical(msg)
-        raise Exception(msg)
+        raise ESPAException(msg)
 
 
 def date_from_year_doy(year, doy):
@@ -279,7 +279,6 @@ def tar_files(tarred_full_path, file_list, gzip=False):
     """Create a tar ball (*.tar or *.tar.gz) of the specified file(s)
 
     Args:
-        cfg (dict): Config settings
         tarred_full_path (str): The full path to the tarred filename.
         file_list (list): The files to tar as a list.
         gzip (bool): Whether or not to gzip the tar on the fly.
@@ -325,9 +324,10 @@ def tar_files(tarred_full_path, file_list, gzip=False):
         # Raise and retain the callstack
         raise Exception(msg)
 
-    # If zipping was chosen, clean up the pigz wrapper script 
-    if gzip:
-        os.unlink(PIGZ_WRAPPER_FILENAME)
+    finally:
+        # If zipping was chosen, clean up the pigz wrapper script
+        if gzip:
+            os.unlink(PIGZ_WRAPPER_FILENAME)
 
     return target
 
@@ -375,6 +375,7 @@ def str2bool(val):
     except AttributeError:
         raise TypeError('value {0} was not a string'.format(type(val)))
 
+
 def get_sleep_duration(cfg, start_time, dont_sleep, key='espa_min_request_duration_in_seconds'):
     """Logs details and returns number of seconds to sleep
     """
@@ -401,6 +402,7 @@ def get_sleep_duration(cfg, start_time, dont_sleep, key='espa_min_request_durati
     logger.info('Sleeping An Additional {0} Seconds'.format(seconds_to_sleep))
 
     return seconds_to_sleep
+
 
 def change_ownership(product_path, user, group, recursive=False):
     """
