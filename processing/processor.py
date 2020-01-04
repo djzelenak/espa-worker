@@ -635,6 +635,7 @@ class LandsatProcessor(CDRProcessor):
                              'include_st',
                              'include_orca',
                              'include_source_data',
+                             'include_source_metadata',
                              'include_sr',
                              'include_sr_evi',
                              'include_sr_msavi',
@@ -1170,6 +1171,13 @@ class LandsatProcessor(CDRProcessor):
             'L*_VER.txt',
         ]
 
+        # Define source metadata files that can be removed if not requested
+        # before product tarball generation
+        metadata_files = [
+            '*_ANG.txt',
+            '*_MTL.txt'
+        ]
+
         # Change to the working directory
         current_directory = os.getcwd()
         os.chdir(self._work_dir)
@@ -1184,6 +1192,11 @@ class LandsatProcessor(CDRProcessor):
             # Add level 1 source files if not requested
             if not options['include_source_data']:
                 for item in l1_source_files:
+                    non_products.extend(glob.glob(item))
+
+            # Add source metadata files if not requested
+            if not options['include_source_metadata']:
+                for item in metadata_files:
                     non_products.extend(glob.glob(item))
 
             if len(non_products) > 0:
