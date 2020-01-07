@@ -73,6 +73,7 @@ def config():
         de('modtran_data_path', os.path.join(aux_dir, 'MODTRAN_DATA')),
         de('modtran_path', '/usr/local/bin'),
         de('ocdataroot', os.path.join(aux_dir, 'ocdata')),
+        de('ar_aux_dir', os.path.join(aux_dir, 'aq_refl')),
         de('omp_num_threads', 1, int),
         de('pigz_num_threads', '1', str),
         de('pythonpath', '/usr/local/python'),
