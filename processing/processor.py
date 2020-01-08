@@ -1194,10 +1194,11 @@ class LandsatProcessor(CDRProcessor):
                 for item in l1_source_files:
                     non_products.extend(glob.glob(item))
 
-            # Add source metadata files if not requested
+            # Add source metadata files if not requested and no source data included in the order
             if not options['include_source_metadata']:
-                for item in metadata_files:
-                    non_products.extend(glob.glob(item))
+                if not options['include_customized_source_data']:
+                    for item in metadata_files:
+                        non_products.extend(glob.glob(item))
 
             if len(non_products) > 0:
                 cmd = ' '.join(['rm', '-rf'] + non_products)
@@ -2068,7 +2069,6 @@ class SentinelProcessor(CDRProcessor):
 
         s2_sr_bands = list()
         s2_sr_bands.extend(['*_sr_band*.img'])
-        s2_sr_bands.extend(['*_sr_aerosol.img'])
 
         # The types must match the types in settings.py
         files_to_search_for['SR'] = s2_sr_bands
