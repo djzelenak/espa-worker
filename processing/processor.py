@@ -633,7 +633,7 @@ class LandsatProcessor(CDRProcessor):
                              'include_customized_source_data',
                              'include_dswe',
                              'include_st',
-                             'include_orca',
+                             'include_aq_refl',
                              'include_source_data',
                              'include_sr',
                              'include_sr_evi',
@@ -668,7 +668,7 @@ class LandsatProcessor(CDRProcessor):
                 not options['include_sr_evi'] and
                 not options['include_dswe'] and
                 not options['include_st'] and
-                not options['include_orca']):
+                not options['include_aq_refl']):
 
             self._logger.info('***NO SCIENCE PRODUCTS CHOSEN***')
             self._build_products = False
@@ -897,21 +897,21 @@ class LandsatProcessor(CDRProcessor):
                 if len(output) > 0:
                     self._logger.info(output)
 
-    def orca_command_line(self):
-        """Returns command line required to generate over-water reflectance"""
-        cmd = ['water_leaving_reflectance.py',
+    def aq_ref_command_line(self):
+        """Returns command line required to generate aquatic reflectance products"""
+        cmd = ['aquatic_reflectance.py',
                '--xml',
                self._xml_filename]
 
         return ' '.join(cmd)
 
-    def generate_over_water_reflectance(self):
-        """Generates over-water reflectance products"""
+    def generate_aquatic_reflectance(self):
+        """Generates aquatic reflectance products"""
         options = self._parms['options']
-        if options['include_orca']:
-            cmd = self.orca_command_line()
+        if options['include_aq_refl']:
+            cmd = self.aq_ref_command_line()
 
-            self._logger.info(' '.join(['WATER LEAVING REFLECTANCE COMMAND:', cmd]))
+            self._logger.info(' '.join(['AQUATIC REFLECTANCE COMMAND:', cmd]))
             output = ''
             try:
                 output = utilities.execute_cmd(cmd)
@@ -1060,7 +1060,7 @@ class LandsatProcessor(CDRProcessor):
 
             self.generate_surface_temperature()
 
-            self.generate_over_water_reflectance()
+            self.generate_aquatic_reflectance()
 
         finally:
             # Change back to the previous directory
@@ -1230,8 +1230,7 @@ class LandsatProcessor(CDRProcessor):
                                         '*_evi.img', '*_savi.img',
                                         '*_msavi.img']
         files_to_search_for['LANDSAT_ST'] = ['*_st.img']
-        files_to_search_for['RRS'] = ['*_rrs_band[0-7].img']
-        files_to_search_for['CHLOR_A'] = ['*_chlor_a.img']
+        files_to_search_for['AR'] = ['*_ar_band[0-5].img']
 
         # Build a command line arguments list
         cmd = ['espa_statistics.py',
@@ -2485,15 +2484,11 @@ class PlotProcessor(ProductProcessor):
 
                           SearchInfo(VIIRS_NAME, ['VNP*SurfReflect_I3*.stats'])]
 
-        # LaORCA bands (Landsat 8)
-        _rrs_coastal_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band1.stats'])]
-        _rrs_blue_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band2.stats'])]
-        _rrs_green_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band3.stats'])]
-        _rrs_red_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band4.stats'])]
-        _rrs_nir_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band5.stats'])]
-        _rrs_swir1_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band6.stats'])]
-        _rrs_swir2_info = [SearchInfo(L8_NAME, ['L[C,O]08*_rrs_band7.stats'])]
-        _chlor_a_info = [SearchInfo(L8_NAME, ['L[C,O]08*_chlor_a.stats'])]
+        # Aquatic Reflectance bands (Landsat 8)
+        _ar_b1_info = [SearchInfo(L8_NAME, ['L[C,O]08*_ar_band1.stats'])]
+        _ar_b2_info = [SearchInfo(L8_NAME, ['L[C,O]08*_ar_band2.stats'])]
+        _ar_b3_info = [SearchInfo(L8_NAME, ['L[C,O]08*_ar_band3.stats'])]
+        _ar_b4_info = [SearchInfo(L8_NAME, ['L[C,O]08*_ar_band4.stats'])]
 
         # SR (L4-L8 B7) (MODIS B7) (S2 B12)
         _sr_swir2_info = [SearchInfo(L4_NAME, ['LT4*_sr_band7.stats',
@@ -2795,10 +2790,10 @@ class PlotProcessor(ProductProcessor):
                           (_sr_cirrus_info, 'SR CIRRUS'),
                           (_sr_swir_modis_b5_info, 'SR SWIR B5'),
                           (_sr_swir_viirs_b3_info, 'SR SWIR B3'),
-                          (_sr_b5_info, 'Vegetation Red Edge B5'),
-                          (_sr_b6_info, 'Vegetation Red Edge B6'),
-                          (_sr_b7_info, 'Vegetation Red Edge B7'),
-                          (_sr_b8_info, 'Wide Band NIR B8'),
+                          (_sr_b5_info, 'SR Vegetation Red Edge B5'),
+                          (_sr_b6_info, 'SR Vegetation Red Edge B6'),
+                          (_sr_b7_info, 'SR Vegetation Red Edge B7'),
+                          (_sr_b8_info, 'SR Broad Band NIR B8'),
                           (_bt_thermal_info, 'BT Thermal'),
                           (_toa_coastal_info, 'TOA COASTAL AEROSOL'),
                           (_toa_blue_info, 'TOA Blue'),
@@ -2814,14 +2809,10 @@ class PlotProcessor(ProductProcessor):
                           (_emis_29_info, 'Emis Band 29'),
                           (_emis_31_info, 'Emis Band 31'),
                           (_emis_32_info, 'Emis Band 32'),
-                          (_rrs_coastal_info, 'RRS Coastal'),
-                          (_rrs_blue_info, 'RRS Blue'),
-                          (_rrs_green_info, 'RRS Green'),
-                          (_rrs_red_info, 'RRS Red'),
-                          (_rrs_nir_info, 'RRS NIR'),
-                          (_rrs_swir1_info, 'RRS SWIR1'),
-                          (_rrs_swir2_info, 'RRS SWIR2'),
-                          (_chlor_a_info, 'CHLOR_A'),
+                          (_ar_b1_info, 'Aquatic Reflectance band 1'),
+                          (_ar_b2_info, 'Aquatic Reflectance band 2'),
+                          (_ar_b3_info, 'Aquatic Reflectance band 3'),
+                          (_ar_b4_info, 'Aquatic Reflectance band 4'),
                           (_lst_day_info, 'LST Day'),
                           (_lst_night_info, 'LST Night'),
                           (_ndvi_info, 'NDVI'),

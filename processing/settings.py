@@ -86,7 +86,7 @@ BAND_TYPE_STAT_RANGES = {
         'UPPER_BOUND': 10000,
         'LOWER_BOUND': -1000
     },
-    # Over-water reflectance from LaORCA
+    # Aquatic Reflectance
     'RRS': {
         'UPPER_BOUND': 20000,
         'LOWER_BOUND': 0
