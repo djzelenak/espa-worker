@@ -14,8 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename occurrences of 'orca' to aquatic reflectance (aq_refl) as necessary
 - Updated statistics and plotting interfacing to locate aquatic reflectance band products
 - Removed references to previous orca band products (rrs and chlor_a)
-- Do not generate statistics for the Sentinel-2 Aerosol QA band
 - Landsat Level-1 metadata is only included in the product bundle if the order includes the level-1 source data, or if it was specifically requested
+
+### Fixed
+- Do not generate statistics for the Sentinel-2 Aerosol QA band
+- Fix bug where unused .stats files are potentially delivered in the statistics archive
 
 ## [1.3.2] - 2020-01-xx
 
