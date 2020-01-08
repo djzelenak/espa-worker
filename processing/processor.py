@@ -2793,7 +2793,7 @@ class PlotProcessor(ProductProcessor):
                           (_sr_b5_info, 'SR Vegetation Red Edge B5'),
                           (_sr_b6_info, 'SR Vegetation Red Edge B6'),
                           (_sr_b7_info, 'SR Vegetation Red Edge B7'),
-                          (_sr_b8_info, 'SR Broad Band NIR B8'),
+                          (_sr_b8_info, 'SR Broad NIR B8'),
                           (_bt_thermal_info, 'BT Thermal'),
                           (_toa_coastal_info, 'TOA COASTAL AEROSOL'),
                           (_toa_blue_info, 'TOA Blue'),
@@ -2832,7 +2832,7 @@ class PlotProcessor(ProductProcessor):
         # Call the base class parameter validation
         super(PlotProcessor, self).validate_parameters()
 
-    def process_band_type(self, (search_list, band_type)):
+    def process_band_type(self, band_info):
         """A generic processing routine which finds the files to process based
            on the provided search criteria
 
@@ -2840,6 +2840,7 @@ class PlotProcessor(ProductProcessor):
         filenames.  If no files are found, no plots or combined statistics
         will be generated.
         """
+        search_list, band_type = band_info
         # Build a command line arguments list
         cmd = ['espa_plotting.py',
                "--band_type '{}'".format(band_type),
