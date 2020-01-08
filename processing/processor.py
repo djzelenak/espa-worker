@@ -2883,6 +2883,12 @@ class PlotProcessor(ProductProcessor):
         try:
             map(self.process_band_type, self.work_list)
 
+            # remove unused .stats files in the <order-id>/stats/ location
+            missed_files = glob.glob(os.path.join('stats', '*.stats'))
+            for m in missed_files:
+                if os.path.exists(m):
+                    os.unlink(m)
+
         finally:
             # Change back to the previous directory
             os.chdir(current_directory)
