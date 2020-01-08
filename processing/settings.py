@@ -87,12 +87,8 @@ BAND_TYPE_STAT_RANGES = {
         'LOWER_BOUND': -1000
     },
     # Aquatic Reflectance
-    'RRS': {
-        'UPPER_BOUND': 20000,
-        'LOWER_BOUND': 0
-    },
-    'CHLOR_A': {
-        'UPPER_BOUND': 10000,
+    'AR': {
+        'UPPER_BOUND': 31420,
         'LOWER_BOUND': 0
     },
     # This is for MODIS LST.  The data range is 7500 to 65535, but with scaling
