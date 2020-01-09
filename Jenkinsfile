@@ -11,6 +11,9 @@ pipeline {
 
     //-- Reference the docker hub repo for the worker
     WORKER_REPO = "usgseros/espa-worker"
+
+    //-- GIT SHORT HASH for latest commit
+    GIT_SHORT_HASH = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
     }
 
     //-- Job Stages (Actions) --\\
@@ -23,6 +26,7 @@ pipeline {
                 echo "Worker version ${env.WORKER_VERSION}"
                 echo "Current worker branch ${env.WORKER_BRANCH}"
                 echo "Worker repo is referenced as ${env.WORKER_REPO}"
+                echo "Last commit ${env.GIT_SHORT_HASH}"
 
                 // Update workspace timestamp to prevent nightly cleanup script from removing workspace during a job run
                 sh script: """
@@ -33,7 +37,7 @@ pipeline {
 
                 script {
                     //-- Build the image no matter which branch we are on
-                    def customImage = docker.build("${WORKER_REPO}:${WORKER_BRANCH}-${WORKER_VERSION}", ".")
+                    def customImage = docker.build("${WORKER_REPO}:${WORKER_BRANCH}-${WORKER_VERSION}-${GIT_SHORT_HASH}", ".")
                     echo "Docker image id in same script block is: ${customImage.id}"
 
                     // Make image object available to later stages
