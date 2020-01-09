@@ -37,7 +37,7 @@ pipeline {
 
                 script {
                     //-- Build the image no matter which branch we are on
-                    def customImage = docker.build("${WORKER_REPO}:${WORKER_BRANCH}-${WORKER_VERSION}-${GIT_SHORT_HASH}", ".")
+                    def customImage = docker.build("--no-cache", "${WORKER_REPO}:${WORKER_BRANCH}-${WORKER_VERSION}-${GIT_SHORT_HASH}", ".")
                     echo "Docker image id in same script block is: ${customImage.id}"
 
                     // Make image object available to later stages
