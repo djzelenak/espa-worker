@@ -71,10 +71,10 @@
     name: "espa-l2qa-tools-{{ espa_l2qa_tools }}"
     state: installed
 
-# Install espa-laorca
-- name: espa-software|Install espa-laorca
+# Install espa-aq-refl
+- name: espa-software|Install espa-aq-refl
   yum:
-    name: "espa-laorca-{{ espa_laorca }}"
+    name: "espa-aq-refl-{{ espa_aq_refl }}"
     state: installed
 
 # Install espa-surface-reflectance
