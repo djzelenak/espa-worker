@@ -1,4 +1,6 @@
-[![Build Status](https://travis-ci.org/USGS-EROS/espa-worker.svg?branch=develop)](https://travis-ci.org/USGS-EROS/espa-worker)
+[![pipeline status](https://eroslab.cr.usgs.gov/lsrd/espa-worker/badges/master/pipeline.svg)](https://eroslab.cr.usgs.gov/lsrd/espa-worker/commits/master)
+
+[![coverage report](https://eroslab.cr.usgs.gov/lsrd/espa-worker/badges/master/coverage.svg)](https://eroslab.cr.usgs.gov/lsrd/espa-worker/commits/master)
 
 # espa-worker
 Components for building an ESPA worker
