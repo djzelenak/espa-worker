@@ -1,5 +1,4 @@
-ARG image
-FROM $image
+FROM ${CI_REGISTRY_IMAGE}:espa-base
 
 MAINTAINER USGS EROS LSRD http://eros.usgs.gov
 

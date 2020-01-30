@@ -12,7 +12,12 @@ services:
 before_script:
   - apk add make git
 
+stages:
+  - base
+  - external
+
 docker_base:
+  stage: base
   script:
     - make build_base
     - make test_base
@@ -27,6 +32,7 @@ docker_base:
     - lsrd
 
 docker_external:
+  stage: external
   script:
     - make build_external
     - make test_external

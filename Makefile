@@ -38,7 +38,7 @@ deploy_base: login
 	docker push $(BASE_TAG_LATEST)
 
 build_external:
-	@docker build -t $(EXTERNAL_TAG) --rm=true --compress $(PWD) --build-arg image=$(BASE_TAG_LATEST) -f $(EXTERNAL_DIR)/Dockerfile.centos7
+	@docker build -t $(EXTERNAL_TAG) --rm=true --compress $(PWD) -f $(EXTERNAL_DIR)/Dockerfile.centos7
 	@docker tag $(EXTERNAL_TAG) $(EXTERNAL_TAG_LATEST)
 
 test_external:
