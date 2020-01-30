@@ -25,7 +25,7 @@ docker_base:
   only:
     changes:
       - base/Dockerfile.centos7
-      - Makefile
+#      - Makefile
   tags:
     - docker
     - eros

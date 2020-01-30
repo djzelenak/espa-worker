@@ -37,7 +37,7 @@ deploy_base: login
 	docker push $(BASE_TAG)
 	docker push $(BASE_TAG_LATEST)
 
-build_external:
+build_external: login
 	@docker build -t $(EXTERNAL_TAG) --rm=true --compress $(PWD) -f $(EXTERNAL_DIR)/Dockerfile.centos7
 	@docker tag $(EXTERNAL_TAG) $(EXTERNAL_TAG_LATEST)
 
