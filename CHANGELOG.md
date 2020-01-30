@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+
+## [1.3.2] - 2020-01-29
+### Added
 - CHANGELOG
 
 ### Changed
@@ -19,8 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Do not generate statistics for the Sentinel-2 Aerosol QA band
 - Fix bug where unused .stats files are potentially delivered in the statistics archive
-
-## [1.3.2] - 2020-01-xx
 
 ## [1.3.1] - 2019-12-06
 ### Changed
