@@ -1,4 +1,4 @@
-.PHONY: build tests docs deploy tag login debug all
+.PHONY: build tests docs deploy build_base test_base deploy_base build_external test_external deploy_external tag login debug all
 
 .DEFAULT_GOAL := build
 VERSION    := 0.0.1
@@ -10,10 +10,10 @@ TAG        := $(IMAGE):$(BRANCH)-$(VERSION)-$(SHORT_HASH)
 BASE_DIR   := $(PWD)/base
 EXTERNAL_DIR := $(PWD)/external
 SCIENCE_DIR := $(PWD)/science
-BASE_IMAGE := $(IMAGE)/base
-BASE_TAG := $(BASE_IMAGE):$(VERSION)-$(SHORT_HASH)
-EXTERNAL_IMAGE := $(IMAGE)/external
-EXTERNAL_TAG := $(EXTERNAL_IMAGE):$(VERSION)-$(SHORT_HASH)
+BASE_TAG := $(IMAGE):base-$(VERSION)-$(SHORT_HASH)
+BASE_TAG_LATEST := $(IMAGE):espa-base
+EXTERNAL_TAG := $(IMAGE):external-$(VERSION)-$(SHORT_HASH)
+EXTERNAL_TAG_LATEST := $(IMAGE):espa-external
 
 build: build_base build_external
 
@@ -29,22 +29,24 @@ deploy: deploy_base deploy_external
 
 build_base:
 	@docker build -t $(BASE_TAG) --rm=true --compress $(PWD) -f $(BASE_DIR)/Dockerfile.centos7
+	@docker tag $(BASE_TAG) $(BASE_TAG_LATEST)
 
 test_base:
 
 deploy_base: login
-	docker push $(BASE_IMAGE)
 	docker push $(BASE_TAG)
-
+	docker push $(BASE_TAG_LATEST)
 
 build_external:
-	@docker build -t $(EXTERNAL_TAG) --rm=true --compress $(PWD) --build-arg image=$(BASE_IMAGE) -f $(EXTERNAL_DIR)/Dockerfile.centos7
+	@docker build -t $(EXTERNAL_TAG) --rm=true --compress $(PWD) --build-arg image=$(BASE_TAG_LATEST) -f $(EXTERNAL_DIR)/Dockerfile.centos7
+	@docker tag $(EXTERNAL_TAG) $(EXTERNAL_TAG_LATEST)
 
 test_external:
 
 deploy_external: login
-	docker push $(EXTERNAL_IMAGE)
 	docker push $(EXTERNAL_TAG)
+	docker push $(EXTERNAL_TAG_LATEST)
+
 
 
 login:
