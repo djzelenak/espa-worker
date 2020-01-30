@@ -338,10 +338,10 @@ RUN cd $SRC_DIR \
 
 # netcdf-4
 RUN wget https://github.com/Unidata/netcdf-c/archive/v4.4.1.1.tar.gz
-RUN mv v4.4.0.tar.gz $SRC_DIR
+RUN mv v4.4.1.1.tar.gz $SRC_DIR
 RUN cd $SRC_DIR \
-    && tar -xvf v4.4.0.tar.gz \
-    && cd netcdf-c-4.4.0 \
+    && tar -xvf v4.4.1.1.tar.gz \
+    && cd netcdf-c-4.4.1.1 \
     && env CPPFLAGS="-I/usr/local/curl/include" LDFLAGS="-L/usr/local/curl/lib" \
         ./configure --prefix=$NETCDF4_PREFIX \
         --enable-netcdf-4 \
@@ -350,7 +350,7 @@ RUN cd $SRC_DIR \
     && make -j5 \
     && make install \
     && cd $SRC_DIR \
-    && rm -rf netcdf-c-4.4.0 v4.4.0.tar.gz
+    && rm -rf netcdf-c-4.4.1.1 v4.4.1.1.tar.gz
 
 # hdfeos2
 RUN wget http://hdfeos.org/software/hdfeos/HDF-EOS2.19v1.00.tar.Z
