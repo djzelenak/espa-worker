@@ -1,7 +1,7 @@
 .PHONY: build tests docs deploy build_base test_base deploy_base build_external test_external deploy_external tag login debug all
 
 .DEFAULT_GOAL := build
-VERSION    := 0.0.1
+VERSION    := `cat version.txt`
 IMAGE      := $(or $(CI_REGISTRY_IMAGE), lsrd/espa-worker)
 BRANCH     := $(or $(CI_COMMIT_REF_NAME), `git rev-parse --abbrev-ref HEAD`)
 BRANCH     := $(shell echo $(BRANCH) | tr / -)
@@ -11,17 +11,19 @@ BASE_DIR   := $(PWD)/base
 EXTERNAL_DIR := $(PWD)/external
 SCIENCE_DIR := $(PWD)/science
 BASE_TAG := $(IMAGE):base-$(VERSION)-$(SHORT_HASH)
-BASE_TAG_LATEST := $(IMAGE):espa-base
+BASE_TAG_LATEST := $(IMAGE):base-latest
 EXTERNAL_TAG := $(IMAGE):external-$(VERSION)-$(SHORT_HASH)
-EXTERNAL_TAG_LATEST := $(IMAGE):espa-external
+EXTERNAL_TAG_LATEST := $(IMAGE):external-latest
+SCIENCE_TAG := $(IMAGE):science-$(VERSION)-$(SHORT_HASH)
+SCIENCE_TAG_LATEST := $(IMAGE):science-latest
 
-build: build_base build_external
+build: build_base build_external build_science
 
-tests: test_base test_external
+tests: test_base test_external test_science
 
 docs:
 
-deploy: deploy_base deploy_external
+deploy: deploy_base deploy_external deploy_science
 
 
 # Extra Makefile targets. Edit at will.
@@ -48,6 +50,15 @@ deploy_external: login
 	docker push $(EXTERNAL_TAG_LATEST)
 
 
+build_science: login
+	@docker build -t $(SCIENCE_TAG) --rm=true --compress $(PWD) -f $(SCIENCE_DIR)/Dockerfile.centos7
+	@docker tag $(SCIENCE_TAG) $(SCIENCE_TAG_LATEST)
+
+test_science:
+
+deploy_science: login
+	docker push $(SCIENCE_TAG)
+	docker push $(SCIENCE_TAG_LATEST)
 
 login:
 	@$(if $(and $(CI_REGISTRY_USER), $(CI_REGISTRY_PASSWORD)), \
