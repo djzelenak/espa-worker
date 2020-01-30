@@ -1,4 +1,4 @@
-FROM centos:centos6.10
+FROM centos:6.10
 
 MAINTAINER USGS EROS LSRD http://eros.usgs.gov
 

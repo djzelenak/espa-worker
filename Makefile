@@ -2,13 +2,18 @@
 
 .DEFAULT_GOAL := build
 VERSION    := 0.0.1
-IMAGE      := ***REMOVED***/$(CI_PROJECT_PATH)
+IMAGE      := $(or $(CI_REGISTRY_IMAGE), lsrd/espa-worker)
 BRANCH     := $(or $(CI_COMMIT_REF_NAME),`git rev-parse --abbrev-ref HEAD`)
 BRANCH     := $(shell echo $(BRANCH) | tr / -)
 SHORT_HASH := `git rev-parse --short HEAD`
 TAG        := $(IMAGE):$(BRANCH)-$(VERSION)-$(SHORT_HASH)
-
-# ESPA Standard Makefile targets.  Do not remove.
+BASE_DIR   := $(PWD)/base
+EXTERNAL_DIR := $(PWD)/external
+SCIENCE_DIR := $(PWD)/science
+BASE_6_IMAGE := $(IMAGE)/centos6
+BASE_7_IMAGE := $(IMAGE)/centos7
+BASE_6_TAG := $(BASE_6_IMAGE):$(VERSION)-$(SHORT_HASH)
+BASE_7_TAG := $(BASE_7_IMAGE):$(VERSION)-$(SHORT_HASH)
 
 build:
 	@docker build -t $(TAG) --rm=true --compress $(PWD)
@@ -24,6 +29,24 @@ deploy: login
 
 # Extra Makefile targets. Edit at will.
 
+
+build_base: build_base_6 build_base_7
+
+build_base_6:
+	@docker build -t $(BASE_6_TAG) --rm=true --compress $(PWD) -f $(BASE_DIR)/Dockerfile.centos6
+
+build_base_7:
+	@docker build -t $(BASE_7_TAG) --rm=true --compress $(PWD) -f $(BASE_DIR)/Dockerfile.centos7
+
+deploy_base: deploy_base_6 deploy_base_7
+
+deploy_base_6: login
+	docker push $(BASE_6_IMAGE)
+	docker push $(BASE_6_TAG)
+
+deploy_base_7: login
+	docker push $(BASE_7_IMAGE)
+	docker push $(BASE_7_TAG)
 
 login:
 	@$(if $(and $(CI_REGISTRY_USER), $(CI_REGISTRY_PASSWORD)), \
