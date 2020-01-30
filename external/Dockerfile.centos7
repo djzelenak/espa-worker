@@ -337,7 +337,7 @@ RUN cd $SRC_DIR \
     && rm -rf hdf5-1.8.16 hdf5-1.8.16.tar.gz
 
 # netcdf-4
-RUN wget https://github.com/Unidata/netcdf-c/archive/v4.4.0.tar.gz
+RUN wget https://github.com/Unidata/netcdf-c/archive/v4.4.1.1.tar.gz
 RUN mv v4.4.0.tar.gz $SRC_DIR
 RUN cd $SRC_DIR \
     && tar -xvf v4.4.0.tar.gz \
