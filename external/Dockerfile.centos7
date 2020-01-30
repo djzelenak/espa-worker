@@ -1,8 +1,9 @@
-FROM ${DOCKER_REPO}/${CI_PROJECT_PATH}
+ARG image
+FROM $image
 
 MAINTAINER USGS EROS LSRD http://eros.usgs.gov
 
-LABEL description="CentOS 7 ESPA install & processing dependencies"
+LABEL description="CentOS 7 ESPA installation & processing dependencies"
 
 # Compilers and all the rquired libraries
 RUN yum group install -y "Development Tools" \
@@ -33,7 +34,7 @@ RUN yum group install -y "Development Tools" \
         openjpeg \
         openjpeg-devel \
         java-1.7.0-openjdk \
-        java-1.7.0-openjdk-devel
+        java-1.7.0-openjdk-devel \
     && yum clean metadata
 
 
@@ -139,7 +140,7 @@ RUN yum install -y \
         wget \
         wgrib \
         pgiz \
-        git
+        git \
     && yum clean metadata
 
 # xz 5.2.2
