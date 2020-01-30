@@ -20,5 +20,5 @@ the-stage:
   tags:
     - docker
     - eros
-    - lcmap
+    - lsrd
 
