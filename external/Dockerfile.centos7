@@ -1,4 +1,4 @@
-FROM ${CI_REGISTRY_IMAGE}:espa-base
+FROM ***REMOVED***/lsrd/espa-worker:espa-base
 
 MAINTAINER USGS EROS LSRD http://eros.usgs.gov
 
