@@ -12,13 +12,30 @@ services:
 before_script:
   - apk add make git
 
-the-stage:
+docker_base:
   script:
-    - make build
-    - make tests
-    - make deploy
+    - make build_base
+    - make test_base
+    - make deploy_base
+  only:
+    changes:
+      - base/Dockerfile.centos7
+      - Makefile
   tags:
     - docker
     - eros
     - lsrd
 
+docker_external:
+  script:
+    - make build_external
+    - make test_external
+    - make deploy_external
+  only:
+    changes:
+      - external/Dockerfile.centos7
+      - Makefile
+  tags:
+    - docker
+    - eros
+    - lsrd
