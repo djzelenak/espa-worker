@@ -60,6 +60,9 @@ docker_external:
 #      - science/Dockerfile.centos7
 #      - version.txt
 #      - set_espa_versions.sh
+#      - processing/*
+#      - playbook/**/*
+#      - setup/requirements.txt
 #  tags:
 #    - docker
 #    - eros
