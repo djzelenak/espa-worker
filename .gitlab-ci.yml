@@ -15,6 +15,7 @@ before_script:
 stages:
   - base
   - external
+  - science
 
 docker_base:
   stage: base
@@ -25,7 +26,8 @@ docker_base:
   only:
     changes:
       - base/Dockerfile.centos7
-#      - Makefile
+      - Makefile
+      - version.txt
   tags:
     - docker
     - eros
@@ -40,8 +42,25 @@ docker_external:
   only:
     changes:
       - external/Dockerfile.centos7
+      - version.txt
       - Makefile
   tags:
     - docker
     - eros
     - lsrd
+
+#docker_science:
+#  stage: science
+#  script:
+#    - make build_science
+#    - make test_science
+#    - make deploy_science
+#  only:
+#    changes:
+#      - science/Dockerfile.centos7
+#      - version.txt
+#      - set_espa_versions.sh
+#  tags:
+#    - docker
+#    - eros
+#    - lsrd
