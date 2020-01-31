@@ -14,10 +14,12 @@ before_script:
 
 stages:
   - base
-  - external
-  - science
+  - external_build
+  - external_test_deploy
+  - worker_build
+  - worker_test_deploy
 
-docker_base:
+base:
   stage: base
   script:
     - make build_base
@@ -28,15 +30,30 @@ docker_base:
       - base/Dockerfile.centos7
       - Makefile
       - version.txt
+      - .gitlab-ci.yml
   tags:
     - docker
     - eros
     - lsrd
 
-docker_external:
-  stage: external
+external-build:
+  stage: external_build
   script:
     - make build_external
+  only:
+    changes:
+      - external/Dockerfile.centos7
+      - version.txt
+      - Makefile
+      - .gitlab-ci.yml
+  tags:
+    - docker
+    - eros
+    - lsrd
+
+external-test-deploy:
+  stage: external_test_deploy
+  script:
     - make test_external
     - make deploy_external
   only:
