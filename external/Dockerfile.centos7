@@ -11,8 +11,6 @@ RUN yum group install -y "Development Tools" \
         expat-devel \
         freetype-devel \
         glibc-static \
-        libcurl-devel \
-        libidn-devel \
         libgfortran-static \
         libquadmath-static \
         perl-ExtUtils-MakeMaker \
@@ -143,9 +141,36 @@ RUN yum install -y \
         wgrib \
         pgiz \
         git \
-        curl \
-        libidn \
     && yum clean metadata
+
+
+# curl libraries
+RUN wget https://curl.haxx.se/download/curl-7.48.0.tar.gz \
+    && mv curl-7.48.0.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
+    && tar -xvf curl-7.48.0.tar.gz \
+    && cd curl-7.48.0 \
+    && ./configure --prefix=$CURL_PREFIX \
+        --enable-static \
+    && make -j4 \
+    && make install \
+    && cd $SRC_DIR \
+    && rm -rf curl-7.48.0 curl-7.48.0.tar.gz
+
+
+# idn libraries
+RUN wget ftp://ftp.gnu.org/gnu/libidn/libidn-1.32.tar.gz \
+    && mv libidn-1.32.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
+    && tar -xvf libidn-1.32.tar.gz \
+    && cd libidn-1.32 \
+    && ./configure --prefix=$IDN_PREFIX \
+        --enable-static \
+    && make -j4 \
+    && make install \
+    && cd $SRC_DIR \
+    && rm -rf libidn-1.32 libidn-1.32.tar.gz
+
 
 # xz 5.2.2
 # RUN yum install -y xz-5.2.2
