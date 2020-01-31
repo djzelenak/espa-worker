@@ -33,7 +33,7 @@ base:
     - eros
     - lsrd
 
-external-build:
+external:
   stage: external
   script:
     - make build_external
