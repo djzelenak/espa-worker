@@ -11,6 +11,11 @@ RUN yum group install -y "Development Tools" \
         expat-devel \
         freetype-devel \
         glibc-static \
+        curl \
+        libcurl-devel \
+        libcurl \
+        libidn \
+        libidn-devel \
         libgfortran-static \
         libquadmath-static \
         perl-ExtUtils-MakeMaker \
@@ -140,7 +145,6 @@ RUN yum install -y \
         wget \
         wgrib \
         pgiz \
-        git \
     && yum clean metadata
 
 
