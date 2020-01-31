@@ -61,6 +61,7 @@ external-test-deploy:
       - external/Dockerfile.centos7
       - version.txt
       - Makefile
+      - .gitlab-ci.yml
   tags:
     - docker
     - eros
