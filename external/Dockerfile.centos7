@@ -72,6 +72,7 @@ ENV PREFIX=/usr/local \
     HDF5_PREFIX=/usr/local \
     NETCDF4_PREFIX=/usr/local \
     HDFEOS_PREFIX=/usr/local \
+    HDFEOS5_PREFIX=/usr/local \
     PROJ4_PREFIX=/usr/local \
     GDAL_PREFIX=/usr/local
 
@@ -123,6 +124,8 @@ ENV ZLIBINC=$ZLIB_PREFIX/include \
     HDFEOS_LIB=$HDFEOS_PREFIX/lib \
     HDFEOS_GCTPINC=$HDFEOS_PREFIX/include \
     HDFEOS_GCTPLIB=$HDFEOS_PREFIX/lib \
+    HDFEOS5_INC=$HDFEOS5/include \
+    HDFEOS5_LIB=$HDFEOS5/lib \
     PROJ4_INC=$PROJ4_PREFIX/include \
     PROJ4_LIB=$PROJ4_PREFIX/lib \
     GDAL_INC=$GDAL_PREFIX/include \
@@ -140,13 +143,15 @@ RUN yum install -y \
         wgrib \
         pgiz \
         git \
+        curl \
+        libidn \
     && yum clean metadata
 
 # xz 5.2.2
 # RUN yum install -y xz-5.2.2
-RUN wget https://tukaani.org/xz/xz-5.2.2.tar.gz
-RUN mv xz-5.2.2.tar.gz $SRC_DIR
-RUN cd $SRC_DIR \
+RUN wget https://tukaani.org/xz/xz-5.2.2.tar.gz \
+    && mv xz-5.2.2.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
     && tar -xvf xz-5.2.2.tar.gz \
     && cd xz-5.2.2 \
     && ./configure --prefix=$XZ_PREFIX \
@@ -158,9 +163,9 @@ RUN cd $SRC_DIR \
 
 
 # szip 2.1
-RUN wget https://support.hdfgroup.org/ftp/lib-external/szip/2.1.1/src/szip-2.1.1.tar.gz
-RUN mv szip-2.1.1.tar.gz $SRC_DIR
-RUN cd $SRC_DIR \
+RUN wget https://support.hdfgroup.org/ftp/lib-external/szip/2.1.1/src/szip-2.1.1.tar.gz \
+    && mv szip-2.1.1.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
     && tar -xvf szip-2.1.1.tar.gz \
     && cd szip-2.1.1 \
     && ./configure --prefix=$SZIP_PREFIX \
@@ -173,9 +178,9 @@ RUN cd $SRC_DIR \
 
 # libxml2 2.9.3 (2.9.1 in repo)
 # RUN yum install -y libxml2-2.9.1
-RUN wget ftp://xmlsoft.org/libxml2/libxml2-2.9.3.tar.gz
-RUN mv libxml2-2.9.3.tar.gz $SRC_DIR
-RUN cd $SRC_DIR \
+RUN wget ftp://xmlsoft.org/libxml2/libxml2-2.9.3.tar.gz \
+    && mv libxml2-2.9.3.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
     && tar -xvf libxml2-2.9.3.tar.gz \
     && cd libxml2-2.9.3 \
     && ./configure --prefix=$XML2_PREFIX \
@@ -192,9 +197,9 @@ RUN cd $SRC_DIR \
 
 # libxslt 1.1.28
 #RUN yum install -y libxslt-1.1.28
-RUN wget ftp://xmlsoft.org/libxslt/libxslt-1.1.28.tar.gz
-RUN mv libxslt-1.1.28.tar.gz $SRC_DIR
-RUN cd $SRC_DIR \
+RUN wget ftp://xmlsoft.org/libxslt/libxslt-1.1.28.tar.gz \
+    && mv libxslt-1.1.28.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
     && tar -xvf libxslt-1.1.28.tar.gz \
     && cd libxslt-1.1.28 \
     && ./configure --prefix=$XSLT_PREFIX \
@@ -208,9 +213,9 @@ RUN cd $SRC_DIR \
     && rm -rf libxslt-1.1.28 libxslt-1.1.28.tar.gz
 
 # jpeg
-RUN wget http://www.ijg.org/files/jpegsrc.v9b.tar.gz
-RUN mv jpegsrc.v9b.tar.gz $SRC_DIR
-RUN cd $SRC_DIR \
+RUN wget http://www.ijg.org/files/jpegsrc.v9b.tar.gz \
+    && mv jpegsrc.v9b.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
     && tar -xvf jpegsrc.v9b.tar.gz \
     && cd jpeg-9b \
     && ./configure --prefix=$JPEG_PREFIX \
@@ -222,9 +227,9 @@ RUN cd $SRC_DIR \
     && rm -rf jpeg-9b jpegsrc.v9b.tar.gz
 
 # jbigkit
-RUN wget https://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-2.1.tar.gz
-RUN mv jbigkit-2.1.tar.gz $SRC_DIR
-RUN cd $SRC_DIR \
+RUN wget https://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-2.1.tar.gz \
+    && mv jbigkit-2.1.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
     && tar -xvf jbigkit-2.1.tar.gz \
     && cd jbigkit-2.1 \
     && sed -i 's/^CFLAGS = .*$/CFLAGS = -fPIC -DPIC -O2 -Wall/' Makefile \
@@ -236,9 +241,9 @@ RUN cd $SRC_DIR \
     && rm -rf jbigkit-2.1 jbigkit-2.1.tar.gz
 
 # proj
-RUN wget https://download.osgeo.org/proj/proj-4.9.1.tar.gz
-RUN mv proj-4.9.1.tar.gz $SRC_DIR
-RUN cd $SRC_DIR \
+RUN wget https://download.osgeo.org/proj/proj-4.9.1.tar.gz \
+    && mv proj-4.9.1.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
     && tar -xvf proj-4.9.1.tar.gz \
     && cd proj-4.9.1 \
     && ./configure --prefix=$PROJ4_PREFIX \
@@ -250,9 +255,9 @@ RUN cd $SRC_DIR \
     && rm -rf proj-4.9.1 proj-4.9.1.tar.gz
 
 # tiff
-RUN wget http://download.osgeo.org/libtiff/tiff-4.0.6.tar.gz
-RUN mv tiff-4.0.6.tar.gz $SRC_DIR
-RUN cd $SRC_DIR \
+RUN wget http://download.osgeo.org/libtiff/tiff-4.0.6.tar.gz \
+    && mv tiff-4.0.6.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
     && tar -xvf tiff-4.0.6.tar.gz \
     && cd tiff-4.0.6 \
     && ./configure --prefix=$TIFF_PREFIX \
@@ -272,9 +277,9 @@ RUN cd $SRC_DIR \
     && rm -rf tiff-4.0.6 tiff-4.0.6.tar.gz
 
 # libgeotiff
-RUN wget http://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.4.1.tar.gz
-RUN mv libgeotiff-1.4.1.tar.gz $SRC_DIR
-RUN cd $SRC_DIR \
+RUN wget http://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.4.1.tar.gz \
+    && mv libgeotiff-1.4.1.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
     && tar -xvf libgeotiff-1.4.1.tar.gz \
     && cd libgeotiff-1.4.1 \
     && ./configure --prefix=$GEOTIFF_PREFIX \
@@ -289,16 +294,11 @@ RUN cd $SRC_DIR \
     && cd $SRC_DIR \
     && rm -rf libgeotiff-1.4.1 libgeotiff-1.4.1.tar.gz
 
-# curl
-RUN yum install -y curl
-
-# idn
-RUN yum install -y libidn
 
 # hdf4
-RUN wget https://support.hdfgroup.org/ftp/HDF/releases/HDF4.2.11/src/hdf-4.2.11.tar.gz
-RUN mv hdf-4.2.11.tar.gz $SRC_DIR
-RUN cd $SRC_DIR \
+RUN wget https://support.hdfgroup.org/ftp/HDF/releases/HDF4.2.11/src/hdf-4.2.11.tar.gz \
+    && mv hdf-4.2.11.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
     && tar -xvf hdf-4.2.11.tar.gz \
     && cd hdf-4.2.11 \
     && ./configure --prefix=$HDF4_PREFIX \
@@ -317,9 +317,9 @@ RUN cd $SRC_DIR \
 
 
 # hdf5
-RUN wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.16/src/hdf5-1.8.16.tar.gz
-RUN mv hdf5-1.8.16.tar.gz $SRC_DIR
-RUN cd $SRC_DIR \
+RUN wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.16/src/hdf5-1.8.16.tar.gz \
+    && mv hdf5-1.8.16.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
     && tar -xvf hdf5-1.8.16.tar.gz \
     && cd hdf5-1.8.16 \
     && ./configure --prefix=$HDF5_PREFIX \
@@ -337,9 +337,9 @@ RUN cd $SRC_DIR \
     && rm -rf hdf5-1.8.16 hdf5-1.8.16.tar.gz
 
 # netcdf-4
-RUN wget https://github.com/Unidata/netcdf-c/archive/v4.4.1.1.tar.gz
-RUN mv v4.4.1.1.tar.gz $SRC_DIR
-RUN cd $SRC_DIR \
+RUN wget https://github.com/Unidata/netcdf-c/archive/v4.4.1.1.tar.gz \
+    && mv v4.4.1.1.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
     && tar -xvf v4.4.1.1.tar.gz \
     && cd netcdf-c-4.4.1.1 \
     && env CPPFLAGS="-I/usr/local/curl/include" LDFLAGS="-L/usr/local/curl/lib" \
@@ -353,9 +353,9 @@ RUN cd $SRC_DIR \
     && rm -rf netcdf-c-4.4.1.1 v4.4.1.1.tar.gz
 
 # hdfeos2
-RUN wget http://hdfeos.org/software/hdfeos/HDF-EOS2.19v1.00.tar.Z
-RUN mv HDF-EOS2.19v1.00.tar.Z $SRC_DIR
-RUN cd $SRC_DIR \
+RUN wget http://hdfeos.org/software/hdfeos/HDF-EOS2.19v1.00.tar.Z \
+    && mv HDF-EOS2.19v1.00.tar.Z $SRC_DIR \
+    && cd $SRC_DIR \
     && tar -xvf HDF-EOS2.19v1.00.tar.Z \
     && cd hdfeos \
     && ./configure --prefix=$HDFEOS_PREFIX \
@@ -371,8 +371,24 @@ RUN cd $SRC_DIR \
     && cd $SRC_DIR \
     && rm -rf hdfeos HDF-EOS2.19v1.00.tar.Z
 
-# python-pip
-RUN yum install -y python-pip
+#hdfeos5
+RUN wget https://observer.gsfc.nasa.gov/ftp/edhs/hdfeos5/latest_release/HDF-EOS5.1.16.tar.Z \
+    && mv HDF-EOS5.1.16.tar.Z $SRC_DIR \
+    && cd $SRC_DIR \
+    && tar -xvf HDF-EOS5.1.16.tar.Z \
+    && cd hdfeos5 \
+    && ./configure --prefix=$HDFEOS_PREFIX \
+        --with-jpeg=$JPEGLIB \
+        --with-zlib=$ZLIBLIB \
+        --with-szlib=$SZIPINC,$SZIPLIB \
+        --enable-install-include \
+        --disable-shared \
+        --enable-static \
+        CC="/usr/local/bin/h4cc -Df2cFortran" \
+    && make -j4 \
+    && make install \
+    && cd $SRC_DIR \
+    && rm -rf hdfeos5 HDF-EOS5.1.16.tar.Z
 
 # Python environment setup
 # GDAL is installed into python through the below installation, because Numpy
@@ -409,9 +425,9 @@ RUN pip install scipy==0.11.0
 RUN python -c 'import matplotlib.pyplot'
 
 # gdal
-RUN wget http://download.osgeo.org/gdal/1.11.4/gdal-1.11.4.tar.gz
-RUN mv gdal-1.11.4.tar.gz $SRC_DIR
-RUN cd $SRC_DIR \
+RUN wget http://download.osgeo.org/gdal/1.11.4/gdal-1.11.4.tar.gz \
+    && mv gdal-1.11.4.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
     && tar -xvf gdal-1.11.4.tar.gz \
     && cd gdal-1.11.4 \
     && ./configure --prefix=$GDAL_PREFIX \
