@@ -11,11 +11,6 @@ RUN yum group install -y "Development Tools" \
         expat-devel \
         freetype-devel \
         glibc-static \
-        curl \
-        libcurl-devel \
-        libcurl \
-        libidn \
-        libidn-devel \
         libgfortran-static \
         libquadmath-static \
         perl-ExtUtils-MakeMaker \
@@ -40,21 +35,6 @@ RUN yum group install -y "Development Tools" \
     && yum clean metadata
 
 
-# Update git to a version that isn't broken
-RUN cd /usr/local/src \
-    && git clone \
-        --depth 1 \
-        --branch v2.9.2 \
-        https://github.com/git/git.git git.git \
-    && cd git.git \
-    && make configure \
-    && ./configure --without-tcltk \
-    && make -j4 \
-    && make install \
-    && cd .. \
-    && rm -rf git.git
-
-
 # Source and installation locations
 ENV PREFIX=/usr/local \
     SRC_DIR=/usr/local/src \
@@ -76,6 +56,7 @@ ENV PREFIX=/usr/local \
     NETCDF4_PREFIX=/usr/local \
     HDFEOS_PREFIX=/usr/local \
     HDFEOS5_PREFIX=/usr/local \
+    LIB3_DIR=/usr/local/lib3 \
     PROJ4_PREFIX=/usr/local \
     GDAL_PREFIX=/usr/local
 
@@ -132,7 +113,11 @@ ENV ZLIBINC=$ZLIB_PREFIX/include \
     PROJ4_INC=$PROJ4_PREFIX/include \
     PROJ4_LIB=$PROJ4_PREFIX/lib \
     GDAL_INC=$GDAL_PREFIX/include \
-    GDAL_LIB=$GDAL_PREFIX/lib
+    GDAL_LIB=$GDAL_PREFIX/lib \
+    LIB3_LIB=$LIB3_DIR/lib \
+    LIB3_INC=$LIB3_DIR/include \
+    ESPALIB=$PREFIX/lib \
+    ESPAINC=$PREFIX/include
 
 
 # Needed for python to find installed shared libraries
@@ -176,6 +161,21 @@ RUN wget ftp://ftp.gnu.org/gnu/libidn/libidn-1.32.tar.gz \
     && rm -rf libidn-1.32 libidn-1.32.tar.gz
 
 
+# Update git to a version that isn't broken
+RUN cd /usr/local/src \
+    && git clone \
+        --depth 1 \
+        --branch v2.9.2 \
+        https://github.com/git/git.git git.git \
+    && cd git.git \
+    && make configure \
+    && ./configure --without-tcltk \
+    && make -j4 \
+    && make install \
+    && cd .. \
+    && rm -rf git.git
+
+
 # xz 5.2.2
 # RUN yum install -y xz-5.2.2
 RUN wget https://tukaani.org/xz/xz-5.2.2.tar.gz \
@@ -204,6 +204,7 @@ RUN wget https://support.hdfgroup.org/ftp/lib-external/szip/2.1.1/src/szip-2.1.1
     && make install \
     && cd $SRC_DIR \
     && rm -rf szip-2.1.1 szip-2.1.1.tar.gz
+
 
 # libxml2 2.9.3 (2.9.1 in repo)
 # RUN yum install -y libxml2-2.9.1
@@ -241,6 +242,7 @@ RUN wget ftp://xmlsoft.org/libxslt/libxslt-1.1.28.tar.gz \
     && cd $SRC_DIR \
     && rm -rf libxslt-1.1.28 libxslt-1.1.28.tar.gz
 
+
 # jpeg
 RUN wget http://www.ijg.org/files/jpegsrc.v9b.tar.gz \
     && mv jpegsrc.v9b.tar.gz $SRC_DIR \
@@ -254,6 +256,7 @@ RUN wget http://www.ijg.org/files/jpegsrc.v9b.tar.gz \
     && make install \
     && cd $SRC_DIR \
     && rm -rf jpeg-9b jpegsrc.v9b.tar.gz
+
 
 # jbigkit
 RUN wget https://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-2.1.tar.gz \
@@ -269,6 +272,7 @@ RUN wget https://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-2.1.tar.gz \
     && cd $SRC_DIR \
     && rm -rf jbigkit-2.1 jbigkit-2.1.tar.gz
 
+
 # proj
 RUN wget https://download.osgeo.org/proj/proj-4.9.1.tar.gz \
     && mv proj-4.9.1.tar.gz $SRC_DIR \
@@ -282,6 +286,7 @@ RUN wget https://download.osgeo.org/proj/proj-4.9.1.tar.gz \
     && make install \
     && cd $SRC_DIR \
     && rm -rf proj-4.9.1 proj-4.9.1.tar.gz
+
 
 # tiff
 RUN wget http://download.osgeo.org/libtiff/tiff-4.0.6.tar.gz \
@@ -304,6 +309,7 @@ RUN wget http://download.osgeo.org/libtiff/tiff-4.0.6.tar.gz \
     && make install \
     && cd $SRC_DIR \
     && rm -rf tiff-4.0.6 tiff-4.0.6.tar.gz
+
 
 # libgeotiff
 RUN wget http://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.4.1.tar.gz \
@@ -365,6 +371,7 @@ RUN wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.16/src
     && cd $SRC_DIR \
     && rm -rf hdf5-1.8.16 hdf5-1.8.16.tar.gz
 
+
 # netcdf-4
 RUN wget https://github.com/Unidata/netcdf-c/archive/v4.4.1.1.tar.gz \
     && mv v4.4.1.1.tar.gz $SRC_DIR \
@@ -380,6 +387,7 @@ RUN wget https://github.com/Unidata/netcdf-c/archive/v4.4.1.1.tar.gz \
     && make install \
     && cd $SRC_DIR \
     && rm -rf netcdf-c-4.4.1.1 v4.4.1.1.tar.gz
+
 
 # hdfeos2
 RUN wget http://hdfeos.org/software/hdfeos/HDF-EOS2.19v1.00.tar.Z \
@@ -400,6 +408,7 @@ RUN wget http://hdfeos.org/software/hdfeos/HDF-EOS2.19v1.00.tar.Z \
     && cd $SRC_DIR \
     && rm -rf hdfeos HDF-EOS2.19v1.00.tar.Z
 
+
 #hdfeos5
 RUN wget https://observer.gsfc.nasa.gov/ftp/edhs/hdfeos5/latest_release/HDF-EOS5.1.16.tar.Z \
     && mv HDF-EOS5.1.16.tar.Z $SRC_DIR \
@@ -419,6 +428,7 @@ RUN wget https://observer.gsfc.nasa.gov/ftp/edhs/hdfeos5/latest_release/HDF-EOS5
     && cd $SRC_DIR \
     && rm -rf hdfeos5 HDF-EOS5.1.16.tar.Z
 
+
 # Python environment setup
 # GDAL is installed into python through the below installation, because Numpy
 # must be installed into python before building GDAL
@@ -431,6 +441,7 @@ RUN pip install --upgrade pip \
         python-dateutil==2.5.3 \
         requests==2.10.0 \
         lxml==3.6.0
+
 
 # Had to break out the numpy and matplotlib installs
 # install command was reporting dependency on python>=3.5
@@ -452,6 +463,7 @@ RUN pip install scipy==0.11.0
 
 # Force matplotlib to build the font cache
 RUN python -c 'import matplotlib.pyplot'
+
 
 # gdal
 RUN wget http://download.osgeo.org/gdal/1.11.4/gdal-1.11.4.tar.gz \
