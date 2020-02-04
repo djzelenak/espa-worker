@@ -1,4 +1,4 @@
-FROM ***REMOVED***/lsrd/espa-worker:builder-latest as builder
+FROM ***REMOVED***/lsrd/espa-worker:builder-latest
 
 MAINTAINER USGS EROS LSRD http://eros.usgs.gov
 
@@ -6,7 +6,13 @@ LABEL description="Adds the science processing applications and setup we use for
 
 
 ENV ESPAINC=/usr/local/include \
-    ESPALIB=/usr/local/lib
+    ESPALIB=/usr/local/lib \
+    UNAME='espa' \
+    UGROUP='ie'
+
+
+RUN yum -y update && yum clean all \
+   && yum -y install ansible
 
 
 # Set up repo access credentials (should be read-only access)
@@ -16,34 +22,22 @@ RUN mkdir ~/.ssh/ \
     && ssh-keyscan eroslab.cr.usgs.gov >> ~/.ssh/known_hosts \
     && ssh-keyscan losrlcmp02.cr.usgs.gov >> ~/.ssh/known_hosts
 
+
 RUN echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519 \
     && chmod 600 /root/.ssh/id_ed25519
 
-RUN yum -y update && yum clean all \
-   && yum -y install ansible
 
 # Ansible: the 'espa-worker.yml' playbook installs our ESPA science applications
 COPY playbook /tmp/ansible/
 RUN ansible-playbook /tmp/ansible/espa-worker.yml --tags "configuration,packages" && \
 	rm -rf /tmp/ansible
 
-#FROM ***REMOVED***/lsrd/espa-worker:base-latest as base
-
-ENV UNAME='espa' \
-    UGROUP='ie'
-
-#COPY --from=builder /usr/bin /usr/bin
-#COPY --from=builder /usr/local /usr/local
-
-
-#COPY playbook /tmp/ansible/
-#RUN ansible-playbook /tmp/ansible/espa-worker.yml --tags "configuration,dependencies" && \
-#	rm -rf /tmp/ansible
 
 # Install any remaining python packages
 COPY setup/requirements.txt /
 RUN pip install -r requirements.txt && \
     rm -f requirements.txt
+
 
 # Copy over the espa-worker processing scripts
 RUN mkdir /home/$UNAME/espa-processing
@@ -52,8 +46,10 @@ COPY test /home/$UNAME/espa-processing/test
 RUN chown -R $UNAME:$UGROUP /home/$UNAME/ \
     && ln -s /home/$UNAME/espa-processing/ /src
 
+
 # Update PYTHONPATH to find espa-product-formatter modules
 ENV PYTHONPATH=/usr/local/espa-product-formatter/python
+
 
 # Set the working directory
 WORKDIR /home/$UNAME

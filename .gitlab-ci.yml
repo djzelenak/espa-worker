@@ -25,7 +25,7 @@ base:
     - make deploy_base
   only:
     changes:
-      - docker_base_os/Dockerfile.base
+      - docker_base/Dockerfile.base
       - Makefile
       - version.txt
   tags:
@@ -50,21 +50,20 @@ builder:
     - eros
     - lsrd
 
-#worker:
-#  stage: worker
-#  script:
-#    - make build_worker
-#    - make test_worker
-#    - make deploy_worker
-#  only:
-#    changes:
-#      - worker/Dockerfile
-#      - version.txt
-#      - set_espa_versions.sh
-#      - processing/*
-#      - playbook/**/*
-#      - setup/requirements.txt
-#  tags:
-#    - docker
-#    - eros
-#    - lsrd
+worker:
+  stage: worker
+  script:
+    - make build_worker
+    - make test_worker
+    - make deploy_worker
+  only:
+    changes:
+      - docker_worker/Dockerfile.worker
+      - version.txt
+      - processing/*
+      - playbook/**/*
+      - setup/requirements.txt
+  tags:
+    - docker
+    - eros
+    - lsrd
