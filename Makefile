@@ -8,12 +8,12 @@ BRANCH     := $(shell echo $(BRANCH) | tr / -)
 SHORT_HASH := `git rev-parse --short HEAD`
 TAG        := $(IMAGE):$(BRANCH)-$(VERSION)-$(SHORT_HASH)
 BASE_DIR   := $(PWD)/docker_base
-EXTERNAL_DIR := $(PWD)/docker_build
+BUILD_DIR := $(PWD)/docker_build
 WORKER_DIR := $(PWD)/docker_worker
 BASE_TAG := $(IMAGE):base-$(VERSION)-$(SHORT_HASH)
 BASE_TAG_LATEST := $(IMAGE):base-latest
-BUILDER_TAG := $(IMAGE):builder-$(VERSION)-$(SHORT_HASH)
-BUILDER_TAG_LATEST := $(IMAGE):builder-latest
+BUILD_TAG := $(IMAGE):builder-$(VERSION)-$(SHORT_HASH)
+BUILD_TAG_LATEST := $(IMAGE):builder-latest
 WORKER_TAG := $(IMAGE):worker-$(VERSION)-$(SHORT_HASH)
 WORKER_TAG_LATEST := $(IMAGE):worker-latest
 
@@ -39,14 +39,14 @@ deploy_base: login
 
 # Build environment targets
 build_builder: login
-	@docker build -t $(BUILDER_TAG) --rm=true --compress $(PWD) -f $(BUILDER_DIR)/Dockerfile.build
-	@docker tag $(BUILDER_TAG) $(BUILDER_TAG_LATEST)
+	@docker build -t $(BUILD_TAG) --rm=true --compress $(PWD) -f $(BUILD_DIR)/Dockerfile.build
+	@docker tag $(BUILD_TAG) $(BUILD_TAG_LATEST)
 
 test_builder:
 
 deploy_builder: login
-	docker push $(BUILDER_TAG)
-	docker push $(BUILDER_TAG_LATEST)
+	docker push $(BUILD_TAG)
+	docker push $(BUILD_TAG_LATEST)
 
 # Worker environment targets
 build_worker: login
