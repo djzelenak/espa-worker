@@ -7,8 +7,8 @@ BRANCH     := $(or $(CI_COMMIT_REF_NAME), `git rev-parse --abbrev-ref HEAD`)
 BRANCH     := $(shell echo $(BRANCH) | tr / -)
 SHORT_HASH := `git rev-parse --short HEAD`
 TAG        := $(IMAGE):$(BRANCH)-$(VERSION)-$(SHORT_HASH)
-BASE_DIR   := $(PWD)/docker_base_os
-EXTERNAL_DIR := $(PWD)/docker_build_env
+BASE_DIR   := $(PWD)/docker_base
+EXTERNAL_DIR := $(PWD)/docker_build
 WORKER_DIR := $(PWD)/docker_worker
 BASE_TAG := $(IMAGE):base-$(VERSION)-$(SHORT_HASH)
 BASE_TAG_LATEST := $(IMAGE):base-latest
@@ -30,7 +30,7 @@ deploy: deploy_base deploy_external deploy_science
 
 
 build_base:
-	@docker build -t $(BASE_TAG) --rm=true --compress $(PWD) -f $(BASE_DIR)/Dockerfile.centos7
+	@docker build -t $(BASE_TAG) --rm=true --compress $(PWD) -f $(BASE_DIR)/Dockerfile.base
 	@docker tag $(BASE_TAG) $(BASE_TAG_LATEST)
 
 test_base:
@@ -40,7 +40,7 @@ deploy_base: login
 	docker push $(BASE_TAG_LATEST)
 
 build_external: login
-	@docker build -t $(EXTERNAL_TAG) --rm=true --compress $(PWD) -f $(EXTERNAL_DIR)/Dockerfile.centos7
+	@docker build -t $(EXTERNAL_TAG) --rm=true --compress $(PWD) -f $(EXTERNAL_DIR)/Dockerfile.build
 	@docker tag $(EXTERNAL_TAG) $(EXTERNAL_TAG_LATEST)
 
 test_external:
