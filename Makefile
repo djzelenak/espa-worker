@@ -1,4 +1,4 @@
-.PHONY: build tests docs deploy build_base test_base deploy_base build_external test_external deploy_external tag login debug all
+.PHONY: build tests docs deploy build_base test_base deploy_base build_builder test_builder deploy_builder build_worker test_worker deploy_worker tag login debug all
 
 .DEFAULT_GOAL := build
 VERSION    := `cat version.txt`
