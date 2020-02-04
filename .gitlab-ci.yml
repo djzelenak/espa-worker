@@ -44,7 +44,6 @@ builder:
       - docker_build/Dockerfile.build
       - version.txt
       - Makefile
-      - .gitlab-ci.yml
   tags:
     - docker
     - eros
@@ -63,6 +62,8 @@ worker:
       - processing/*
       - playbook/**/*
       - setup/requirements.txt
+      - Makefile
+      - .gitlab-ci
   tags:
     - docker
     - eros
