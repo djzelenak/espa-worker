@@ -45,7 +45,7 @@ RUN cd /usr/local/src \
         https://github.com/git/git.git git.git \
     && cd git.git \
     && make configure \
-    && ./configure --without-tcltk --with-curl \
+    && ./configure --without-tcltk \
     && make -j4 \
     && make install \
     && cd .. \
@@ -170,14 +170,11 @@ RUN wget https://curl.haxx.se/download/curl-7.48.0.tar.gz \
     && cd curl-7.48.0 \
     && ./configure --prefix=$CURL_PREFIX \
         --enable-static \
-        --with-libidn=$IDN_PREFIX
+        --with-libidn=$IDN_PREFIX \
     && make -j4 \
     && make install \
     && cd $SRC_DIR \
     && rm -rf curl-7.48.0 curl-7.48.0.tar.gz
-
-
-
 
 
 # xz 5.2.2
