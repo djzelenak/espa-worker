@@ -34,7 +34,7 @@ RUN yum group install -y "Development Tools" \
         openjpeg-devel \
         java-1.7.0-openjdk \
         java-1.7.0-openjdk-devel \
-    && yum clean metadata
+    && yum clean all
 
 
 # Update git to a version that isn't broken
@@ -145,7 +145,7 @@ RUN yum install -y \
         wget \
         wgrib \
         pgiz \
-    && yum clean metadata
+    && yum clean all
 
 
 # idn libraries

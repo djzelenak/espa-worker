@@ -15,4 +15,4 @@ RUN yum install -y \
         python-pip \
         python-devel \
     && pip install --upgrade pip \
-    && yum clean metadata
+    && yum clean all
