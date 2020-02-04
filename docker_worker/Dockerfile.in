@@ -1,4 +1,4 @@
-FROM ***REMOVED***/lsrd/espa-worker:external-latest as intermediate
+FROM ***REMOVED***/lsrd/espa-worker:builder-latest as builder
 
 MAINTAINER USGS EROS LSRD http://eros.usgs.gov
 
@@ -15,14 +15,51 @@ ENV PREFIX=/usr/local \
     UNAME='espa' \
     UGROUP='ie'
 
+#ENV ESPA_AQUATIC_REFLECTANCE=@ESPA_AQUATIC_REFLECTANCE@ \
+#    ESPA_PRODUCT_FORMATTER=@ESPA_PRODUCT_FORMATTER@ \
+#    ESPA_L2QA_TOOLS=@ESPA_L2QA_TOOLS@ \
+#    ESPA_SPECTRAL_INDICES=@ESPA_SPECTRAL_INDICES@ \
+#    ESPA_SURFACE_REFLECTANCE=@ESPA_SURFACE_REFLECTANCE@ \
+#    ESPA_SURFACE_REFLECTANCE_LEDAPS=@ESPA_SURFACE_REFLECTANCE_LEDAPS@ \
+#    ESPA_SURFACE_REFLECTANCE_LASRC=@ESPA_SURFACE_REFLECTANCE_LASRC@ \
+#    ESPA_SURFACE_TEMPERATURE=@ESPA_SURFACE_TEMPERATURE@ \
+#    ESPA_SURFACE_TEMPERATURE_RIT=@ESPA_SURFACE_TEMPERATURE_RIT@ \
+#    ESPA_SURFACE_WATER_EXTENT=@ESPA_SURFACE_WATER_EXTENT@ \
+#    ESPA_SURFACE_WATER_EXTENT_CFBWD=@ESPA_SURFACE_WATER_EXTENT_CFBWD@ \
+#    ESPA_SURFACE_WATER_EXTENT_DSWE=@ESPA_SURFACE_WATER_EXTENT_DSWE@ \
+#    ESPA_ELEVATION=@ESPA_ELEVATION@ \
+#    ESPA_REPROJECTION=@ESPA_REPROJECTION@ \
+#    ESPA_PLOTTING=@ESPA_PLOTTING@
+
+
 # Set up repo access credentials (should be read-only access)
 ARG SSH_PRIVATE_KEY
 RUN mkdir ~/.ssh/ \
     && chmod 700 ~/.ssh \
-    && ssh-keyscan eroslab.cr.usgs.gov > ~/.ssh/known_hosts
+    && ssh-keyscan eroslab.cr.usgs.gov >> ~/.ssh/known_hosts \
+    && ssh-keyscan losrlcmp02.cr.usgs.gov >> ~/.ssh/known_hosts
 
 RUN echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519 \
     && chmod 600 /root/.ssh/id_ed25519
+
+# Download all of the espa science repos
+#RUN cd ${SRC_DIR} \
+#    && git clone --depth 1 --branch ${ESPA_AQUATIC_REFLECTANCE} \
+#       git@eroslab.cr.usgs.gov:lsrd/espa-aquatic-reflectance.git \
+#
+#    && git clone --depth 1 --branch ${ESPA_PRODUCT_FORMATTER} \
+#       https://github.com/USGS-EROS/espa-product-formatter.git \
+#
+#    && git clone --depth 1 --branch ${ESPA_SPECTRAL_INDICES} \
+#       https://github.com/USGS-EROS/espa-spectral-indices.git \
+#
+#    && git clone --depth 1 --branch ${ESPA_L2QA_TOOLS} \
+#       https://github.com/USGS-EROS/espa-l2qa-tools.git \
+#
+#    && git clone https://github.com/USGS-EROS/espa-surface-reflectance.git \
+#
+#    && git clone
+
 
 RUN yum -y update && yum clean all \
    && yum -y install ansible
