@@ -14,7 +14,7 @@ before_script:
 
 stages:
   - base
-  - external
+  - builder
   - worker
 
 base:
@@ -25,7 +25,7 @@ base:
     - make deploy_base
   only:
     changes:
-      - docker_base_os/Dockerfile.centos7
+      - docker_base_os/Dockerfile.base
       - Makefile
       - version.txt
   tags:
@@ -33,15 +33,15 @@ base:
     - eros
     - lsrd
 
-external:
-  stage: external
+builder:
+  stage: builder
   script:
-    - make build_external
-    - make test_external
-    - make deploy_external
+    - make build_builder
+    - make test_builder
+    - make deploy_builder
   only:
     changes:
-      - docker_build_env/Dockerfile.centos7
+      - docker_build/Dockerfile.build
       - version.txt
       - Makefile
       - .gitlab-ci.yml
@@ -50,15 +50,15 @@ external:
     - eros
     - lsrd
 
-#docker_science:
-#  stage: science
+#worker:
+#  stage: worker
 #  script:
-#    - make build_science
-#    - make test_science
-#    - make deploy_science
+#    - make build_worker
+#    - make test_worker
+#    - make deploy_worker
 #  only:
 #    changes:
-#      - science/Dockerfile.centos7
+#      - worker/Dockerfile
 #      - version.txt
 #      - set_espa_versions.sh
 #      - processing/*

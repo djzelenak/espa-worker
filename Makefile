@@ -12,23 +12,21 @@ EXTERNAL_DIR := $(PWD)/docker_build
 WORKER_DIR := $(PWD)/docker_worker
 BASE_TAG := $(IMAGE):base-$(VERSION)-$(SHORT_HASH)
 BASE_TAG_LATEST := $(IMAGE):base-latest
-EXTERNAL_TAG := $(IMAGE):external-$(VERSION)-$(SHORT_HASH)
-EXTERNAL_TAG_LATEST := $(IMAGE):external-latest
-SCIENCE_TAG := $(IMAGE):science-$(VERSION)-$(SHORT_HASH)
-SCIENCE_TAG_LATEST := $(IMAGE):science-latest
+BUILDER_TAG := $(IMAGE):builder-$(VERSION)-$(SHORT_HASH)
+BUILDER_TAG_LATEST := $(IMAGE):builder-latest
+WORKER_TAG := $(IMAGE):worker-$(VERSION)-$(SHORT_HASH)
+WORKER_TAG_LATEST := $(IMAGE):worker-latest
 
-build: build_base build_external build_science
+build: build_base build_builder build_worker
 
-tests: test_base test_external test_science
+tests: test_base test_build test_worker
 
 docs:
 
-deploy: deploy_base deploy_external deploy_science
+deploy: deploy_base deploy_builder deploy_worker
 
 
-# Extra Makefile targets. Edit at will.
-
-
+# Base OS Targets
 build_base:
 	@docker build -t $(BASE_TAG) --rm=true --compress $(PWD) -f $(BASE_DIR)/Dockerfile.base
 	@docker tag $(BASE_TAG) $(BASE_TAG_LATEST)
@@ -39,25 +37,27 @@ deploy_base: login
 	docker push $(BASE_TAG)
 	docker push $(BASE_TAG_LATEST)
 
-build_external: login
-	@docker build -t $(EXTERNAL_TAG) --rm=true --compress $(PWD) -f $(EXTERNAL_DIR)/Dockerfile.build
-	@docker tag $(EXTERNAL_TAG) $(EXTERNAL_TAG_LATEST)
+# Build environment targets
+build_builder: login
+	@docker build -t $(BUILDER_TAG) --rm=true --compress $(PWD) -f $(BUILDER_DIR)/Dockerfile.build
+	@docker tag $(BUILDER_TAG) $(BUILDER_TAG_LATEST)
 
-test_external:
+test_builder:
 
-deploy_external: login
-	docker push $(EXTERNAL_TAG)
-	docker push $(EXTERNAL_TAG_LATEST)
+deploy_builder: login
+	docker push $(BUILDER_TAG)
+	docker push $(BUILDER_TAG_LATEST)
 
-build_science: login
-	@docker build -t $(SCIENCE_TAG) --rm=true --compress --build-arg SSH_PRIVATE_KEY=$(SSH_PRIVATE_KEY) $(PWD) -f $(SCIENCE_DIR)/Dockerfile.centos7
-	@docker tag $(SCIENCE_TAG) $(SCIENCE_TAG_LATEST)
+# Worker environment targets
+build_worker: login
+	@docker build -t $(WORKER_TAG) --rm=true --compress --build-arg SSH_PRIVATE_KEY=$(SSH_PRIVATE_KEY) $(PWD) -f $(WORKER_DIR)/Dockerfile
+	@docker tag $(WORKER_TAG) $(WORKER_TAG_LATEST)
 
-test_science:
+test_worker:
 
-deploy_science: login
-	docker push $(SCIENCE_TAG)
-	docker push $(SCIENCE_TAG_LATEST)
+deploy_worker: login
+	docker push $(WORKER_TAG)
+	docker push $(WORKER_TAG_LATEST)
 
 login:
 	@$(if $(and $(CI_REGISTRY_USER), $(CI_REGISTRY_PASSWORD)), \
