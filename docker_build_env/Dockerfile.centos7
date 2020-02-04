@@ -11,6 +11,8 @@ RUN yum group install -y "Development Tools" \
         expat-devel \
         freetype-devel \
         glibc-static \
+        libcurl-devel \
+        libidn-devel \
         libgfortran-static \
         libquadmath-static \
         perl-ExtUtils-MakeMaker \
@@ -33,6 +35,21 @@ RUN yum group install -y "Development Tools" \
         java-1.7.0-openjdk \
         java-1.7.0-openjdk-devel \
     && yum clean metadata
+
+
+# Update git to a version that isn't broken
+RUN cd /usr/local/src \
+    && git clone \
+        --depth 1 \
+        --branch v2.16.5 \
+        https://github.com/git/git.git git.git \
+    && cd git.git \
+    && make configure \
+    && ./configure --without-tcltk --with-curl \
+    && make -j4 \
+    && make install \
+    && cd .. \
+    && rm -rf git.git
 
 
 # Source and installation locations
@@ -115,9 +132,7 @@ ENV ZLIBINC=$ZLIB_PREFIX/include \
     GDAL_INC=$GDAL_PREFIX/include \
     GDAL_LIB=$GDAL_PREFIX/lib \
     LIB3_LIB=$LIB3_DIR/lib \
-    LIB3_INC=$LIB3_DIR/include \
-    ESPALIB=$PREFIX/lib \
-    ESPAINC=$PREFIX/include
+    LIB3_INC=$LIB3_DIR/include
 
 
 # Needed for python to find installed shared libraries
@@ -131,20 +146,6 @@ RUN yum install -y \
         wgrib \
         pgiz \
     && yum clean metadata
-
-
-# curl libraries
-RUN wget https://curl.haxx.se/download/curl-7.48.0.tar.gz \
-    && mv curl-7.48.0.tar.gz $SRC_DIR \
-    && cd $SRC_DIR \
-    && tar -xvf curl-7.48.0.tar.gz \
-    && cd curl-7.48.0 \
-    && ./configure --prefix=$CURL_PREFIX \
-        --enable-static \
-    && make -j4 \
-    && make install \
-    && cd $SRC_DIR \
-    && rm -rf curl-7.48.0 curl-7.48.0.tar.gz
 
 
 # idn libraries
@@ -161,19 +162,22 @@ RUN wget ftp://ftp.gnu.org/gnu/libidn/libidn-1.32.tar.gz \
     && rm -rf libidn-1.32 libidn-1.32.tar.gz
 
 
-# Update git to a version that isn't broken
-RUN cd /usr/local/src \
-    && git clone \
-        --depth 1 \
-        --branch v2.9.2 \
-        https://github.com/git/git.git git.git \
-    && cd git.git \
-    && make configure \
-    && ./configure --without-tcltk \
+# curl libraries
+RUN wget https://curl.haxx.se/download/curl-7.48.0.tar.gz \
+    && mv curl-7.48.0.tar.gz $SRC_DIR \
+    && cd $SRC_DIR \
+    && tar -xvf curl-7.48.0.tar.gz \
+    && cd curl-7.48.0 \
+    && ./configure --prefix=$CURL_PREFIX \
+        --enable-static \
+        --with-libidn=$IDN_PREFIX
     && make -j4 \
     && make install \
-    && cd .. \
-    && rm -rf git.git
+    && cd $SRC_DIR \
+    && rm -rf curl-7.48.0 curl-7.48.0.tar.gz
+
+
+
 
 
 # xz 5.2.2

@@ -1,0 +1,165 @@
+FROM ***REMOVED***/lsrd/espa-worker:external-latest as intermediate
+
+MAINTAINER USGS EROS LSRD http://eros.usgs.gov
+
+LABEL description="Adds the science processing applications and setup we use for ESPA-Product-Fulfillment."
+
+# ----------------------------------------------------------------------------
+# Configuration of environment variables to reduce intermediate docker image
+# generation.
+# ----------------------------------------------------------------------------
+
+ENV PREFIX=/usr/local \
+    ESPAINC=/usr/local/include \
+    ESPALIB=/usr/local/lib \
+    UNAME='espa' \
+    UGROUP='ie'
+
+# Set up repo access credentials (should be read-only access)
+ARG SSH_PRIVATE_KEY
+RUN mkdir ~/.ssh/ \
+    && chmod 700 ~/.ssh \
+    && ssh-keyscan eroslab.cr.usgs.gov > ~/.ssh/known_hosts
+
+RUN echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519 \
+    && chmod 600 /root/.ssh/id_ed25519
+
+RUN yum -y update && yum clean all \
+   && yum -y install ansible
+
+# Ansible: the 'espa-worker.yml' playbook installs our ESPA science applications
+COPY playbook /tmp/ansible/
+RUN ansible-playbook /tmp/ansible/espa-worker.yml && \
+	rm -rf /tmp/ansible
+# ----------------------------------------------------------------------------
+# Install the espa-python-library
+#RUN pip install \
+#       git+https://github.com/USGS-EROS/espa-python-library.git@@ESPA_PYTHON_LIBRARY@#espa
+
+# ----------------------------------------------------------------------------
+# Clone the software and then build and install it
+# ----------------------------------------------------------------------------
+
+#RUN REPO_NAME=espa-aquatic-reflectance \
+#    && REPO_TAG=aq_refl_v1.1.0 \
+#    && cd $SRC_DIR \
+#    && git clone git@eroslab.cr.usgs.gov:lsrd/espa-aquatic-reflectance.git ${REPO_NAME} \
+#    && cd ${REPO_NAME} \
+#    && git checkout ${REPO_TAG} \
+#    && mkdir ${LIB3_DIR} && cp -r src/lib3 ${LIB3_DIR} \
+#    && make BUILD_STATIC=yes ENABLE_THREADING=yes \
+#    && make install \
+#    && cd $SRC_DIR \
+#    && rm -rf ${REPO_NAME}
+
+
+#RUN REPO_NAME=espa-product-formatter \
+#    && REPO_TAG=@ESPA_PRODUCT_FORMATTER@ \
+#    && cd $SRC_DIR \
+#    && git clone https://github.com/USGS-EROS/${REPO_NAME}.git ${REPO_NAME} \
+#    && cd ${REPO_NAME} \
+#    && git checkout ${REPO_TAG} \
+#    && make BUILD_STATIC=yes ENABLE_THREADING=yes \
+#    && make install \
+#    && cd $SRC_DIR \
+#    && rm -rf ${REPO_NAME}
+#
+#
+#RUN REPO_NAME=espa-l2qa-tools \
+#    && REPO_TAG=@ESPA_L2QA_TOOLS@ \
+#    && cd $SRC_DIR \
+#    && git clone https://github.com/USGS-EROS/${REPO_NAME}.git ${REPO_NAME} \
+#    && cd ${REPO_NAME} \
+#    && git checkout ${REPO_TAG} \
+#    && make BUILD_STATIC=yes ENABLE_THREADING=yes \
+#    && make install \
+#    && cd $SRC_DIR \
+#    && rm -rf ${REPO_NAME}
+#
+#
+#RUN REPO_NAME=espa-spectral-indices \
+#    && REPO_TAG=@ESPA_SPECTRAL_INDICES@ \
+#    && cd $SRC_DIR \
+#    && git clone https://github.com/USGS-EROS/${REPO_NAME}.git ${REPO_NAME} \
+#    && cd ${REPO_NAME} \
+#    && git checkout ${REPO_TAG} \
+#    && make BUILD_STATIC=yes ENABLE_THREADING=yes \
+#    && make install \
+#    && cd $SRC_DIR \
+#    && rm -rf ${REPO_NAME}
+#
+#
+#RUN REPO_NAME=espa-surface-water-extent \
+#    && REPO_TAG=@ESPA_SURFACE_WATER_EXTENT@ \
+#    && cd $SRC_DIR \
+#    && git clone https://github.com/USGS-EROS/${REPO_NAME}.git ${REPO_NAME} \
+#    && cd ${REPO_NAME} \
+#    && git checkout ${REPO_TAG} \
+#    && make BUILD_STATIC=yes ENABLE_THREADING=yes \
+#    && make install \
+#    && cd $SRC_DIR \
+#    && rm -rf ${REPO_NAME}
+#
+#
+#RUN REPO_NAME=espa-surface-reflectance \
+#    && REPO_TAG=@ESPA_SURFACE_REFLECTANCE@ \
+#    && cd $SRC_DIR \
+#    && git clone https://github.com/USGS-EROS/${REPO_NAME}.git ${REPO_NAME} \
+#    && cd ${REPO_NAME} \
+#    && git checkout ${REPO_TAG} \
+#    && make BUILD_STATIC=yes ENABLE_THREADING=yes \
+#    && make install \
+#    && cd $SRC_DIR \
+#    && rm -rf ${REPO_NAME}
+#
+#
+#RUN REPO_NAME=espa-surface-temperature \
+#    && REPO_TAG=@ESPA_SURFACE_TEMPERATURE@ \
+#    && cd $SRC_DIR \
+#    && git clone https://github.com/USGS-EROS/${REPO_NAME}.git ${REPO_NAME} \
+#    && cd ${REPO_NAME} \
+#    && git checkout ${REPO_TAG} \
+#    && make BUILD_STATIC=yes ENABLE_THREADING=yes \
+#    && make install \
+#    && cd $SRC_DIR \
+#    && rm -rf ${REPO_NAME}
+#
+#
+#RUN REPO_NAME=espa-elevation \
+#    && REPO_TAG=@ESPA_ELEVATION@ \
+#    && cd $SRC_DIR \
+#    && git clone https://github.com/USGS-EROS/${REPO_NAME}.git ${REPO_NAME} \
+#    && cd ${REPO_NAME} \
+#    && git checkout ${REPO_TAG} \
+#    && make install \
+#    && cd $SRC_DIR \
+#    && rm -rf ${REPO_NAME}
+#
+#RUN REPO_NAME=espa-reprojection \
+#    && REPO_TAG=@ESPA_REPROJECTION@ \
+#    && cd $SRC_DIR \
+#    && git clone https://github.com/USGS-EROS/${REPO_NAME}.git ${REPO_NAME} \
+#    && cd ${REPO_NAME} \
+#    && git checkout ${REPO_TAG} \
+#    && make install \
+#    && cd $SRC_DIR \
+#    && rm -rf ${REPO_NAME}
+#
+#RUN REPO_NAME=espa-plotting \
+#    && REPO_TAG=@ESPA_PLOTTING@ \
+#    && cd $SRC_DIR \
+#    && git clone https://github.com/USGS-EROS/${REPO_NAME}.git ${REPO_NAME} \
+#    && cd ${REPO_NAME} \
+#    && git checkout ${REPO_TAG} \
+#    && make install \
+#    && cd $SRC_DIR \
+#    && rm -rf ${REPO_NAME}
+#
+#
+#
+## ----------------------------------------------------------------------------
+## Add an entrypoint so that we can do some internal setup and then execute the
+## specified application
+#COPY science-entrypoint.sh /entrypoint.sh
+#RUN chmod 755 /entrypoint.sh
+#ENTRYPOINT ["/entrypoint.sh"]

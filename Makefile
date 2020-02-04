@@ -7,9 +7,9 @@ BRANCH     := $(or $(CI_COMMIT_REF_NAME), `git rev-parse --abbrev-ref HEAD`)
 BRANCH     := $(shell echo $(BRANCH) | tr / -)
 SHORT_HASH := `git rev-parse --short HEAD`
 TAG        := $(IMAGE):$(BRANCH)-$(VERSION)-$(SHORT_HASH)
-BASE_DIR   := $(PWD)/base
-EXTERNAL_DIR := $(PWD)/external
-SCIENCE_DIR := $(PWD)/science
+BASE_DIR   := $(PWD)/docker_base_os
+EXTERNAL_DIR := $(PWD)/docker_build_env
+WORKER_DIR := $(PWD)/docker_worker
 BASE_TAG := $(IMAGE):base-$(VERSION)-$(SHORT_HASH)
 BASE_TAG_LATEST := $(IMAGE):base-latest
 EXTERNAL_TAG := $(IMAGE):external-$(VERSION)-$(SHORT_HASH)
@@ -49,9 +49,8 @@ deploy_external: login
 	docker push $(EXTERNAL_TAG)
 	docker push $(EXTERNAL_TAG_LATEST)
 
-
 build_science: login
-	@docker build -t $(SCIENCE_TAG) --rm=true --compress $(PWD) -f $(SCIENCE_DIR)/Dockerfile.centos7
+	@docker build -t $(SCIENCE_TAG) --rm=true --compress --build-arg SSH_PRIVATE_KEY=$(SSH_PRIVATE_KEY) $(PWD) -f $(SCIENCE_DIR)/Dockerfile.centos7
 	@docker tag $(SCIENCE_TAG) $(SCIENCE_TAG_LATEST)
 
 test_science:
