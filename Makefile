@@ -1,11 +1,11 @@
 .PHONY: build tests docs deploy build_base test_base deploy_base build_builder test_builder deploy_builder build_worker test_worker deploy_worker tag login debug all
 
 .DEFAULT_GOAL := build
-VERSION    := `cat version.txt`
+VERSION    := $(shell cat version.txt)
 IMAGE      := $(or $(CI_REGISTRY_IMAGE), lsrd/espa-worker)
-BRANCH     := $(or $(CI_COMMIT_REF_NAME), `git rev-parse --abbrev-ref HEAD`)
+BRANCH     := $(or $(CI_COMMIT_REF_NAME), $(shell git rev-parse --abbrev-ref HEAD))
 BRANCH     := $(shell echo $(BRANCH) | tr / -)
-SHORT_HASH := `git rev-parse --short HEAD`
+SHORT_HASH := $(shell git rev-parse --short HEAD)
 TAG        := $(IMAGE):$(BRANCH)-$(VERSION)-$(SHORT_HASH)
 BASE_DIR   := $(PWD)/docker_base
 BUILD_DIR := $(PWD)/docker_build
@@ -50,7 +50,8 @@ deploy_builder: login
 
 # Worker environment targets
 build_worker: login
-	@docker build -t $(WORKER_TAG) --rm=true --compress --build-arg SSH_PRIVATE_KEY="$(SSH_PRIVATE_KEY)" $(PWD) -f $(WORKER_DIR)/Dockerfile
+	@echo $(WORKER_TAG)
+	@docker build -t $(WORKER_TAG) --rm=true --compress --build-arg SSH_PRIVATE_KEY=$SSH_PRIVATE_KEY $(PWD) -f $(WORKER_DIR)/Dockerfile.worker
 	@docker tag $(WORKER_TAG) $(WORKER_TAG_LATEST)
 
 test_worker:
