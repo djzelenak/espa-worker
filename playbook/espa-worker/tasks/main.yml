@@ -15,10 +15,6 @@
 - import_tasks: espa-software.yml
   tags: packages
 
-# Install Worker Dependencies
-- import_tasks: worker-dependencies.yml
-  tags: dependencies
-
 # Directories and Symlinks
 - import_tasks: dirs-links.yml
   tags: dirs-links, configuration
