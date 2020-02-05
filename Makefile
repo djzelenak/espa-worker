@@ -50,7 +50,6 @@ deploy_builder: login
 
 # Worker environment targets
 build_worker: login
-	@echo $(WORKER_TAG)
 	@docker build -t $(WORKER_TAG) --rm=true --compress --build-arg SSH_PRIVATE_KEY=$SSH_PRIVATE_KEY $(PWD) -f $(WORKER_DIR)/Dockerfile.worker
 	@docker tag $(WORKER_TAG) $(WORKER_TAG_LATEST)
 
