@@ -26,7 +26,6 @@ base:
   only:
     changes:
       - docker_base/Dockerfile.base
-      - Makefile
       - version.txt
   tags:
     - docker
@@ -43,7 +42,6 @@ builder:
     changes:
       - docker_build/Dockerfile.build
       - version.txt
-      - Makefile
   tags:
     - docker
     - eros
@@ -63,7 +61,6 @@ worker:
       - playbook/**/*
       - setup/requirements.txt
       - Makefile
-      - .gitlab-ci
   tags:
     - docker
     - eros
