@@ -29,8 +29,8 @@ RUN echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519 \
 
 # Ansible: the 'espa-worker.yml' playbook installs our ESPA science applications
 COPY playbook /tmp/ansible/
-RUN ansible-playbook /tmp/ansible/espa-worker.yml --tags "configuration,packages" && \
-	rm -rf /tmp/ansible
+RUN ansible-playbook /tmp/ansible/espa-worker.yml \
+	&& rm -rf /tmp/ansible
 
 
 # Install any remaining python packages
