@@ -1,9 +1,38 @@
-FROM ***REMOVED***/lsrd/espa-worker:builder-latest
+FROM ***REMOVED***/lsrd/espa-worker:base-latest as source
 
 MAINTAINER USGS EROS LSRD http://eros.usgs.gov
 
 LABEL description="Adds the science processing applications and setup we use for ESPA-Product-Fulfillment."
 
+RUN yum -y update && yum clean all \
+   && yum -y install \
+      ansible \
+      git
+
+# Set up repo access credentials (should be read-only access)
+ARG SSH_PRIVATE_KEY
+RUN mkdir ~/.ssh/ \
+    && chmod 0700 ~/.ssh \
+    && ssh-keyscan eroslab.cr.usgs.gov >> ~/.ssh/known_hosts
+
+RUN echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519 \
+    && chmod 0600 /root/.ssh/id_ed25519 \
+    && ssh -T git@eroslab.cr.usgs.gov
+
+COPY playbook /tmp/ansible/
+
+# Run the play to download the source code
+RUN ansible-playbook /tmp/ansible/espa-worker.yml --tags "download-source"
+
+FROM ***REMOVED***/lsrd/espa-worker:builder-latest
+
+RUN yum -y update && yum clean all \
+   && yum -y install ansible \
+   && yum clean all
+
+# Copy the source code that was downloaded in the previous build stage
+COPY --from=source /tmp/ansible /tmp/ansible
+COPY --from=source /src /src
 
 ENV ESPAINC=/usr/local/include \
     ESPALIB=/usr/local/lib \
@@ -11,25 +40,7 @@ ENV ESPAINC=/usr/local/include \
     UGROUP='ie'
 
 
-RUN yum -y update && yum clean all \
-   && yum -y install ansible
-
-
-# Set up repo access credentials (should be read-only access)
-ARG SSH_PRIVATE_KEY
-RUN mkdir ~/.ssh/ \
-    && chmod 700 ~/.ssh \
-    && ssh-keyscan eroslab.cr.usgs.gov >> ~/.ssh/known_hosts \
-    && ssh-keyscan losrlcmp02.cr.usgs.gov >> ~/.ssh/known_hosts
-
-
-RUN echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519 \
-    && chmod 600 /root/.ssh/id_ed25519
-
-
-# Ansible: the 'espa-worker.yml' playbook installs our ESPA science applications
-COPY playbook /tmp/ansible/
-RUN ansible-playbook /tmp/ansible/espa-worker.yml \
+RUN ansible-playbook /tmp/ansible/espa-worker.yml --tags "configuration,packages" \
 	&& rm -rf /tmp/ansible
 
 

@@ -1,0 +1,115 @@
+# File: espa-source.yml
+# Description: Download ESPA science application source code
+# Last Updated: See 'git log -p <filename>'
+# Recent Changes: See 'git log -p <filename>'
+
+# ------------ ESPA SYSTEM REQUIREMENTS ----------- #
+# (espa_dependencies defined in external vars file) #
+# ------------------------------------------------- #
+
+- name: espa-source|Clone espa-product-formatter
+  git:
+    repo: 'https://github.com/USGS-EROS/espa-product-formatter.git'
+    dest: /src/espa-product-formatter
+    version: "{{ git_espa_product_formatter }}"
+    depth: 1
+
+- name: espa-software|Clone espa-l2qa-tools
+  git:
+    repo: 'https://github.com/USGS-EROS/espa-l2qa-tools.git'
+    dest: /src/espa-l2qa-tools
+    version: "{{ git_espa_l2qa_tools }}"
+    depth: 1
+
+## Install espa-aquatic-reflectance
+- name: espa-software|Clone espa-aq-refl
+  git:
+    repo: 'git@eroslab.cr.usgs.gov:lsrd/espa-orca.git'
+    dest: /src/espa-aq-refl
+    version: "{{ git_espa_aq_refl }}"
+    depth: 1
+
+- name: espa-software|Clone espa-surface-reflectance
+  git:
+    repo: 'https://github.com/USGS-EROS/espa-surface-reflectance.git'
+    dest: /src/espa-surface-reflectance
+    version: "{{ git_espa_surface_reflectance }}"
+    depth: 1
+
+- name: espa-software|Clone espa-surface-reflectance-ledaps
+  git:
+    repo: 'https://github.com/USGS-EROS/espa-surface-reflectance.git'
+    dest: /src/espa-surface-reflectance-ledaps
+    version: "{{ git_espa_surface_reflectance_ledaps }}"
+    depth: 1
+
+- name: espa-software|Clone espa-surface-reflectance-lasrc
+  git:
+    repo: 'https://github.com/USGS-EROS/espa-surface-reflectance.git'
+    dest: /src/espa-surface-reflectance-lasrc
+    version: "{{ git_espa_surface_reflectance_lasrc }}"
+    depth: 1
+
+- name: espa-software|Clone espa-surface-temperature
+  git:
+    repo: 'git@eroslab.cr.usgs.gov:lsrd/espa-surface-temperature.git'
+    dest: /src/espa-surface-temperature
+    version: "{{ git_espa_surface_temperature }}"
+    depth: 1
+
+- name: espa-software|Clone espa-surface-temperature-rit
+  git:
+    repo: 'git@eroslab.cr.usgs.gov:lsrd/espa-surface-temperature.git'
+    dest: /src/espa-surface-temperature-rit
+    version: "{{ git_espa_surface_temperature_rit }}"
+    depth: 1
+
+- name: espa-software|Clone espa-spectral-indices
+  git:
+    repo: 'https://github.com/USGS-EROS/espa-spectral-indices.git'
+    dest: /src/espa-spectral-indices
+    version: "{{ git_espa_spectral_indices }}"
+    depth: 1
+
+- name: espa-software|Clone espa-surface-water-extent
+  git:
+    repo: 'https://github.com/USGS-EROS/espa-surface-water-extent.git'
+    dest: /src/espa-surface-water-extent
+    version: "{{ git_espa_surface_water_extent }}"
+    depth: 1
+
+- name: espa-software|Clone espa-surface-water-extent-cfbwd
+  git:
+    repo: 'https://github.com/USGS-EROS/espa-surface-water-extent.git'
+    dest: /src/espa-surface-water-extent-cfbwd
+    version: "{{ git_espa_surface_water_extent_cfbwd }}"
+    depth: 1
+
+- name: espa-software|Clone espa-surface-water-extent-dswe
+  git:
+    repo: 'https://github.com/USGS-EROS/espa-surface-water-extent.git'
+    dest: /src/espa-surface-water-extent-dswe
+    version: "{{ git_espa_surface_water_extent_dswe }}"
+    depth: 1
+
+- name: espa-software|Clone espa-elevation
+  git:
+    repo: 'https://github.com/USGS-EROS/espa-elevation.git'
+    dest: /src/espa-elevation
+    version: "{{ git_espa_elevation }}"
+    depth: 1
+
+- name: espa-software|Clone espa-reprojection
+  git:
+    repo: 'https://github.com/USGS-EROS/espa-reprojection.git'
+    dest: /src/espa-reprojection
+    version: "{{ git_espa_reprojection }}"
+    depth: 1
+
+- name: espa-software|Clone espa-plotting
+  git:
+    repo: 'https://github.com/USGS-EROS/espa-plotting.git'
+    dest: /src/espa-plotting
+    version: "{{ git_espa_plotting }}"
+    depth: 1
+

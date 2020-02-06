@@ -11,6 +11,10 @@
 - import_tasks: mounts.yml
   tags: mounts, configuration
 
+# Download ESPA source code
+- import_tasks: espa-source.yml
+  tags: download-source
+
 # Install ESPA Software
 - import_tasks: espa-software.yml
   tags: packages

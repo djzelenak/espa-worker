@@ -60,12 +60,6 @@
     state: installed
 
 # Build and install espa-product-formatter
-- name: espa-software|Clone espa-product-formatter
-  git:
-    repo: 'https://github.com/USGS-EROS/espa-product-formatter.git'
-    dest: /src/espa-product-formatter
-    version: "{{ git_espa_product_formatter }}"
-
 - name: espa-software|Build espa-product-formatter
   make:
     chdir: /src/espa-product-formatter
@@ -87,12 +81,6 @@
 
 
 ## Install espa-l2qa-tools
-- name: espa-software|Clone espa-l2qa-tools
-  git:
-    repo: 'https://github.com/USGS-EROS/espa-l2qa-tools.git'
-    dest: /src/espa-l2qa-tools
-    version: "{{ git_espa_l2qa_tools }}"
-
 - name: espa-software|Build espa-l2qa-tools
   make:
     chdir: /src/espa-l2qa-tools
@@ -114,19 +102,9 @@
 
 
 ## Install espa-aquatic-reflectance
-- name: espa-software|Clone espa-aq-refl
-  git:
-    accept_hostkey: yes
-    ssh_opts: "-o StrictHostKeyChecking=no"
-    repo: 'git@eroslab.cr.usgs.gov:lsrd/espa-aquatic-reflectance.git'
-    dest: /src/espa-aq-refl
-    version: "{{ git_espa_aq_refl }}"
-    depth: 1
-
 - name: espa-software|Copy lib3 from espa-aq-refl
   command:
     cmd: cp -r /src/espa-aq-refl/src/lib3 /usr/local/
-
 
 - name: espa-software|Build espa-aq-refl
   make:
@@ -149,13 +127,6 @@
 
 
 ## Install espa-surface-reflectance
-- name: espa-software|Clone espa-surface-reflectance
-  git:
-    repo: 'https://github.com/USGS-EROS/espa-surface-reflectance.git'
-    dest: /src/espa-surface-reflectance
-    version: "{{ git_espa_surface_reflectance }}"
-    depth: 1
-
 - name: espa-software|Build all espa-surface-reflectance
   make:
     chdir: /src/espa-surface-reflectance
@@ -175,13 +146,6 @@
 
 
 ## Install espa-surface-reflectance-ledaps
-- name: espa-software|Clone espa-surface-reflectance-ledaps
-  git:
-    repo: 'https://github.com/USGS-EROS/espa-surface-reflectance.git'
-    dest: /src/espa-surface-reflectance-ledaps
-    version: "{{ git_espa_surface_reflectance_ledaps }}"
-    depth: 1
-
 - name: espa-software|Build espa-surface-reflectance-ledaps
   make:
     chdir: /src/espa-surface-reflectance-ledaps
@@ -204,13 +168,6 @@
 
 
 ## Install espa-surface-reflectance-lasrc
-- name: espa-software|Clone espa-surface-reflectance-lasrc
-  git:
-    repo: 'https://github.com/USGS-EROS/espa-surface-reflectance.git'
-    dest: /src/espa-surface-reflectance-lasrc
-    version: "{{ git_espa_surface_reflectance_lasrc }}"
-    depth: 1
-
 - name: espa-software|Build espa-surface-reflectance-lasrc
   make:
     chdir: /src/espa-surface-reflectance-lasrc
@@ -233,13 +190,6 @@
 
 
 ## Install espa-surface-temperature
-- name: espa-software|Clone espa-surface-temperature
-  git:
-    repo: 'git@losrlcmp02.cr.usgs.gov:lsrd/espa-surface-temperature.git'
-    dest: /src/espa-surface-temperature
-    version: "{{ git_espa_surface_temperature }}"
-    depth: 1
-
 - name: espa-software|Build espa-surface-temperature
   make:
     chdir: /src/espa-surface-temperature
@@ -261,13 +211,6 @@
 
 
 ## Install espa-surface-temperature-rit
-- name: espa-software|Clone espa-surface-temperature-rit
-  git:
-    repo: 'git@losrlcmp02.cr.usgs.gov:lsrd/espa-surface-temperature.git'
-    dest: /src/espa-surface-temperature-rit
-    version: "{{ git_espa_surface_temperature_rit }}"
-    depth: 1
-
 - name: espa-software|Build espa-surface-temperature-rit
   make:
     chdir: /src/espa-surface-temperature-rit
@@ -290,13 +233,6 @@
 
 
 ## Install espa-spectral-indices
-- name: espa-software|Clone espa-spectral-indices
-  git:
-    repo: 'https://github.com/USGS-EROS/espa-spectral-indices.git'
-    dest: /src/espa-spectral-indices
-    version: "{{ git_espa_spectral_indices }}"
-    depth: 1
-
 - name: espa-software|Build espa-spectral-indices
   make:
     chdir: /src/espa-spectral-indices
@@ -318,13 +254,6 @@
 
 
 ## Install espa-surface-water-extent
-- name: espa-software|Clone espa-surface-water-extent
-  git:
-    repo: 'https://github.com/USGS-EROS/espa-surface-water-extent.git'
-    dest: /src/espa-surface-water-extent
-    version: "{{ git_espa_surface_water_extent }}"
-    depth: 1
-
 - name: espa-software|Build espa-surface-water-extent
   make:
     chdir: /src/espa-surface-water-extent
@@ -344,13 +273,6 @@
 
 
 ## Install espa-surface-water-extent-cfbwd
-- name: espa-software|Clone espa-surface-water-extent-cfbwd
-  git:
-    repo: 'https://github.com/USGS-EROS/espa-surface-water-extent.git'
-    dest: /src/espa-surface-water-extent-cfbwd
-    version: "{{ git_espa_surface_water_extent_cfbwd }}"
-    depth: 1
-
 - name: espa-software|Build espa-surface-water-extent-cfbwd
   make:
     chdir: /src/espa-surface-water-extent-cfbwd
@@ -373,13 +295,6 @@
 
 
 ## Install espa-surface-water-extent-dswe
-- name: espa-software|Clone espa-surface-water-extent-dswe
-  git:
-    repo: 'https://github.com/USGS-EROS/espa-surface-water-extent.git'
-    dest: /src/espa-surface-water-extent-dswe
-    version: "{{ git_espa_surface_water_extent_dswe }}"
-    depth: 1
-
 - name: espa-software|Build espa-surface-water-extent-dswe
   make:
     chdir: /src/espa-surface-water-extent-dswe
@@ -402,13 +317,6 @@
 
 
 ## Install espa-elevation
-- name: espa-software|Clone espa-elevation
-  git:
-    repo: 'https://github.com/USGS-EROS/espa-elevation.git'
-    dest: /src/espa-elevation
-    version: "{{ git_espa_elevation }}"
-    depth: 1
-
 - name: espa-software|Build espa-elevation
   make:
     chdir: /src/espa-elevation
@@ -427,13 +335,6 @@
 
 
 ## Install espa-reprojection
-- name: espa-software|Clone espa-reprojection
-  git:
-    repo: 'https://github.com/USGS-EROS/espa-reprojection.git'
-    dest: /src/espa-reprojection
-    version: "{{ git_espa_reprojection }}"
-    depth: 1
-
 - name: espa-software|Build espa-reprojection
   make:
     chdir: /src/espa-reprojection
@@ -452,13 +353,6 @@
 
 
 ## Install espa-plotting
-- name: espa-software|Clone espa-plotting
-  git:
-    repo: 'https://github.com/USGS-EROS/espa-plotting.git'
-    dest: /src/espa-plotting
-    version: "{{ git_espa_plotting }}"
-    depth: 1
-
 - name: espa-software|Build espa-plotting
   make:
     chdir: /src/espa-plotting
