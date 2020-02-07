@@ -24,8 +24,6 @@ RUN eval $(ssh-agent -s) \
 # makes it to the final worker image
 FROM ***REMOVED***/lsrd/espa-worker:builder-latest as builder
 
-RUN yum clean all && yum -y update && yum clean all
-
 # Copy the playbook and source code from the previous build stage
 COPY --from=source /tmp/ansible /tmp/ansible
 COPY --from=source /src /src
