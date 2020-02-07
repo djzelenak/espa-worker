@@ -4,8 +4,6 @@ MAINTAINER USGS EROS LSRD http://eros.usgs.gov
 
 LABEL description="Adds the science processing applications and setup we use for ESPA-Product-Fulfillment."
 
-RUN yum -y update && yum clean all
-
 COPY playbook /tmp/ansible/
 
 # Set up repo access credentials (should be read-only access)
@@ -26,7 +24,7 @@ RUN eval $(ssh-agent -s) \
 # makes it to the final worker image
 FROM ***REMOVED***/lsrd/espa-worker:builder-latest as builder
 
-RUN yum -y update && yum clean all
+RUN yum clean all && yum -y update && yum clean all
 
 # Copy the playbook and source code from the previous build stage
 COPY --from=source /tmp/ansible /tmp/ansible
