@@ -8,15 +8,14 @@ BRANCH     := $(shell echo $(BRANCH) | tr / -)
 SHORT_HASH := $(shell git rev-parse --short HEAD)
 TAG        := $(IMAGE):$(BRANCH)-$(VERSION)-$(SHORT_HASH)
 BASE_DIR   := $(PWD)/docker_base
-BUILD_DIR := $(PWD)/docker_build
+BUILD_DIR  := $(PWD)/docker_build
 WORKER_DIR := $(PWD)/docker_worker
-BASE_TAG := $(IMAGE):base-$(VERSION)-$(SHORT_HASH)
+BASE_TAG   := $(IMAGE):base-$(VERSION)-$(SHORT_HASH)
 BASE_TAG_LATEST := $(IMAGE):base-latest
-BUILD_TAG := $(IMAGE):builder-$(VERSION)-$(SHORT_HASH)
+BUILD_TAG  := $(IMAGE):builder-$(VERSION)-$(SHORT_HASH)
 BUILD_TAG_LATEST := $(IMAGE):builder-latest
 WORKER_TAG := $(IMAGE):worker-$(VERSION)-$(SHORT_HASH)
 WORKER_TAG_LATEST := $(IMAGE):worker-latest
-KEY := $SSH_PRIVATE_KEY
 
 build: build_base build_builder build_worker
 
