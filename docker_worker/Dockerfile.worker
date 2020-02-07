@@ -37,6 +37,14 @@ ENV ESPAINC=/usr/local/include \
     UNAME='espa' \
     UGROUP='ie'
 
+RUN df -h
+
+RUN du -h -d 1 /var/cache/yum/x86_64/7 \
+    && rm -rf /var/cache/yum/x86_64/7/base/* \
+    && du -h -d 1 /var/cache/yum/x86_64/7
+
+RUN df -h
+
 RUN ansible-playbook /tmp/ansible/espa-worker.yml --tags "configuration,packages" \
 	&& rm -rf /tmp/ansible
 
