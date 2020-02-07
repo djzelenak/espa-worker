@@ -145,6 +145,7 @@ RUN yum install -y \
         wget \
         wgrib \
         pgiz \
+        ansible \
     && yum clean all
 
 

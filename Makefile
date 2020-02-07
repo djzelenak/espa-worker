@@ -16,6 +16,7 @@ BUILD_TAG := $(IMAGE):builder-$(VERSION)-$(SHORT_HASH)
 BUILD_TAG_LATEST := $(IMAGE):builder-latest
 WORKER_TAG := $(IMAGE):worker-$(VERSION)-$(SHORT_HASH)
 WORKER_TAG_LATEST := $(IMAGE):worker-latest
+KEY := $SSH_PRIVATE_KEY
 
 build: build_base build_builder build_worker
 
@@ -50,7 +51,9 @@ deploy_builder: login
 
 # Worker environment targets
 build_worker: login
-	@docker build -t $(WORKER_TAG) --rm=true --compress --build-arg SSH_PRIVATE_KEY=$SSH_PRIVATE_KEY $(PWD) -f $(WORKER_DIR)/Dockerfile.worker
+	docker build -t $(WORKER_TAG) --rm=true --compress --build-arg SSH_PRIVATE_KEY="$$SSH_PRIVATE_KEY" \
+	--build-arg SSH_KNOWN_HOSTS="$$SSH_KNOWN_HOSTS" \
+	$(PWD) -f $(WORKER_DIR)/Dockerfile.worker
 	@docker tag $(WORKER_TAG) $(WORKER_TAG_LATEST)
 
 test_worker:
