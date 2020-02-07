@@ -239,7 +239,7 @@
 
 - name: espa-software|Clean espa-spectral-indices
   file:
-    path: /src/espa-spectral-indicies
+    path: /src/espa-spectral-indices
     state: absent
 
 

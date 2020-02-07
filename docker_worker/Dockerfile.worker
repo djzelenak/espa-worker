@@ -32,6 +32,9 @@ FROM ***REMOVED***/lsrd/espa-worker:builder-latest as builder
 COPY --from=source /tmp/ansible /tmp/ansible
 COPY --from=source /src /src
 
+# Clear up space
+RUN rm -rf /var/cache/yum/*
+
 ENV ESPAINC=/usr/local/include \
     ESPALIB=/usr/local/lib \
     UNAME='espa' \
