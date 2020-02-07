@@ -3,16 +3,6 @@
 # Last Updated: See 'git log -p <filename>'
 # Recent Changes: See 'git log -p <filename>'
 
-# ------------ ESPA SYSTEM REQUIREMENTS ----------- #
-# (espa_dependencies defined in external vars file) #
-# ------------------------------------------------- #
-
-# Install required system packages
-- name: espa-software|Install ESPA required system packages
-  yum:
-    name: "{{ espa_dependencies }}"
-    state: installed
-
 # ---- ESPA/LSRD CUSTOM REPOS ---- #
 
 # Install LSRD Repo
