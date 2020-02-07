@@ -1,6 +1,6 @@
-[![pipeline status](https://eroslab.cr.usgs.gov/lsrd/espa-worker/badges/master/pipeline.svg)](https://eroslab.cr.usgs.gov/lsrd/espa-worker/commits/master)
+[![pipeline status](https://eroslab.cr.usgs.gov/lsrd/espa-worker/badges/topic/centos7/pipeline.svg)](https://eroslab.cr.usgs.gov/lsrd/espa-worker/commits/master)
 
-[![coverage report](https://eroslab.cr.usgs.gov/lsrd/espa-worker/badges/master/coverage.svg)](https://eroslab.cr.usgs.gov/lsrd/espa-worker/commits/master)
+[![coverage report](https://eroslab.cr.usgs.gov/lsrd/espa-worker/badges/topic/centos7/coverage.svg)](https://eroslab.cr.usgs.gov/lsrd/espa-worker/commits/master)
 
 # espa-worker
 Components for building an ESPA worker
