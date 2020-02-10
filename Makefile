@@ -55,7 +55,7 @@ build_worker: login
 	$(PWD) -f $(WORKER_DIR)/Dockerfile.worker
 	@docker tag $(WORKER_TAG) $(WORKER_TAG_LATEST)
 
-test_worker:
+test_worker: login
 	@docker run --rm $(WORKER_TAG) /bin/bash -c "cd /home/espa/espa-processing && nose2 --fail-fast --with-coverage --log-level=error"
 
 deploy_worker: login
