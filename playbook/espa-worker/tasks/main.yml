@@ -5,16 +5,20 @@
 
 # Add user and group
 - import_tasks: user-group.yml
-  tags: user-group
+  tags: user-group, configuration
 
 # Setup mounts
 - import_tasks: mounts.yml
-  tags: mounts
+  tags: mounts, configuration
+
+# Download ESPA source code
+- import_tasks: espa-source.yml
+  tags: download-source
 
 # Install ESPA Software
 - import_tasks: espa-software.yml
-  tags: espa-software
+  tags: packages
 
 # Directories and Symlinks
 - import_tasks: dirs-links.yml
-  tags: dirs-links
+  tags: dirs-links, configuration

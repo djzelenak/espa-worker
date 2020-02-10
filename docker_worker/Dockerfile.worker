@@ -1,0 +1,56 @@
+FROM ***REMOVED***/lsrd/espa-worker:builder-latest as source
+
+MAINTAINER USGS EROS LSRD http://eros.usgs.gov
+
+LABEL description="Adds the science processing applications and setup we use for ESPA-Product-Fulfillment."
+
+COPY playbook /tmp/ansible/
+
+# Set up repo access credentials (should be read-only access)
+ARG SSH_PRIVATE_KEY
+ARG SSH_KNOWN_HOSTS
+
+# Set-up SSH credentials with the host and
+# run the play to download the source code
+# (all must be done in the same container)
+RUN eval $(ssh-agent -s) \
+    && echo "${SSH_PRIVATE_KEY}" | ssh-add - \
+    && mkdir -p ~/.ssh && chmod 700 ~/.ssh \
+    && echo "${SSH_KNOWN_HOSTS}" > ~/.ssh/known_hosts \
+    && chmod 644 ~/.ssh/known_hosts \
+    && ansible-playbook /tmp/ansible/espa-worker.yml --tags "download-source"
+
+# A multi-stage build ensures no sensitive SSH data
+# makes it to the final worker image
+FROM ***REMOVED***/lsrd/espa-worker:builder-latest as builder
+
+# Copy the playbook and source code from the previous build stage
+COPY --from=source /tmp/ansible /tmp/ansible
+COPY --from=source /src /src
+
+ENV ESPAINC=/usr/local/include \
+    ESPALIB=/usr/local/lib \
+    UNAME='espa' \
+    UGROUP='ie'
+
+RUN rm -rf /var/cache/yum/x86_64/7/base/* \
+    && ansible-playbook /tmp/ansible/espa-worker.yml --tags "configuration,packages" \
+	&& rm -rf /tmp/ansible
+
+# Install any remaining python packages
+COPY setup/requirements.txt /
+RUN pip install -r requirements.txt && \
+    rm -f requirements.txt
+
+# Copy over the espa-worker processing scripts
+RUN mkdir /home/$UNAME/espa-processing
+COPY processing /home/$UNAME/espa-processing/processing
+COPY test /home/$UNAME/espa-processing/test
+RUN chown -R $UNAME:$UGROUP /home/$UNAME/ \
+    && ln -s /home/$UNAME/espa-processing/ /src
+
+# Update PYTHONPATH to find espa-product-formatter modules
+ENV PYTHONPATH=/usr/local/espa-product-formatter/python
+
+# Set the working directory
+WORKDIR /home/$UNAME

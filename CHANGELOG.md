@@ -5,6 +5,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- base/Dockerfile.centos7
+- external/Dockerfile.centos7
+- science/Dockerfile.centos7
+- Makefile
+- .gitlab-ci.yml
+
+### Changed
+- Updated and restructured project to allow for more streamlined builds
+- Integrated changes for working with GitLab CI
+- Updating the base working environment OS to CentOS7 (from CentOS 6)
+
+## [1.3.2] - 2020-01-29
+### Added
 - CHANGELOG
 
 ### Changed
@@ -19,8 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Do not generate statistics for the Sentinel-2 Aerosol QA band
 - Fix bug where unused .stats files are potentially delivered in the statistics archive
-
-## [1.3.2] - 2020-01-xx
 
 ## [1.3.1] - 2019-12-06
 ### Changed
