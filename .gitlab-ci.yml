@@ -42,6 +42,9 @@ stages:
   - base
   - builder
   - worker
+  - build
+  - test
+  - deploy
 
 base:
   stage: base
@@ -91,3 +94,27 @@ worker:
     - docker
     - eros
     - lsrd
+
+# PR Pipeline
+build:
+  stage: build
+  script:
+    - make build_worker
+  only:
+    - master
+    - develop
+
+test:
+  stage: test
+  script:
+    - make test_worker
+  only:
+    - merge_requests
+
+deploy:
+  stage: deploy
+  script: ./deploy
+  only:
+    - master
+    - develop
+
