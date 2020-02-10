@@ -96,24 +96,15 @@ worker:
     - lsrd
 
 # PR Pipeline
-build:
-  stage: build
+Merge:
+  stage: worker
   script:
     - make build_worker
-  only:
-    - merge_requests
-
-test:
-  stage: test
-  script:
     - make test_worker
+    - make deploy_worker
   only:
     - merge_requests
-
-deploy:
-  stage: deploy
-  script: make deploy_worker
-  only:
-    - merge_requests
-    - master
-    - develop
+  tags:
+    - docker
+    - eros
+    - lsrd
