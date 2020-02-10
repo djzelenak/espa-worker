@@ -101,8 +101,7 @@ build:
   script:
     - make build_worker
   only:
-    - master
-    - develop
+    - merge_requests
 
 test:
   stage: test
@@ -113,8 +112,8 @@ test:
 
 deploy:
   stage: deploy
-  script: ./deploy
+  script: make deploy_worker
   only:
+    - merge_requests
     - master
     - develop
-
