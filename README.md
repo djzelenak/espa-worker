@@ -3,7 +3,8 @@
 [![coverage report](https://eroslab.cr.usgs.gov/lsrd/espa-worker/badges/topic/centos7/coverage.svg)](https://eroslab.cr.usgs.gov/lsrd/espa-worker/commits/topic/centos7)
 
 # ESPA worker
-##### A containerized processing environment for generating ESPA science products
+##### A containerized processing environment for generating ESPA science products.
+##### Image components include base, build, and worker
 
 ## Base
 A CentOS 7 base image using the native python 2 interpreter.  Provides
@@ -74,7 +75,7 @@ build the various espa science applications.
 | gdal          | 1.11.4        | http://download.osgeo.org/gdal/1.11.4/gdal-1.11.4.tar.gz
 
 #### Registry Names: 
- * __***REMOVED***/lsrd/espa-worker:builder-latest___
+ * __***REMOVED***/lsrd/espa-worker:builder-latest__
  * __***REMOVED***/lsrd/espa-worker:builder-{version}-{short commit SHA}__
 
 ## Worker Environment
