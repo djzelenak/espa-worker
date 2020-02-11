@@ -69,8 +69,10 @@ builder:
     - make deploy_builder
   only:
     changes:
+      - docker_base/Dockerfile.base
       - docker_build/Dockerfile.build
       - version.txt
+      - .gitlab-ci.yml
   tags:
     - docker
     - eros
@@ -84,12 +86,15 @@ worker:
     - make deploy_worker
   only:
     changes:
+      - docker_base/Dockerfile.base
+      - docker_build/Dockerfile.build
       - docker_worker/Dockerfile.worker
       - version.txt
       - processing/*
       - playbook/**/*
       - setup/requirements.txt
       - Makefile
+      - .gitlab-ci.yml
   tags:
     - docker
     - eros

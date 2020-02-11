@@ -31,11 +31,15 @@
 # ---- ESPA PYTHON LIBRARY ---- #
 
 # Install espa-python library
-- name: espa-software|Install espa-python-library
+- name: espa-software|Pip install espa-python-library
   pip:
     editable: false
-    version: 1.1.0
-    name: "git+https://github.com/USGS-EROS/espa-python-library.git@v1.1.0#egg=espa"
+    name: "git+file:///src/espa-python-library"
+
+- name: espa-software|Clean espa-python-library
+  file:
+    path: /src/espa-python-library
+    state: absent
 
 
 # ---------- ESPA SOFTWARE RELEASE GROUP ---------- #

@@ -48,6 +48,7 @@ modtran_espa: 5.3.2
 python_lsrd: 2.7.8
 
 # Define ESPA science repo branches/tags here:
+git_espa_python_library: v1.1.0
 git_espa_product_formatter: product_formatter_v1.19.0
 git_espa_l2qa_tools: l2qa_tools_v1.7.2
 git_espa_aq_refl: aq_refl_v1.1.0
