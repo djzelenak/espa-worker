@@ -47,7 +47,7 @@ RUN mkdir /home/$UNAME/espa-processing
 COPY processing /home/$UNAME/espa-processing/processing
 COPY test /home/$UNAME/espa-processing/test
 RUN chown -R $UNAME:$UGROUP /home/$UNAME/ \
-    && ln -s /home/$UNAME/espa-processing/ /src
+    && ln -s /home/$UNAME/espa-processing/processing /src/processing
 
 # Update PYTHONPATH to find espa-product-formatter modules
 ENV PYTHONPATH=/usr/local/espa-product-formatter/python

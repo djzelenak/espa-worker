@@ -14,6 +14,13 @@
     version: "{{ git_espa_product_formatter }}"
     depth: 1
 
+- name: espa-source|Clone espa-python-library
+  git:
+    repo: 'git@eroslab.cr.usgs.gov:lsrd/espa-python-library.git'
+    dest: /src/espa-python-library
+    version: "{{ git_espa_python_library }}"
+    depth: 1
+
 - name: espa-software|Clone espa-l2qa-tools
   git:
     repo: 'https://github.com/USGS-EROS/espa-l2qa-tools.git'
@@ -108,7 +115,7 @@
 
 - name: espa-software|Clone espa-plotting
   git:
-    repo: 'https://github.com/USGS-EROS/espa-plotting.git'
+    repo: 'git@eroslab.cr.usgs.gov:lsrd/espa-plotting.git'
     dest: /src/espa-plotting
     version: "{{ git_espa_plotting }}"
     depth: 1

@@ -125,8 +125,8 @@ ENV ZLIBINC=$ZLIB_PREFIX/include \
     HDFEOS_LIB=$HDFEOS_PREFIX/lib \
     HDFEOS_GCTPINC=$HDFEOS_PREFIX/include \
     HDFEOS_GCTPLIB=$HDFEOS_PREFIX/lib \
-    HDFEOS5_INC=$HDFEOS5/include \
-    HDFEOS5_LIB=$HDFEOS5/lib \
+    HDFEOS5_INC=$HDFEOS5_PREFIX/include \
+    HDFEOS5_LIB=$HDFEOS5_PREFIX/lib \
     PROJ4_INC=$PROJ4_PREFIX/include \
     PROJ4_LIB=$PROJ4_PREFIX/lib \
     GDAL_INC=$GDAL_PREFIX/include \
@@ -144,7 +144,7 @@ ENV LD_LIBRARY_PATH=/usr/lib64:/usr/local/lib
 RUN yum install -y \
         wget \
         wgrib \
-        pgiz \
+        pigz \
         ansible \
     && yum clean all
 
