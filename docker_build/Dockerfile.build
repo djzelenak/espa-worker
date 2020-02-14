@@ -1,4 +1,4 @@
-FROM ***REMOVED***/lsrd/espa-worker:base-latest
+FROM container-registry/espa-worker/espa-worker:base-latest
 
 MAINTAINER USGS EROS LSRD http://eros.usgs.gov
 
