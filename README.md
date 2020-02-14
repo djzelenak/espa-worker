@@ -14,8 +14,8 @@ additional python dev headers and pip.
  * __centos:7.3.1611__
  
 #### Registry Names:
- * __***REMOVED***/lsrd/espa-worker:base-latest__
- * __***REMOVED***/lsrd/espa-worker:base-{version}-{short commit SHA}__
+ * __container-registry/espa-worker:base-latest__
+ * __container-registry/espa-worker:base-{version}-{short commit SHA}__
 
 ## Build Environment
 Built from the base image.  Provides all of the libraries required to
@@ -75,8 +75,8 @@ build the various espa science applications.
 | gdal          | 1.11.4        | http://download.osgeo.org/gdal/1.11.4/gdal-1.11.4.tar.gz
 
 #### Registry Names: 
- * __***REMOVED***/lsrd/espa-worker:builder-latest__
- * __***REMOVED***/lsrd/espa-worker:builder-{version}-{short commit SHA}__
+ * __container-registry/espa-worker:builder-latest__
+ * __container-registry/espa-worker:builder-{version}-{short commit SHA}__
 
 ## Worker Environment
 Based off the of the builder image, the worker image downloads, builds, and installs all
@@ -84,7 +84,7 @@ of the ESPA science applications from source.  It provides the final processing
 environment that is run on MESOS to deliver ESPA science products.
 
 #### Registry Names
- * __***REMOVED***/lsrd/espa-worker:worker-latest__
- * __***REMOVED***/lsrd/espa-worker:worker-{version}-{short commit SHA}__
+ * __container-registry/espa-worker/espa-worker:worker-latest__
+ * __container-registry/espa-worker/espa-worker:worker-{version}-{short commit SHA}__
  
 
