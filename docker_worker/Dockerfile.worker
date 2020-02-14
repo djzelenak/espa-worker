@@ -1,4 +1,4 @@
-FROM ***REMOVED***/lsrd/espa-worker:builder-latest as source
+FROM container-registry/espa-worker/espa-worker:builder-latest as source
 
 MAINTAINER USGS EROS LSRD http://eros.usgs.gov
 
@@ -22,7 +22,7 @@ RUN eval $(ssh-agent -s) \
 
 # A multi-stage build ensures no sensitive SSH data
 # makes it to the final worker image
-FROM ***REMOVED***/lsrd/espa-worker:builder-latest as builder
+FROM container-registry/espa-worker/espa-worker:builder-latest as builder
 
 # Copy the playbook and source code from the previous build stage
 COPY --from=source /tmp/ansible /tmp/ansible
